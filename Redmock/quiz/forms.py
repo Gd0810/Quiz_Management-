@@ -4,6 +4,14 @@ from dashboard.models import Quiz, SubTitle, TestSubject
 
 
 class CandidateStartForm(forms.Form):
+    def __init__(self, *args, company=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if company is not None:
+            self.fields['subjects'].queryset = TestSubject.objects.filter(company=company).select_related('company')
+            self.fields['sub_titles'].queryset = SubTitle.objects.filter(
+                test_subject__company=company
+            ).select_related('test_subject')
+
     SESSION_CHOICES = [
         ('single', 'Single'),
         ('multi', 'Multi'),

@@ -16,7 +16,6 @@
                 </div>
                 <nav class="flex flex-wrap gap-2 text-sm">
                     <a href="/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Home</a>
-                    <a href="/quiz/start/" class="rounded bg-emerald-600 px-3 py-2 hover:bg-emerald-500">Test Form</a>
                     {% if request.session.company_id %}
                         <a href="/dashboard/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Dashboard</a>
                         <a href="/dashboard/subjects/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Subjects</a>
@@ -24,6 +23,7 @@
                         <a href="/dashboard/quizzes/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Quizs</a>
                         <a href="/dashboard/candidates/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Candidates</a>
                         <a href="/dashboard/attempts/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Attempts</a>
+                        <a href="/quiz/start/" class="rounded bg-emerald-600 px-3 py-2 hover:bg-emerald-500">Test Form</a>
                         <a href="/dashboard/logout/" class="rounded bg-rose-600 px-3 py-2 hover:bg-rose-500">Logout</a>
                     {% else %}
                         <a href="/dashboard/login/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Dashboard Login</a>

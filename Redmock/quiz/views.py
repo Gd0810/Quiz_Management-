@@ -6,13 +6,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from dashboard.models import Quiz
+from dashboard.views import company_login_required
 
 from .forms import CandidateStartForm
 from .models import Candidate, CandidateTestAttempt
 
 
+@company_login_required
 def start_test(request):
-    form = CandidateStartForm(request.POST or None)
+    form = CandidateStartForm(request.POST or None, company=request.company)
     if request.method == 'POST' and form.is_valid():
         candidate, _ = Candidate.objects.get_or_create(
             email=form.cleaned_data['candidate_email'],
@@ -27,9 +29,10 @@ def start_test(request):
 
         subjects = list(form.cleaned_data['subjects'])
         subtitles = list(form.cleaned_data['sub_titles'])
-        company = subjects[0].company
+        company = request.company
 
         quiz_queryset = Quiz.objects.filter(
+            test_subject__company=company,
             test_subject__in=subjects,
             level=form.cleaned_data['level'],
         ).select_related('test_subject', 'sub_title')
@@ -61,11 +64,20 @@ def start_test(request):
     return render(request, 'quiz/start_test.html', {'form': form})
 
 
+@company_login_required
 def take_test(request, attempt_id):
-    attempt = get_object_or_404(CandidateTestAttempt.objects.select_related('candidate', 'company'), pk=attempt_id)
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('candidate', 'company'),
+        pk=attempt_id,
+        company=request.company,
+    )
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
-    questions = list(Quiz.objects.filter(id__in=question_ids).select_related('test_subject', 'sub_title'))
+    questions = list(
+        Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company).select_related(
+            'test_subject', 'sub_title'
+        )
+    )
     question_map = {question.id: question for question in questions}
     ordered_questions = [question_map[qid] for qid in question_ids if qid in question_map]
 
@@ -121,15 +133,18 @@ def take_test(request, attempt_id):
     return render(request, 'quiz/take_test.html', context)
 
 
+@company_login_required
 def test_result(request, attempt_id):
     attempt = get_object_or_404(
         CandidateTestAttempt.objects.select_related('candidate', 'company'),
         pk=attempt_id,
+        company=request.company,
     )
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
     question_map = {
-        question.id: question for question in Quiz.objects.filter(id__in=question_ids)
+        question.id: question
+        for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company)
     }
     results = []
     for row in answer_rows:
