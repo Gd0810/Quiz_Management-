@@ -1,3 +1,6 @@
+import json
+
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -54,6 +57,13 @@ class Quiz(models.Model):
         (LEVEL_EXPERIENCED, 'Experienced'),
     ]
 
+    bulk_upload = models.ForeignKey(
+        'BulkQuestionUpload',
+        on_delete=models.SET_NULL,
+        related_name='imported_quizzes',
+        blank=True,
+        null=True,
+    )
     test_subject = models.ForeignKey(TestSubject, on_delete=models.CASCADE, related_name='quizzes')
     sub_title = models.ForeignKey(SubTitle, on_delete=models.CASCADE, related_name='quizzes')
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
@@ -95,6 +105,8 @@ class BulkQuestionUpload(models.Model):
         help_text='Optional pasted JSON array. Use this only for bulk import data.',
     )
     notes = models.CharField(max_length=255, blank=True)
+    imported_count = models.PositiveIntegerField(default=0)
+    processed_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -107,3 +119,95 @@ class BulkQuestionUpload(models.Model):
 
     def get_level_display(self):
         return dict(Quiz.LEVEL_CHOICES).get(self.level, self.level)
+
+    def load_questions_payload(self):
+        if self.json_file:
+            self.json_file.seek(0)
+            try:
+                return json.loads(self.json_file.read().decode('utf-8'))
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise ValidationError({'json_file': f'Invalid JSON file: {exc}'}) from exc
+
+        if self.questions_json:
+            if isinstance(self.questions_json, list):
+                return self.questions_json
+            raise ValidationError({'questions_json': 'Bulk JSON must be a list of question objects.'})
+
+        raise ValidationError('Provide either a JSON file or pasted JSON data for bulk import.')
+
+    def _normalize_correct_answer(self, row):
+        option_map = {
+            'option_1': row.get('option_1', ''),
+            'option_2': row.get('option_2', ''),
+            'option_3': row.get('option_3', ''),
+            'option_4': row.get('option_4', ''),
+        }
+        raw_answer = str(row.get('correct_answer', '')).strip()
+        if raw_answer in option_map:
+            return raw_answer
+
+        numeric_map = {
+            '1': 'option_1',
+            '2': 'option_2',
+            '3': 'option_3',
+            '4': 'option_4',
+        }
+        if raw_answer in numeric_map:
+            return numeric_map[raw_answer]
+
+        for key, value in option_map.items():
+            if raw_answer and raw_answer == str(value).strip():
+                return key
+
+        raise ValidationError(
+            f'Invalid correct_answer "{raw_answer}" for question "{row.get("question", "")}". '
+            'Use option_1..option_4, 1..4, or the exact option text.'
+        )
+
+    def import_questions(self):
+        payload = self.load_questions_payload()
+        if not isinstance(payload, list):
+            raise ValidationError('Bulk import data must be a list of question objects.')
+
+        quiz_rows = []
+        for index, row in enumerate(payload, start=1):
+            if not isinstance(row, dict):
+                raise ValidationError(f'Question #{index} must be a JSON object.')
+
+            question_text = str(row.get('question', '')).strip()
+            option_1 = str(row.get('option_1', '')).strip()
+            option_2 = str(row.get('option_2', '')).strip()
+            option_3 = str(row.get('option_3', '')).strip()
+            option_4 = str(row.get('option_4', '')).strip()
+
+            if not all([question_text, option_1, option_2, option_3, option_4]):
+                raise ValidationError(
+                    f'Question #{index} is missing required fields. '
+                    'Each row needs question, option_1, option_2, option_3, option_4, and correct_answer.'
+                )
+
+            quiz_rows.append(
+                Quiz(
+                    bulk_upload=self,
+                    test_subject=self.test_subject,
+                    sub_title=self.sub_title,
+                    level=self.level,
+                    question_paragraph=row.get('question_paragraph') or row.get('qustionparagraph'),
+                    question=question_text,
+                    option_1=option_1,
+                    option_2=option_2,
+                    option_3=option_3,
+                    option_4=option_4,
+                    correct_answer=self._normalize_correct_answer(row),
+                )
+            )
+
+        self.imported_quizzes.all().delete()
+        Quiz.objects.bulk_create(quiz_rows)
+        self.imported_count = len(quiz_rows)
+
+        from django.utils import timezone
+
+        self.processed_at = timezone.now()
+        self.save(update_fields=['imported_count', 'processed_at'])
+        return self.imported_count

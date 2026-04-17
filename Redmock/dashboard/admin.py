@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.hashers import identify_hasher, make_password
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 from .models import BulkQuestionUpload, Company, Quiz, SubTitle, TestSubject
 
@@ -42,7 +44,7 @@ class SubTitleAdmin(admin.ModelAdmin):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('question_preview', 'test_subject', 'sub_title', 'level', 'correct_answer', 'created_at')
+    list_display = ('question_preview', 'test_subject', 'sub_title', 'level', 'correct_answer', 'bulk_upload', 'created_at')
     list_filter = ('level', 'test_subject__company', 'test_subject')
     search_fields = ('question', 'test_subject__subject', 'sub_title__title')
 
@@ -54,6 +56,42 @@ class QuizAdmin(admin.ModelAdmin):
 
 @admin.register(BulkQuestionUpload)
 class BulkQuestionUploadAdmin(admin.ModelAdmin):
-    list_display = ('test_subject', 'sub_title', 'level', 'json_file', 'created_at')
+    list_display = ('test_subject', 'sub_title', 'level', 'imported_count', 'processed_at', 'created_at')
     list_filter = ('level', 'test_subject__company', 'test_subject')
     search_fields = ('test_subject__subject', 'sub_title__title', 'notes')
+    readonly_fields = ('imported_count', 'processed_at')
+    actions = ('run_bulk_import',)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        try:
+            imported_count = obj.import_questions()
+        except ValidationError as exc:
+            self.message_user(request, f'Bulk import failed: {exc}', level=messages.ERROR)
+            raise
+        else:
+            self.message_user(
+                request,
+                f'Bulk import completed successfully. {imported_count} questions created.',
+                level=messages.SUCCESS,
+            )
+
+    @admin.action(description='Run bulk import again for selected uploads')
+    def run_bulk_import(self, request, queryset):
+        imported_total = 0
+        for bulk_upload in queryset:
+            try:
+                imported_total += bulk_upload.import_questions()
+            except ValidationError as exc:
+                self.message_user(
+                    request,
+                    f'Bulk import failed for "{bulk_upload}": {exc}',
+                    level=messages.ERROR,
+                )
+
+        if imported_total:
+            self.message_user(
+                request,
+                f'Bulk import completed. {imported_total} questions created across selected uploads.',
+                level=messages.SUCCESS,
+            )
