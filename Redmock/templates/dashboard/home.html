@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Redmock{% endblock %}
+
+{% block content %}
+<section class="grid gap-4 md:grid-cols-5">
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">Subjects</p>
+        <p class="mt-2 text-3xl font-bold">{{ subject_count }}</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">Sub Titles</p>
+        <p class="mt-2 text-3xl font-bold">{{ subtitle_count }}</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">Quiz Questions</p>
+        <p class="mt-2 text-3xl font-bold">{{ quiz_count }}</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">Candidates</p>
+        <p class="mt-2 text-3xl font-bold">{{ candidate_count }}</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">Attempts</p>
+        <p class="mt-2 text-3xl font-bold">{{ attempt_count }}</p>
+    </div>
+</section>
+
+<section class="mt-8 grid gap-6 lg:grid-cols-2">
+    <div class="rounded-2xl bg-white p-6 shadow-sm">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-semibold">Quick Actions</h2>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+            <a href="{% url 'dashboard:subject_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-white">Create Subject</a>
+            <a href="{% url 'dashboard:subtitle_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-white">Create Sub Title</a>
+            <a href="{% url 'dashboard:quiz_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-white">Create Quiz</a>
+            <a href="{% url 'quiz:start' %}" class="rounded-xl bg-emerald-600 px-4 py-3 text-white">Open Test Form</a>
+        </div>
+    </div>
+
+    <div class="rounded-2xl bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold">Subject Overview</h2>
+        <div class="mt-4 space-y-3">
+            {% for subject in subjects %}
+                <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                    <div>
+                        <p class="font-medium">{{ subject.subject }}</p>
+                        <p class="text-sm text-slate-500">{{ subject.company.name }}</p>
+                    </div>
+                    <span class="rounded-full bg-slate-900 px-3 py-1 text-sm text-white">{{ subject.quiz_total }} questions</span>
+                </div>
+            {% empty %}
+                <p class="text-slate-500">No subjects created yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+    <h2 class="text-xl font-semibold">Recent Attempts</h2>
+    <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead class="border-b border-slate-200 text-slate-500">
+                <tr>
+                    <th class="px-3 py-2">Candidate</th>
+                    <th class="px-3 py-2">Company</th>
+                    <th class="px-3 py-2">Level</th>
+                    <th class="px-3 py-2">Score</th>
+                    <th class="px-3 py-2">Submitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attempt in recent_attempts %}
+                    <tr class="border-b border-slate-100">
+                        <td class="px-3 py-2">{{ attempt.candidate.name }}</td>
+                        <td class="px-3 py-2">{{ attempt.company.name }}</td>
+                        <td class="px-3 py-2">{{ attempt.level }}</td>
+                        <td class="px-3 py-2">{{ attempt.percentage }}%</td>
+                        <td class="px-3 py-2">{{ attempt.is_submitted|yesno:"Yes,No" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-3 py-6 text-center text-slate-500">No test attempts yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

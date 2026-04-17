@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Test Form | Redmock{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Candidate Test Form</h1>
+        <p class="mt-2 text-slate-500">Choose subjects, level, duration, and candidate details to start the test.</p>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="grid gap-5 md:grid-cols-2">
+            {% for field in form %}
+                <div class="{% if field.name == 'subjects' or field.name == 'sub_titles' %}md:col-span-2{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700">
+                        {{ field.label }}
+                    </label>
+                    <div class="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="rounded-xl bg-emerald-600 px-5 py-3 text-white">Start Test</button>
+    </form>
+</section>
+{% endblock %}
