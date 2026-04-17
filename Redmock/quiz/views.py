@@ -80,16 +80,20 @@ def _build_default_allocations(question_count, subject_configs, available_counts
 
     subject_shares = _split_evenly(question_count, len(subject_configs))
     for index, config in enumerate(subject_configs):
-        subtitle_shares = _split_evenly(subject_shares[index], len(config['subtitles']))
-        for subtitle_index, subtitle in enumerate(config['subtitles']):
+        allocation_targets = config['subtitles'] or [None]
+        subtitle_shares = _split_evenly(subject_shares[index], len(allocation_targets))
+        for subtitle_index, subtitle in enumerate(allocation_targets):
             allocations.append(
                 {
                     'subject': config['subject'],
                     'subtitle': subtitle,
                     'level': config['level'],
                     'requested_count': subtitle_shares[subtitle_index],
-                    'available_count': available_counts.get((config['subject'].id, subtitle.id), 0),
-                    'field_name': f'custom_count_{config["subject"].id}_{subtitle.id}',
+                    'available_count': available_counts.get(
+                        (config['subject'].id, subtitle.id if subtitle else None),
+                        0,
+                    ),
+                    'field_name': f'custom_count_{config["subject"].id}_{subtitle.id if subtitle else 0}',
                 }
             )
     return allocations
@@ -171,13 +175,17 @@ def _build_setup_state(request, company, data=None):
         if custom_mode:
             allocation_total = 0
             for config in subject_configs:
-                for subtitle in config['subtitles']:
-                    field_name = f'custom_count_{config["subject"].id}_{subtitle.id}'
+                allocation_targets = config['subtitles'] or [None]
+                for subtitle in allocation_targets:
+                    field_name = f'custom_count_{config["subject"].id}_{subtitle.id if subtitle else 0}'
                     requested_count = _parse_positive_int(
                         data.get(field_name),
                         default_count_map.get(field_name, 0),
                     )
-                    available_count = available_counts.get((config['subject'].id, subtitle.id), 0)
+                    available_count = available_counts.get(
+                        (config['subject'].id, subtitle.id if subtitle else None),
+                        0,
+                    )
                     allocations.append(
                         {
                             'subject': config['subject'],
@@ -197,14 +205,10 @@ def _build_setup_state(request, company, data=None):
         else:
             allocations = default_allocations
 
-    for config in subject_configs:
-        if not config['subtitles']:
-            errors.append(f'{config["subject"].subject} does not have any selected sub titles.')
-
     for allocation in allocations:
         if allocation['requested_count'] > allocation['available_count']:
             errors.append(
-                f'{allocation["subject"].subject} / {allocation["subtitle"].title} has only '
+                f'{allocation["subject"].subject} / {(allocation["subtitle"].title if allocation["subtitle"] else "General")} has only '
                 f'{allocation["available_count"]} questions for {allocation["level"].title()} level.'
             )
 
@@ -272,13 +276,17 @@ def _select_question_ids(company, allocations):
         queryset = Quiz.objects.filter(
             test_subject__company=company,
             test_subject=allocation['subject'],
-            sub_title=allocation['subtitle'],
             level=allocation['level'],
-        ).order_by('id')[: allocation['requested_count']]
+        )
+        if allocation['subtitle'] is None:
+            queryset = queryset.filter(sub_title__isnull=True)
+        else:
+            queryset = queryset.filter(sub_title=allocation['subtitle'])
+        queryset = queryset.order_by('id')[: allocation['requested_count']]
         selected = list(queryset.values_list('id', flat=True))
         if len(selected) != allocation['requested_count']:
             raise ValueError(
-                f'Not enough questions in {allocation["subject"].subject} / {allocation["subtitle"].title}.'
+                f'Not enough questions in {allocation["subject"].subject} / {(allocation["subtitle"].title if allocation["subtitle"] else "General")}.'
             )
         question_ids.extend(selected)
     return question_ids
@@ -291,13 +299,17 @@ def _serialize_setup(state, question_ids):
         'duration_minutes': state['duration_minutes'],
         'question_count': state['question_count'],
         'selected_subjects': state['selected_subject_ids'],
-        'selected_sub_titles': [allocation['subtitle'].id for allocation in state['allocations'] if allocation['requested_count'] > 0],
+        'selected_sub_titles': [
+            allocation['subtitle'].id
+            for allocation in state['allocations']
+            if allocation['requested_count'] > 0 and allocation['subtitle'] is not None
+        ],
         'allocations': [
             {
                 'subject_id': allocation['subject'].id,
                 'subject_name': allocation['subject'].subject,
-                'subtitle_id': allocation['subtitle'].id,
-                'subtitle_name': allocation['subtitle'].title,
+                'subtitle_id': allocation['subtitle'].id if allocation['subtitle'] else None,
+                'subtitle_name': allocation['subtitle'].title if allocation['subtitle'] else 'General',
                 'level': allocation['level'],
                 'requested_count': allocation['requested_count'],
             }
@@ -400,8 +412,9 @@ def setup_back(request):
             post_data['single_subject'] = str(first['subject_id'])
             post_data['single_level'] = first['level']
             for allocation in pending_setup['allocations']:
-                post_data.appendlist('single_subtitles', str(allocation['subtitle_id']))
-                post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"]}'] = str(allocation['requested_count'])
+                if allocation['subtitle_id'] is not None:
+                    post_data.appendlist('single_subtitles', str(allocation['subtitle_id']))
+                post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}'] = str(allocation['requested_count'])
         else:
             for subject_id in pending_setup['selected_subjects']:
                 post_data.appendlist('multi_subjects', str(subject_id))
@@ -410,8 +423,9 @@ def setup_back(request):
                 if allocation['subject_id'] not in seen_subjects:
                     post_data[f'multi_level_{allocation["subject_id"]}'] = allocation['level']
                     seen_subjects.add(allocation['subject_id'])
-                post_data.appendlist(f'multi_subtitles_{allocation["subject_id"]}', str(allocation['subtitle_id']))
-                post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"]}'] = str(allocation['requested_count'])
+                if allocation['subtitle_id'] is not None:
+                    post_data.appendlist(f'multi_subtitles_{allocation["subject_id"]}', str(allocation['subtitle_id']))
+                post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}'] = str(allocation['requested_count'])
 
     state = _build_setup_state(request, request.company, data=post_data)
     return render(

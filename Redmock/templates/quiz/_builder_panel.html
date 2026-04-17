@@ -204,6 +204,11 @@
                         </span>
                     </div>
                     <div class="mt-5 space-y-5">
+                        {% if setup_state.custom_mode %}
+                            <div class="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                                Current custom total: <span id="custom-total-value">0</span> / {{ setup_state.question_count }}
+                            </div>
+                        {% endif %}
                         {% for row in setup_state.summary_rows %}
                             <div class="rounded-2xl bg-slate-50 p-5">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -219,7 +224,7 @@
                                     {% for allocation in row.allocations %}
                                         <div class="rounded-xl bg-white p-4">
                                             <div class="flex items-center justify-between">
-                                                <p class="font-medium">{{ allocation.subtitle.title }}</p>
+                                                <p class="font-medium">{% if allocation.subtitle %}{{ allocation.subtitle.title }}{% else %}General{% endif %}</p>
                                                 <span class="text-xs text-slate-500">Available {{ allocation.available_count }}</span>
                                             </div>
                                             {% if setup_state.custom_mode %}
@@ -239,6 +244,7 @@
                                                         max="{{ allocation.available_count }}"
                                                         name="{{ allocation.field_name }}"
                                                         value="{{ allocation.requested_count }}"
+                                                        data-custom-count="true"
                                                         class="w-full rounded-xl border border-slate-300 px-4 py-3 text-center"
                                                     >
                                                     <button
@@ -287,5 +293,19 @@
         const next = Math.min(max, Math.max(min, current + delta));
         input.value = next;
         input.dispatchEvent(new Event("change", { bubbles: true }));
+        refreshCustomTotal();
     }
+
+    function refreshCustomTotal() {
+        const totalElement = document.getElementById("custom-total-value");
+        if (!totalElement) return;
+        const inputs = document.querySelectorAll('[data-custom-count="true"]');
+        let total = 0;
+        inputs.forEach((input) => {
+            total += parseInt(input.value || "0", 10);
+        });
+        totalElement.textContent = total;
+    }
+
+    refreshCustomTotal();
 </script>

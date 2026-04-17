@@ -65,7 +65,13 @@ class Quiz(models.Model):
         null=True,
     )
     test_subject = models.ForeignKey(TestSubject, on_delete=models.CASCADE, related_name='quizzes')
-    sub_title = models.ForeignKey(SubTitle, on_delete=models.CASCADE, related_name='quizzes')
+    sub_title = models.ForeignKey(
+        SubTitle,
+        on_delete=models.SET_NULL,
+        related_name='quizzes',
+        blank=True,
+        null=True,
+    )
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
     question_paragraph = models.TextField(blank=True, null=True)
     question_image = models.ImageField(upload_to='questions/', blank=True, null=True)
@@ -91,12 +97,19 @@ class Quiz(models.Model):
         ordering = ['test_subject__subject', 'sub_title__title', 'level']
 
     def __str__(self):
-        return f'{self.test_subject.subject} / {self.sub_title.title} / {self.get_level_display()}'
+        subtitle_name = self.sub_title.title if self.sub_title else 'General'
+        return f'{self.test_subject.subject} / {subtitle_name} / {self.get_level_display()}'
 
 
 class BulkQuestionUpload(models.Model):
     test_subject = models.ForeignKey(TestSubject, on_delete=models.CASCADE, related_name='bulk_uploads')
-    sub_title = models.ForeignKey(SubTitle, on_delete=models.CASCADE, related_name='bulk_uploads')
+    sub_title = models.ForeignKey(
+        SubTitle,
+        on_delete=models.SET_NULL,
+        related_name='bulk_uploads',
+        blank=True,
+        null=True,
+    )
     level = models.CharField(max_length=20, choices=Quiz.LEVEL_CHOICES)
     json_file = models.FileField(upload_to='bulk_questions/', blank=True, null=True)
     questions_json = models.JSONField(
@@ -115,7 +128,8 @@ class BulkQuestionUpload(models.Model):
         verbose_name_plural = 'Bulk Question Uploads'
 
     def __str__(self):
-        return f'Bulk Upload - {self.test_subject.subject} / {self.sub_title.title} / {self.get_level_display()}'
+        subtitle_name = self.sub_title.title if self.sub_title else 'General'
+        return f'Bulk Upload - {self.test_subject.subject} / {subtitle_name} / {self.get_level_display()}'
 
     def get_level_display(self):
         return dict(Quiz.LEVEL_CHOICES).get(self.level, self.level)

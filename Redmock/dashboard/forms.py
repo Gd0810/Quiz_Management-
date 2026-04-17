@@ -26,6 +26,7 @@ class SubTitleForm(forms.ModelForm):
 class QuizForm(forms.ModelForm):
     def __init__(self, *args, company=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['sub_title'].required = False
         if company is not None:
             subject_queryset = TestSubject.objects.filter(company=company)
             self.fields['test_subject'].queryset = subject_queryset
