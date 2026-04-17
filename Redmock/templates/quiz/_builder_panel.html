@@ -1,0 +1,291 @@
+<div id="builder-panel">
+    {% if step == 'candidate' %}
+        <div class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold">Test Setup Summary</h2>
+                    <button
+                        type="button"
+                        hx-post="{% url 'quiz:setup_back' %}"
+                        hx-target="#builder-panel"
+                        hx-swap="outerHTML"
+                        class="rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm"
+                    >
+                        Back To Setup
+                    </button>
+                </div>
+                <div class="space-y-4 text-sm text-slate-700">
+                    <div class="rounded-xl bg-white p-4">
+                        <p><span class="font-semibold">Session Type:</span> {{ pending_setup.session_type|title }}</p>
+                        <p><span class="font-semibold">Question Count:</span> {{ pending_setup.question_count }}</p>
+                        <p><span class="font-semibold">Duration:</span> {{ pending_setup.duration_minutes }} minutes</p>
+                    </div>
+                    {% for key, rows in summary.items %}
+                        <div class="rounded-xl bg-white p-4">
+                            <p class="font-semibold">{{ key.0 }} - {{ key.1|title }}</p>
+                            <div class="mt-3 space-y-2">
+                                {% for row in rows %}
+                                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                                        <span>{{ row.subtitle_name }}</span>
+                                        <span>{{ row.requested_count }} questions</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 class="text-xl font-semibold">Candidate Form</h2>
+                <p class="mt-2 text-sm text-slate-500">Enter candidate details and start the test.</p>
+
+                <form method="post" action="{% url 'quiz:begin' %}" class="mt-6 space-y-5">
+                    {% csrf_token %}
+                    {% if candidate_form.non_field_errors %}
+                        <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+                            {{ candidate_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    {% for field in candidate_form %}
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="rounded-xl border border-slate-300 px-4 py-3">
+                                {{ field }}
+                            </div>
+                            {% if field.errors %}
+                                <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="w-full rounded-xl bg-emerald-600 px-5 py-3 text-white">Start Test</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <form
+            id="setup-form"
+            method="post"
+            hx-post="{% url 'quiz:setup_builder' %}"
+            hx-trigger="change delay:200ms"
+            hx-target="#builder-panel"
+            hx-swap="outerHTML"
+            class="space-y-6"
+        >
+            {% csrf_token %}
+
+            {% if setup_state.errors %}
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-700">
+                    <ul class="space-y-1 text-sm">
+                        {% for error in setup_state.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Session Type</label>
+                    <select name="session_type" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                        <option value="single" {% if setup_state.session_type == 'single' %}selected{% endif %}>Single</option>
+                        <option value="multi" {% if setup_state.session_type == 'multi' %}selected{% endif %}>Multi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Duration Minutes</label>
+                    <input type="number" min="1" name="duration_minutes" value="{{ setup_state.duration_minutes }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">Question Count</label>
+                    <input type="number" min="1" name="question_count" value="{{ setup_state.question_count }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                </div>
+                <div class="flex items-end">
+                    <label class="inline-flex items-center gap-3 rounded-xl border border-slate-300 px-4 py-3">
+                        <input type="checkbox" name="custom_mode" value="1" {% if setup_state.custom_mode %}checked{% endif %}>
+                        <span class="text-sm font-medium text-slate-700">Custom Questions</span>
+                    </label>
+                </div>
+            </div>
+
+            {% if setup_state.session_type == 'single' %}
+                <div class="rounded-2xl border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold">Single Session Setup</h2>
+                    <div class="mt-5 grid gap-5 md:grid-cols-2">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">Subject</label>
+                            <select name="single_subject" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                                <option value="">Choose subject</option>
+                                {% for subject_id, subject in setup_state.subject_map.items %}
+                                    <option value="{{ subject_id }}" {% if setup_state.selected_subject_ids and setup_state.selected_subject_ids.0 == subject_id %}selected{% endif %}>
+                                        {{ subject.subject }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">Level</label>
+                            <select name="single_level" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                                {% for level_value, level_label in level_choices %}
+                                    <option value="{{ level_value }}" {% if setup_state.subject_configs and setup_state.subject_configs.0.level == level_value %}selected{% endif %}>
+                                        {{ level_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if setup_state.subject_configs %}
+                        <div class="mt-6">
+                            <p class="mb-3 text-sm font-medium text-slate-700">Sub Titles</p>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for subtitle in setup_state.subject_configs.0.all_subtitles %}
+                                    <label class="rounded-xl border border-slate-200 px-4 py-3">
+                                        <input type="checkbox" name="single_subtitles" value="{{ subtitle.id }}" {% if subtitle.id in setup_state.subject_configs.0.selected_subtitle_ids %}checked{% endif %} class="mr-2">
+                                        {{ subtitle.title }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="rounded-2xl border border-slate-200 p-6">
+                    <h2 class="text-xl font-semibold">Multi Session Setup</h2>
+                    <div class="mt-5">
+                        <p class="mb-3 text-sm font-medium text-slate-700">Subjects</p>
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {% for subject_id, subject in setup_state.subject_map.items %}
+                                <label class="rounded-xl border border-slate-200 px-4 py-3">
+                                    <input type="checkbox" name="multi_subjects" value="{{ subject_id }}" {% if subject_id in setup_state.selected_subject_ids %}checked{% endif %} class="mr-2">
+                                    {{ subject.subject }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% for config in setup_state.subject_configs %}
+                        <div class="mt-6 rounded-2xl bg-slate-50 p-5">
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <p class="text-lg font-semibold">{{ config.subject.subject }}</p>
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-slate-700">Level</label>
+                                    <select name="multi_level_{{ config.subject.id }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                                        {% for level_value, level_label in level_choices %}
+                                            <option value="{{ level_value }}" {% if config.level == level_value %}selected{% endif %}>{{ level_label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="mb-3 text-sm font-medium text-slate-700">Sub Titles</p>
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    {% for subtitle in config.all_subtitles %}
+                                        <label class="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                                            <input type="checkbox" name="multi_subtitles_{{ config.subject.id }}" value="{{ subtitle.id }}" {% if subtitle.id in config.selected_subtitle_ids %}checked{% endif %} class="mr-2">
+                                            {{ subtitle.title }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if setup_state.summary_rows %}
+                <div class="rounded-2xl border border-slate-200 p-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold">Question Allocation Preview</h2>
+                        <span class="rounded-full bg-slate-900 px-4 py-2 text-sm text-white">
+                            {{ setup_state.question_count }} total
+                        </span>
+                    </div>
+                    <div class="mt-5 space-y-5">
+                        {% for row in setup_state.summary_rows %}
+                            <div class="rounded-2xl bg-slate-50 p-5">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <p class="text-lg font-semibold">{{ row.subject.subject }}</p>
+                                        <p class="text-sm text-slate-500">{{ row.level|title }} level</p>
+                                    </div>
+                                    <span class="rounded-full bg-white px-3 py-1 text-sm font-medium text-slate-700">
+                                        {{ row.total_requested }} questions
+                                    </span>
+                                </div>
+                                <div class="mt-4 grid gap-3 md:grid-cols-2">
+                                    {% for allocation in row.allocations %}
+                                        <div class="rounded-xl bg-white p-4">
+                                            <div class="flex items-center justify-between">
+                                                <p class="font-medium">{{ allocation.subtitle.title }}</p>
+                                                <span class="text-xs text-slate-500">Available {{ allocation.available_count }}</span>
+                                            </div>
+                                            {% if setup_state.custom_mode %}
+                                                <p class="mt-3 text-xs text-slate-500">Adjust the count here for this subtitle.</p>
+                                                <div class="mt-3 flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        class="rounded-xl border border-slate-300 px-4 py-3 text-lg font-semibold text-slate-700"
+                                                        onclick="updateQuestionCount('{{ allocation.field_name }}', -1)"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <input
+                                                        id="{{ allocation.field_name }}"
+                                                        type="number"
+                                                        min="0"
+                                                        max="{{ allocation.available_count }}"
+                                                        name="{{ allocation.field_name }}"
+                                                        value="{{ allocation.requested_count }}"
+                                                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-center"
+                                                    >
+                                                    <button
+                                                        type="button"
+                                                        class="rounded-xl border border-slate-300 px-4 py-3 text-lg font-semibold text-slate-700"
+                                                        onclick="updateQuestionCount('{{ allocation.field_name }}', 1)"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <p class="mt-3 text-sm text-slate-700">{{ allocation.requested_count }} questions will be used by default.</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="flex justify-end">
+                <button
+                    type="button"
+                    hx-post="{% url 'quiz:setup_next' %}"
+                    hx-include="#setup-form"
+                    hx-target="#builder-panel"
+                    hx-swap="outerHTML"
+                    class="rounded-xl bg-emerald-600 px-5 py-3 text-white"
+                >
+                    Next
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+
+<script>
+    function updateQuestionCount(fieldId, delta) {
+        const input = document.getElementById(fieldId);
+        if (!input) return;
+        const min = parseInt(input.min || "0", 10);
+        const max = parseInt(input.max || "999999", 10);
+        const current = parseInt(input.value || "0", 10);
+        const next = Math.min(max, Math.max(min, current + delta));
+        input.value = next;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+</script>
