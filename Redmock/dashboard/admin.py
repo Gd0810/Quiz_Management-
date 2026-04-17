@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.hashers import identify_hasher, make_password
 
-from .models import Company, Quiz, SubTitle, TestSubject
+from .models import BulkQuestionUpload, Company, Quiz, SubTitle, TestSubject
 
 
 class SubTitleInline(admin.TabularInline):
@@ -42,6 +42,18 @@ class SubTitleAdmin(admin.ModelAdmin):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('test_subject', 'sub_title', 'level', 'created_at')
+    list_display = ('question_preview', 'test_subject', 'sub_title', 'level', 'correct_answer', 'created_at')
     list_filter = ('level', 'test_subject__company', 'test_subject')
-    search_fields = ('test_subject__subject', 'sub_title__title')
+    search_fields = ('question', 'test_subject__subject', 'sub_title__title')
+
+    def question_preview(self, obj):
+        return obj.question[:60]
+
+    question_preview.short_description = 'Question'
+
+
+@admin.register(BulkQuestionUpload)
+class BulkQuestionUploadAdmin(admin.ModelAdmin):
+    list_display = ('test_subject', 'sub_title', 'level', 'json_file', 'created_at')
+    list_filter = ('level', 'test_subject__company', 'test_subject')
+    search_fields = ('test_subject__subject', 'sub_title__title', 'notes')

@@ -57,7 +57,23 @@ class Quiz(models.Model):
     test_subject = models.ForeignKey(TestSubject, on_delete=models.CASCADE, related_name='quizzes')
     sub_title = models.ForeignKey(SubTitle, on_delete=models.CASCADE, related_name='quizzes')
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
-    questions_json = models.JSONField(default=list, help_text='Bulk-uploaded question bank as a JSON array.')
+    question_paragraph = models.TextField(blank=True, null=True)
+    question_image = models.ImageField(upload_to='questions/', blank=True, null=True)
+    question = models.TextField(default='')
+    option_1 = models.CharField(max_length=255, default='')
+    option_2 = models.CharField(max_length=255, default='')
+    option_3 = models.CharField(max_length=255, default='')
+    option_4 = models.CharField(max_length=255, default='')
+    correct_answer = models.CharField(
+        max_length=20,
+        choices=[
+            ('option_1', 'Option 1'),
+            ('option_2', 'Option 2'),
+            ('option_3', 'Option 3'),
+            ('option_4', 'Option 4'),
+        ],
+        default='option_1',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -66,3 +82,28 @@ class Quiz(models.Model):
 
     def __str__(self):
         return f'{self.test_subject.subject} / {self.sub_title.title} / {self.get_level_display()}'
+
+
+class BulkQuestionUpload(models.Model):
+    test_subject = models.ForeignKey(TestSubject, on_delete=models.CASCADE, related_name='bulk_uploads')
+    sub_title = models.ForeignKey(SubTitle, on_delete=models.CASCADE, related_name='bulk_uploads')
+    level = models.CharField(max_length=20, choices=Quiz.LEVEL_CHOICES)
+    json_file = models.FileField(upload_to='bulk_questions/', blank=True, null=True)
+    questions_json = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='Optional pasted JSON array. Use this only for bulk import data.',
+    )
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Bulk Question Upload'
+        verbose_name_plural = 'Bulk Question Uploads'
+
+    def __str__(self):
+        return f'Bulk Upload - {self.test_subject.subject} / {self.sub_title.title} / {self.get_level_display()}'
+
+    def get_level_display(self):
+        return dict(Quiz.LEVEL_CHOICES).get(self.level, self.level)
