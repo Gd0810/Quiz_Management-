@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Redmock | Landing{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+    <div class="rounded-3xl bg-slate-900 p-10 text-white shadow-xl">
+        <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">Mock Test Management</p>
+        <h1 class="mt-4 text-4xl font-bold leading-tight sm:text-5xl">
+            Manage company mock tests and candidate exams in one place.
+        </h1>
+        <p class="mt-5 max-w-2xl text-lg text-slate-300">
+            Create subjects, organize sub titles, add questions one by one or in bulk, and run candidate tests with automatic scoring.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+            <a href="{% url 'dashboard:login' %}" class="rounded-xl bg-emerald-500 px-5 py-3 font-medium text-slate-950">
+                Dashboard Login
+            </a>
+            <a href="{% url 'quiz:start' %}" class="rounded-xl border border-slate-700 px-5 py-3 font-medium text-white">
+                Open Test Form
+            </a>
+        </div>
+    </div>
+
+    <div class="grid gap-4">
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <p class="text-sm text-slate-500">Active Companies</p>
+            <p class="mt-3 text-3xl font-bold">{{ company_count }}</p>
+        </div>
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <p class="text-sm text-slate-500">Subjects</p>
+            <p class="mt-3 text-3xl font-bold">{{ subject_count }}</p>
+        </div>
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <p class="text-sm text-slate-500">Quiz Questions</p>
+            <p class="mt-3 text-3xl font-bold">{{ quiz_count }}</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

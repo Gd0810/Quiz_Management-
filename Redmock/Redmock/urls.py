@@ -19,7 +19,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from dashboard.views import landing_page
+
 urlpatterns = [
+    path('', landing_page, name='landing'),
     path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),
     path('quiz/', include('quiz.urls')),

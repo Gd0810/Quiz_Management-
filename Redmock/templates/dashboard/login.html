@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Login | Redmock{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-md rounded-3xl bg-white p-8 shadow-sm">
+    <div class="mb-6 text-center">
+        <h1 class="text-3xl font-bold">Company Login</h1>
+        <p class="mt-2 text-slate-500">Use the credentials created by the super admin.</p>
+    </div>
+
+    <form method="post" class="space-y-5">
+        {% csrf_token %}
+        {% if error %}
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <div>
+            <label for="email" class="mb-2 block text-sm font-medium text-slate-700">Email</label>
+            <input id="email" name="email" type="email" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900" required>
+        </div>
+
+        <div>
+            <label for="password" class="mb-2 block text-sm font-medium text-slate-700">Password</label>
+            <input id="password" name="password" type="password" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900" required>
+        </div>
+
+        <button type="submit" class="w-full rounded-xl bg-slate-900 px-5 py-3 text-white">Login</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,26 +1,95 @@
 from django.contrib import messages
+from django.contrib.auth.hashers import check_password
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from functools import wraps
 
 from quiz.models import Candidate, CandidateTestAttempt
 
 from .forms import CandidateForm, CandidateTestAttemptForm, QuizForm, SubTitleForm, TestSubjectForm
-from .models import Quiz, SubTitle, TestSubject
+from .models import Company, Quiz, SubTitle, TestSubject
 
 
+def get_logged_in_company(request):
+    company_id = request.session.get('company_id')
+    if not company_id:
+        return None
+    return Company.objects.filter(id=company_id, is_active=True).first()
+
+
+def company_login_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        company = get_logged_in_company(request)
+        if not company:
+            return redirect(f"{reverse('dashboard:login')}?next={request.path}")
+        request.company = company
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def landing_page(request):
+    return render(
+        request,
+        'landing.html',
+        {
+            'company_count': Company.objects.filter(is_active=True).count(),
+            'subject_count': TestSubject.objects.count(),
+            'quiz_count': Quiz.objects.count(),
+        },
+    )
+
+
+def dashboard_login(request):
+    if get_logged_in_company(request):
+        return redirect('dashboard:home')
+
+    error = None
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '').strip()
+        company = Company.objects.filter(email=email, is_active=True).first()
+
+        if not email or not password:
+            error = 'Please enter email and password.'
+        elif not company:
+            error = 'Company account not found.'
+        elif not check_password(password, company.password):
+            error = 'Invalid password.'
+        else:
+            request.session.flush()
+            request.session['company_id'] = company.id
+            request.session.set_expiry(60 * 60 * 8)
+            messages.success(request, f'Welcome back, {company.name}.')
+            return redirect(request.GET.get('next') or 'dashboard:home')
+
+    return render(request, 'dashboard/login.html', {'error': error})
+
+
+def dashboard_logout(request):
+    request.session.flush()
+    messages.success(request, 'You have been logged out.')
+    return redirect('dashboard:login')
+
+
+@company_login_required
 def dashboard_home(request):
+    company = request.company
     context = {
-        'subject_count': TestSubject.objects.count(),
-        'subtitle_count': SubTitle.objects.count(),
-        'quiz_count': Quiz.objects.count(),
-        'candidate_count': Candidate.objects.count(),
-        'attempt_count': CandidateTestAttempt.objects.count(),
-        'subjects': TestSubject.objects.select_related('company').annotate(
+        'subject_count': TestSubject.objects.filter(company=company).count(),
+        'subtitle_count': SubTitle.objects.filter(test_subject__company=company).count(),
+        'quiz_count': Quiz.objects.filter(test_subject__company=company).count(),
+        'candidate_count': Candidate.objects.filter(attempts__company=company).distinct().count(),
+        'attempt_count': CandidateTestAttempt.objects.filter(company=company).count(),
+        'subjects': TestSubject.objects.filter(company=company).select_related('company').annotate(
             quiz_total=Count('quizzes')
         )[:6],
-        'recent_attempts': CandidateTestAttempt.objects.select_related(
+        'recent_attempts': CandidateTestAttempt.objects.filter(company=company).select_related(
             'candidate', 'company'
         )[:8],
+        'company': company,
     }
     return render(request, 'dashboard/home.html', context)
 
@@ -53,8 +122,9 @@ def render_crud_delete(request, *, obj, title, cancel_url):
     )
 
 
+@company_login_required
 def subject_list(request):
-    queryset = TestSubject.objects.select_related('company').all()
+    queryset = TestSubject.objects.filter(company=request.company).select_related('company')
     return render_crud_list(
         request,
         queryset=queryset,
@@ -66,10 +136,13 @@ def subject_list(request):
     )
 
 
+@company_login_required
 def subject_create(request):
     form = TestSubjectForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        subject = form.save(commit=False)
+        subject.company = request.company
+        subject.save()
         messages.success(request, 'Test subject created successfully.')
         return redirect('dashboard:subject_list')
     return render_crud_form(
@@ -80,8 +153,9 @@ def subject_create(request):
     )
 
 
+@company_login_required
 def subject_update(request, pk):
-    subject = get_object_or_404(TestSubject, pk=pk)
+    subject = get_object_or_404(TestSubject, pk=pk, company=request.company)
     form = TestSubjectForm(request.POST or None, instance=subject)
     if request.method == 'POST' and form.is_valid():
         form.save()
@@ -95,8 +169,9 @@ def subject_update(request, pk):
     )
 
 
+@company_login_required
 def subject_delete(request, pk):
-    subject = get_object_or_404(TestSubject, pk=pk)
+    subject = get_object_or_404(TestSubject, pk=pk, company=request.company)
     if request.method == 'POST':
         subject.delete()
         messages.success(request, 'Test subject deleted successfully.')
@@ -109,8 +184,9 @@ def subject_delete(request, pk):
     )
 
 
+@company_login_required
 def subtitle_list(request):
-    queryset = SubTitle.objects.select_related('test_subject', 'test_subject__company').all()
+    queryset = SubTitle.objects.filter(test_subject__company=request.company).select_related('test_subject', 'test_subject__company')
     return render_crud_list(
         request,
         queryset=queryset,
@@ -122,8 +198,9 @@ def subtitle_list(request):
     )
 
 
+@company_login_required
 def subtitle_create(request):
-    form = SubTitleForm(request.POST or None)
+    form = SubTitleForm(request.POST or None, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Sub title created successfully.')
@@ -136,9 +213,10 @@ def subtitle_create(request):
     )
 
 
+@company_login_required
 def subtitle_update(request, pk):
-    subtitle = get_object_or_404(SubTitle, pk=pk)
-    form = SubTitleForm(request.POST or None, instance=subtitle)
+    subtitle = get_object_or_404(SubTitle, pk=pk, test_subject__company=request.company)
+    form = SubTitleForm(request.POST or None, instance=subtitle, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Sub title updated successfully.')
@@ -151,8 +229,9 @@ def subtitle_update(request, pk):
     )
 
 
+@company_login_required
 def subtitle_delete(request, pk):
-    subtitle = get_object_or_404(SubTitle, pk=pk)
+    subtitle = get_object_or_404(SubTitle, pk=pk, test_subject__company=request.company)
     if request.method == 'POST':
         subtitle.delete()
         messages.success(request, 'Sub title deleted successfully.')
@@ -165,8 +244,9 @@ def subtitle_delete(request, pk):
     )
 
 
+@company_login_required
 def quiz_list(request):
-    queryset = Quiz.objects.select_related('test_subject', 'sub_title').all()
+    queryset = Quiz.objects.filter(test_subject__company=request.company).select_related('test_subject', 'sub_title')
     return render_crud_list(
         request,
         queryset=queryset,
@@ -178,8 +258,9 @@ def quiz_list(request):
     )
 
 
+@company_login_required
 def quiz_create(request):
-    form = QuizForm(request.POST or None, request.FILES or None)
+    form = QuizForm(request.POST or None, request.FILES or None, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Quiz question created successfully.')
@@ -192,9 +273,10 @@ def quiz_create(request):
     )
 
 
+@company_login_required
 def quiz_update(request, pk):
-    quiz = get_object_or_404(Quiz, pk=pk)
-    form = QuizForm(request.POST or None, request.FILES or None, instance=quiz)
+    quiz = get_object_or_404(Quiz, pk=pk, test_subject__company=request.company)
+    form = QuizForm(request.POST or None, request.FILES or None, instance=quiz, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Quiz question updated successfully.')
@@ -207,8 +289,9 @@ def quiz_update(request, pk):
     )
 
 
+@company_login_required
 def quiz_delete(request, pk):
-    quiz = get_object_or_404(Quiz, pk=pk)
+    quiz = get_object_or_404(Quiz, pk=pk, test_subject__company=request.company)
     if request.method == 'POST':
         quiz.delete()
         messages.success(request, 'Quiz question deleted successfully.')
@@ -221,6 +304,7 @@ def quiz_delete(request, pk):
     )
 
 
+@company_login_required
 def candidate_list(request):
     queryset = Candidate.objects.all()
     return render_crud_list(
@@ -234,6 +318,7 @@ def candidate_list(request):
     )
 
 
+@company_login_required
 def candidate_create(request):
     form = CandidateForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -248,6 +333,7 @@ def candidate_create(request):
     )
 
 
+@company_login_required
 def candidate_update(request, pk):
     candidate = get_object_or_404(Candidate, pk=pk)
     form = CandidateForm(request.POST or None, instance=candidate)
@@ -263,6 +349,7 @@ def candidate_update(request, pk):
     )
 
 
+@company_login_required
 def candidate_delete(request, pk):
     candidate = get_object_or_404(Candidate, pk=pk)
     if request.method == 'POST':
@@ -277,8 +364,9 @@ def candidate_delete(request, pk):
     )
 
 
+@company_login_required
 def attempt_list(request):
-    queryset = CandidateTestAttempt.objects.select_related('candidate', 'company').all()
+    queryset = CandidateTestAttempt.objects.filter(company=request.company).select_related('candidate', 'company')
     return render_crud_list(
         request,
         queryset=queryset,
@@ -298,8 +386,9 @@ def attempt_list(request):
     )
 
 
+@company_login_required
 def attempt_create(request):
-    form = CandidateTestAttemptForm(request.POST or None)
+    form = CandidateTestAttemptForm(request.POST or None, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Candidate test attempt created successfully.')
@@ -312,9 +401,10 @@ def attempt_create(request):
     )
 
 
+@company_login_required
 def attempt_update(request, pk):
-    attempt = get_object_or_404(CandidateTestAttempt, pk=pk)
-    form = CandidateTestAttemptForm(request.POST or None, instance=attempt)
+    attempt = get_object_or_404(CandidateTestAttempt, pk=pk, company=request.company)
+    form = CandidateTestAttemptForm(request.POST or None, instance=attempt, company=request.company)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Candidate test attempt updated successfully.')
@@ -327,8 +417,9 @@ def attempt_update(request, pk):
     )
 
 
+@company_login_required
 def attempt_delete(request, pk):
-    attempt = get_object_or_404(CandidateTestAttempt, pk=pk)
+    attempt = get_object_or_404(CandidateTestAttempt, pk=pk, company=request.company)
     if request.method == 'POST':
         attempt.delete()
         messages.success(request, 'Candidate test attempt deleted successfully.')
