@@ -59,11 +59,29 @@
     color: var(--c6);
 }
 
-.bp-input-wrap { position: relative; }
+.bp-input-wrap {
+    position: relative;
+}
+.bp-input-wrap .bp-input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--c5);
+    z-index: 1;
+    pointer-events: none;
+    width: auto;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: color .2s ease, transform .2s ease;
+}
 .bp-input,
 .bp-select {
     width: 100%;
-    padding: .8rem 1.1rem;
+    padding: .9rem 1.1rem .9rem 3.5rem;
     border: 1.5px solid var(--c2);
     border-radius: .75rem;
     font-family: 'Poppins', sans-serif;
@@ -71,7 +89,7 @@
     color: var(--c8);
     background: #f6fdff;
     outline: none;
-    transition: border-color .15s, box-shadow .15s, background .15s;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
     -webkit-appearance: none;
     appearance: none;
 }
@@ -435,7 +453,7 @@
 .bp-form-field select,
 .bp-form-field textarea {
     width: 100%;
-    padding: .9rem 1.1rem;
+    padding: .9rem 1.1rem .9rem 3rem;
     border: 1.5px solid var(--c2);
     border-radius: .75rem;
     font-family: 'Poppins', sans-serif;
@@ -452,6 +470,11 @@
     border-color: var(--c4);
     background: #fff;
     box-shadow: 0 0 0 3.5px rgba(0,180,216,.16);
+}
+
+.bp-input-wrap.focused .bp-input-icon {
+    color: var(--c4);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .bp-btn-primary {
@@ -612,7 +635,18 @@
                     {% for field in candidate_form %}
                         <div class="bp-form-field">
                             <label class="bp-label" style="display:block;margin-bottom:.4rem;" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
+                            <div class="bp-input-wrap">
+                                {% if field.name == 'candidate_name' %}
+                                    <iconify-icon icon="fa-solid:user" width="20" height="20" class="bp-input-icon"></iconify-icon>
+                                {% elif field.name == 'candidate_email' %}
+                                    <iconify-icon icon="ic:round-email" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% elif field.name == 'designation_tech' %}
+                                    <iconify-icon icon="boxicons:file-code-filled" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% else %}
+                                    <iconify-icon icon="fa-solid:user" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% endif %}
+                                {{ field }}
+                            </div>
                             {% if field.errors %}
                                 <p style="margin-top:.3rem;font-size:.78rem;color:#dc2626;">{{ field.errors|join:", " }}</p>
                             {% endif %}
@@ -1015,6 +1049,30 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         setupAccordionBehavior();
+        
+        // Set placeholders for candidate form fields
+        var placeholders = {
+            'candidate_name': 'Enter your full name',
+            'candidate_email': 'Enter your email address',
+            'designation_tech': 'Enter your designation'
+        };
+        
+        document.querySelectorAll('#builder-panel .bp-form-field input, #builder-panel .bp-form-field select, #builder-panel .bp-form-field textarea').forEach(function(input) {
+            if (input.name in placeholders) {
+                input.placeholder = placeholders[input.name];
+            }
+            
+            // Add focus/blur for icon color change
+            var wrapper = input.closest('.bp-input-wrap');
+            if (!wrapper) return;
+
+            input.addEventListener('focus', function() {
+                wrapper.classList.add('focused');
+            });
+            input.addEventListener('blur', function() {
+                wrapper.classList.remove('focused');
+            });
+        });
     });
 
     // Global click tracker for all details elements
