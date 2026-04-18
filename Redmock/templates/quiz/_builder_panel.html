@@ -918,6 +918,98 @@
         el.textContent = total;
     };
 
+    // Prevent accordion from closing when clicking checkboxes
+    function setupAccordionBehavior() {
+        console.log("🔧 Setting up accordion behavior...");
+        
+        document.querySelectorAll(".bp-accordion").forEach(function (accordion, accordionIndex) {
+            console.log(`📦 Accordion ${accordionIndex} found`);
+            
+            // Watch for changes to the 'open' attribute
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'open') {
+                        var isOpen = accordion.hasAttribute('open');
+                        console.log(`🔄 Accordion ${accordionIndex} open state changed:`, isOpen);
+                    }
+                });
+            });
+            
+            observer.observe(accordion, { attributes: true });
+            
+            // Prevent any click on the accordion body from closing it
+            var accordionBody = accordion.querySelector(".bp-accordion-body");
+            if (accordionBody) {
+                console.log(`📝 Found accordion body for accordion ${accordionIndex}`);
+                
+                accordionBody.addEventListener("click", function (e) {
+                    console.log(`❌ Stopping propagation on accordion body click`, e.target);
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+                
+                accordionBody.addEventListener("mousedown", function (e) {
+                    console.log(`🖱️ Mousedown on accordion body`, e.target);
+                });
+                
+                accordionBody.addEventListener("mouseup", function (e) {
+                    console.log(`🖱️ Mouseup on accordion body`, e.target);
+                });
+            }
+            
+            // Get all checkboxes and prevent their default behavior
+            var checkboxes = accordion.querySelectorAll('input[type="checkbox"]');
+            console.log(`✅ Found ${checkboxes.length} checkboxes in accordion ${accordionIndex}`);
+            
+            checkboxes.forEach(function(checkbox, cbIndex) {
+                checkbox.addEventListener("change", function (e) {
+                    console.log(`☑️ Checkbox ${cbIndex} changed in accordion ${accordionIndex}`, {
+                        checked: this.checked,
+                        value: this.value
+                    });
+                    
+                    // UPDATE THE COUNTER LIVE
+                    var accordion = this.closest(".bp-accordion");
+                    if (accordion) {
+                        var summary = accordion.querySelector("summary");
+                        var meta = summary ? summary.querySelector(".bp-accordion-meta") : null;
+                        if (meta) {
+                            var checkedCount = accordion.querySelectorAll('input[type="checkbox"]:checked').length;
+                            var parts = meta.textContent.split(" / ");
+                            var totalNeeded = parts[1] ? parts[1].trim() : "?";
+                            meta.textContent = checkedCount + " / " + totalNeeded;
+                            console.log(`📊 Updated counter to: ${checkedCount} / ${totalNeeded}`);
+                        }
+                    }
+                    
+                    // PREVENT change event from bubbling to form (which triggers HTMX)
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                });
+                
+                checkbox.addEventListener("click", function (e) {
+                    console.log(`🖱️ Checkbox ${cbIndex} clicked in accordion ${accordionIndex}`);
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                });
+            });
+            
+            // Also prevent clicks on individual question rows
+            var questionRows = accordion.querySelectorAll(".bp-q-row");
+            console.log(`📄 Found ${questionRows.length} question rows in accordion ${accordionIndex}`);
+            
+            questionRows.forEach(function (row, rowIndex) {
+                row.addEventListener("click", function (e) {
+                    console.log(`🔗 Question row ${rowIndex} clicked in accordion ${accordionIndex}`, e.target.tagName);
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                });
+            });
+        });
+        
+        console.log("✨ Accordion behavior setup complete");
+    }
+
     document.addEventListener("htmx:beforeRequest", function () {
         setProgressBar(true);
     });
@@ -932,10 +1024,31 @@
 
     document.addEventListener("htmx:afterSwap", function (evt) {
         if (evt.detail && evt.detail.target && evt.detail.target.id === "builder-panel") {
+            console.log("🔄 HTMX swap detected, reinitializing accordion behavior");
             refreshCustomTotal();
+            setupAccordionBehavior();
             setProgressBar(false);
         }
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("📄 DOM loaded, initializing accordion behavior");
+        setupAccordionBehavior();
+    });
+
+    // Global click tracker for all details elements
+    document.addEventListener("click", function(e) {
+        var details = e.target.closest("details");
+        if (details && details.classList.contains("bp-accordion")) {
+            var isSummary = e.target.closest("summary");
+            console.log(`🎯 Click on accordion details`, {
+                isSummaryClick: !!isSummary,
+                targetTag: e.target.tagName,
+                targetClass: e.target.className,
+                isOpen: details.hasAttribute("open")
+            });
+        }
+    }, true); // Use capture phase to log all clicks
 
     refreshCustomTotal();
 }());
