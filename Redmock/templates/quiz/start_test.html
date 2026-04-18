@@ -58,7 +58,7 @@
     }
     .rb-logo {
         font-family: 'Poppins', sans-serif;
-        font-size: 1.35rem;
+        font-size: 1.75rem;
         font-weight: 800;
         color: #fff;
         letter-spacing: -.03em;
@@ -135,12 +135,18 @@
         color: #fff;
         box-shadow: 0 0 12px rgba(0,180,216,.5);
     }
+    .rb-step-num--done {
+        background: linear-gradient(135deg, rgba(0,180,216,.35), rgba(0,119,182,.55));
+        color: #fff;
+        border: 1px solid rgba(255,255,255,.15);
+    }
     .rb-step-num--idle {
         background: rgba(255,255,255,.06);
         color: rgba(255,255,255,.3);
         border: 1px solid rgba(255,255,255,.1);
     }
     .rb-step-label { font-size: .8125rem; font-weight: 600; color: rgba(255,255,255,.9); padding-top: .25rem; }
+    .rb-step-label--done { color: rgba(255,255,255,.75); }
     .rb-step-label--idle { color: rgba(255,255,255,.3); }
     .rb-step-desc { font-size: .75rem; color: rgba(173,232,244,.4); margin-top: .2rem; }
 
@@ -207,30 +213,30 @@
     <aside class="rb-sidebar">
         <div class="rb-logo">
             <span class="rb-logo-dot"></span>
-            {{ request.company.name|default:"Company" }}
+            {{ request.company.name|default:"Company"|title }}
         </div>
-        <h1 class="rb-sidebar-title">Mock<br><em>Test</em><br>Builder</h1>
+        <h1 class="rb-sidebar-title">Mock Test Builder</h1>
         <p class="rb-sidebar-sub">Configure your test in steps. No page reloads.</p>
 
         <div class="rb-steps">
             <div class="rb-step">
-                <div class="rb-step-num rb-step-num--active">1</div>
+                <div id="rb-step-num-1" class="rb-step-num rb-step-num--active">1</div>
                 <div>
-                    <p class="rb-step-label">Session Setup</p>
+                    <p id="rb-step-label-1" class="rb-step-label">Session Setup</p>
                     <p class="rb-step-desc">Type, duration and subjects</p>
                 </div>
             </div>
             <div class="rb-step">
-                <div class="rb-step-num rb-step-num--idle">2</div>
+                <div id="rb-step-num-2" class="rb-step-num rb-step-num--idle">2</div>
                 <div>
-                    <p class="rb-step-label rb-step-label--idle">Candidate Info</p>
+                    <p id="rb-step-label-2" class="rb-step-label rb-step-label--idle">Candidate Info</p>
                     <p class="rb-step-desc">Name and details</p>
                 </div>
             </div>
             <div class="rb-step">
-                <div class="rb-step-num rb-step-num--idle">3</div>
+                <div id="rb-step-num-3" class="rb-step-num rb-step-num--idle">3</div>
                 <div>
-                    <p class="rb-step-label rb-step-label--idle">Begin Test</p>
+                    <p id="rb-step-label-3" class="rb-step-label rb-step-label--idle">Begin Test</p>
                     <p class="rb-step-desc">Timed session starts</p>
                 </div>
             </div>
@@ -250,4 +256,50 @@
         </div>
     </main>
 </div>
+<script>
+(function () {
+    "use strict";
+
+    function setStepState(stepNumber, state) {
+        var num = document.getElementById("rb-step-num-" + stepNumber);
+        var label = document.getElementById("rb-step-label-" + stepNumber);
+        if (!num || !label) return;
+
+        num.classList.remove("rb-step-num--active", "rb-step-num--done", "rb-step-num--idle");
+        label.classList.remove("rb-step-label--done", "rb-step-label--idle");
+
+        if (state === "active") {
+            num.classList.add("rb-step-num--active");
+        } else if (state === "done") {
+            num.classList.add("rb-step-num--done");
+            label.classList.add("rb-step-label--done");
+        } else {
+            num.classList.add("rb-step-num--idle");
+            label.classList.add("rb-step-label--idle");
+        }
+    }
+
+    function syncSidebarProgress() {
+        var marker = document.querySelector("#builder-panel [data-current-step]");
+        var currentStep = marker ? marker.getAttribute("data-current-step") : "setup";
+
+        if (currentStep === "candidate") {
+            setStepState(1, "done");
+            setStepState(2, "active");
+            setStepState(3, "idle");
+        } else {
+            setStepState(1, "active");
+            setStepState(2, "idle");
+            setStepState(3, "idle");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", syncSidebarProgress);
+    document.addEventListener("htmx:afterSwap", function (evt) {
+        if (evt.detail && evt.detail.target && evt.detail.target.id === "builder-panel") {
+            syncSidebarProgress();
+        }
+    });
+}());
+</script>
 {% endblock %}
