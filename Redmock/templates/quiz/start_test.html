@@ -3,14 +3,251 @@
 {% block title %}Test Builder | Redmock{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-sm">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold">Mock Test Builder</h1>
-        <p class="mt-2 text-slate-500">Configure the test setup, then move to the candidate form without leaving this page.</p>
-    </div>
+<style>
+    :root {
+        --c0: #caf0f8;
+        --c1: #ade8f4;
+        --c2: #90e0ef;
+        --c3: #48cae4;
+        --c4: #00b4d8;
+        --c5: #0096c7;
+        --c6: #0077b6;
+        --c7: #023e8a;
+        --c8: #03045e;
+        --c9: #02033a;
+    }
 
-    <div id="builder-panel">
-        {% include "quiz/_builder_panel.html" %}
-    </div>
-</section>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { background: var(--c9); font-family: 'Poppins', sans-serif; }
+
+    .rb-shell {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        grid-template-rows: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+
+    .rb-sidebar {
+        background: var(--c8);
+        display: flex;
+        flex-direction: column;
+        padding: 2.5rem 2rem;
+        position: relative;
+        overflow: hidden;
+        z-index: 2;
+    }
+    .rb-sidebar::before {
+        content: '';
+        position: absolute;
+        bottom: -80px; right: -80px;
+        width: 260px; height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,180,216,.25) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .rb-sidebar::after {
+        content: '';
+        position: absolute;
+        top: 40px; left: -60px;
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(72,202,228,.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .rb-logo {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -.03em;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 1;
+    }
+    .rb-logo-dot {
+        width: .55rem; height: .55rem;
+        border-radius: 50%;
+        background: var(--c3);
+        flex-shrink: 0;
+        box-shadow: 0 0 8px var(--c4);
+    }
+    .rb-sidebar-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.15;
+        letter-spacing: -.04em;
+        position: relative;
+        z-index: 1;
+    }
+    .rb-sidebar-title em {
+        font-style: normal;
+        background: linear-gradient(90deg, var(--c3), var(--c4));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .rb-sidebar-sub {
+        margin-top: 1rem;
+        font-size: .875rem;
+        color: rgba(173,232,244,.6);
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+    .rb-steps {
+        margin-top: 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        position: relative;
+        z-index: 1;
+    }
+    .rb-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-bottom: 2rem;
+        position: relative;
+    }
+    .rb-step:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 1rem; top: 2rem; bottom: 0;
+        width: 1px;
+        background: rgba(144,224,239,.2);
+    }
+    .rb-step-num {
+        width: 2rem; height: 2rem;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .75rem; font-weight: 700;
+        flex-shrink: 0;
+    }
+    .rb-step-num--active {
+        background: linear-gradient(135deg, var(--c4), var(--c6));
+        color: #fff;
+        box-shadow: 0 0 12px rgba(0,180,216,.5);
+    }
+    .rb-step-num--idle {
+        background: rgba(255,255,255,.06);
+        color: rgba(255,255,255,.3);
+        border: 1px solid rgba(255,255,255,.1);
+    }
+    .rb-step-label { font-size: .8125rem; font-weight: 600; color: rgba(255,255,255,.9); padding-top: .25rem; }
+    .rb-step-label--idle { color: rgba(255,255,255,.3); }
+    .rb-step-desc { font-size: .75rem; color: rgba(173,232,244,.4); margin-top: .2rem; }
+
+    .rb-main {
+        background: linear-gradient(160deg, #f0fafd 0%, #e3f6fc 50%, #d6f1fa 100%);
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .rb-topbar {
+        position: sticky; top: 0;
+        background: rgba(240,250,253,.9);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(0,180,216,.15);
+        padding: .875rem 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 10;
+    }
+    .rb-topbar-crumb {
+        font-size: .8125rem; font-weight: 600;
+        color: var(--c6);
+        display: flex; align-items: center; gap: .5rem;
+    }
+    .rb-topbar-crumb span { color: var(--c4); }
+    .rb-content { flex: 1; padding: 2.5rem; }
+
+    @media (max-width: 900px) {
+        .rb-shell { grid-template-columns: 220px 1fr; }
+        .rb-sidebar { padding: 1.5rem 1.25rem; }
+        .rb-sidebar-title { font-size: 1.35rem; }
+        .rb-content { padding: 1.5rem; }
+        .rb-topbar { padding: .75rem 1.25rem; }
+    }
+
+    @media (max-width: 640px) {
+        .rb-shell {
+            display: block;
+            width: 100%;
+            min-height: auto;
+        }
+        .rb-sidebar {
+            display: none;
+        }
+        .rb-main {
+            min-height: auto;
+        }
+        .rb-topbar {
+            padding: .85rem 1rem;
+        }
+        .rb-topbar-crumb {
+            font-size: .75rem;
+        }
+        .rb-content {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="rb-shell">
+    <aside class="rb-sidebar">
+        <div class="rb-logo">
+            <span class="rb-logo-dot"></span>
+            {{ request.company.name|default:"Company" }}
+        </div>
+        <h1 class="rb-sidebar-title">Mock<br><em>Test</em><br>Builder</h1>
+        <p class="rb-sidebar-sub">Configure your test in steps. No page reloads.</p>
+
+        <div class="rb-steps">
+            <div class="rb-step">
+                <div class="rb-step-num rb-step-num--active">1</div>
+                <div>
+                    <p class="rb-step-label">Session Setup</p>
+                    <p class="rb-step-desc">Type, duration and subjects</p>
+                </div>
+            </div>
+            <div class="rb-step">
+                <div class="rb-step-num rb-step-num--idle">2</div>
+                <div>
+                    <p class="rb-step-label rb-step-label--idle">Candidate Info</p>
+                    <p class="rb-step-desc">Name and details</p>
+                </div>
+            </div>
+            <div class="rb-step">
+                <div class="rb-step-num rb-step-num--idle">3</div>
+                <div>
+                    <p class="rb-step-label rb-step-label--idle">Begin Test</p>
+                    <p class="rb-step-desc">Timed session starts</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="rb-main">
+        <div class="rb-topbar">
+            <div class="rb-topbar-crumb">
+                Test Builder <span>&rsaquo;</span> Configure Session
+            </div>
+        </div>
+        <div class="rb-content">
+            <div id="builder-panel">
+                {% include "quiz/_builder_panel.html" %}
+            </div>
+        </div>
+    </main>
+</div>
 {% endblock %}

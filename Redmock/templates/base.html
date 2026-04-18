@@ -5,10 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Redmock{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/tailwind-build.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
+<body class="min-h-screen bg-slate-100 text-slate-900" style="font-family: 'Poppins', sans-serif;">
     <div class="min-h-screen">
         <header class="bg-slate-900 text-white shadow">
             <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
