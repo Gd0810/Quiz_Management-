@@ -99,6 +99,26 @@ def _build_default_allocations(question_count, subject_configs, available_counts
     return allocations
 
 
+def _available_questions_for_allocation(company, subject, subtitle, level):
+    queryset = Quiz.objects.filter(
+        test_subject__company=company,
+        test_subject=subject,
+        level=level,
+    )
+    if subtitle is None:
+        queryset = queryset.filter(sub_title__isnull=True)
+    else:
+        queryset = queryset.filter(sub_title=subtitle)
+
+    return [
+        {
+            'id': question.id,
+            'label': question.question[:140],
+        }
+        for question in queryset.order_by('id')
+    ]
+
+
 def _build_setup_state(request, company, data=None):
     data = data or request.POST
     subject_map = _subject_map(company)
@@ -194,6 +214,14 @@ def _build_setup_state(request, company, data=None):
                             'requested_count': requested_count,
                             'available_count': available_count,
                             'field_name': field_name,
+                            'question_select_field': f'question_select_{config["subject"].id}_{subtitle.id if subtitle else 0}',
+                            'available_questions': _available_questions_for_allocation(
+                                company,
+                                config['subject'],
+                                subtitle,
+                                config['level'],
+                            ),
+                            'selected_question_ids': [],
                         }
                     )
                     allocation_total += requested_count
@@ -204,6 +232,36 @@ def _build_setup_state(request, company, data=None):
                 )
         else:
             allocations = default_allocations
+
+    for allocation in allocations:
+        if 'question_select_field' not in allocation:
+            allocation['question_select_field'] = (
+                f'question_select_{allocation["subject"].id}_{allocation["subtitle"].id if allocation["subtitle"] else 0}'
+            )
+            allocation['available_questions'] = _available_questions_for_allocation(
+                company,
+                allocation['subject'],
+                allocation['subtitle'],
+                allocation['level'],
+            )
+            allocation['selected_question_ids'] = []
+
+        selected_question_ids = [
+            _parse_positive_int(value)
+            for value in data.getlist(allocation['question_select_field'])
+            if _parse_positive_int(value)
+        ]
+        valid_question_ids = {question['id'] for question in allocation['available_questions']}
+        allocation['selected_question_ids'] = [
+            question_id for question_id in selected_question_ids if question_id in valid_question_ids
+        ]
+
+        if allocation['selected_question_ids'] and len(allocation['selected_question_ids']) != allocation['requested_count']:
+            errors.append(
+                f'{allocation["subject"].subject} / {(allocation["subtitle"].title if allocation["subtitle"] else "General")} '
+                f'must have exactly {allocation["requested_count"]} chosen questions. '
+                f'Current chosen questions: {len(allocation["selected_question_ids"])}.'
+            )
 
     for allocation in allocations:
         if allocation['requested_count'] > allocation['available_count']:
@@ -273,6 +331,14 @@ def _select_question_ids(company, allocations):
     for allocation in allocations:
         if allocation['requested_count'] <= 0:
             continue
+        if allocation['selected_question_ids']:
+            if len(allocation['selected_question_ids']) != allocation['requested_count']:
+                raise ValueError(
+                    f'{allocation["subject"].subject} / {(allocation["subtitle"].title if allocation["subtitle"] else "General")} '
+                    f'must have exactly {allocation["requested_count"]} chosen questions.'
+                )
+            question_ids.extend(allocation['selected_question_ids'])
+            continue
         queryset = Quiz.objects.filter(
             test_subject__company=company,
             test_subject=allocation['subject'],
@@ -312,6 +378,7 @@ def _serialize_setup(state, question_ids):
                 'subtitle_name': allocation['subtitle'].title if allocation['subtitle'] else 'General',
                 'level': allocation['level'],
                 'requested_count': allocation['requested_count'],
+                'selected_question_ids': allocation['selected_question_ids'],
             }
             for allocation in state['allocations']
             if allocation['requested_count'] > 0
@@ -415,6 +482,11 @@ def setup_back(request):
                 if allocation['subtitle_id'] is not None:
                     post_data.appendlist('single_subtitles', str(allocation['subtitle_id']))
                 post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}'] = str(allocation['requested_count'])
+                for question_id in allocation.get('selected_question_ids', []):
+                    post_data.appendlist(
+                        f'question_select_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}',
+                        str(question_id),
+                    )
         else:
             for subject_id in pending_setup['selected_subjects']:
                 post_data.appendlist('multi_subjects', str(subject_id))
@@ -426,6 +498,11 @@ def setup_back(request):
                 if allocation['subtitle_id'] is not None:
                     post_data.appendlist(f'multi_subtitles_{allocation["subject_id"]}', str(allocation['subtitle_id']))
                 post_data[f'custom_count_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}'] = str(allocation['requested_count'])
+                for question_id in allocation.get('selected_question_ids', []):
+                    post_data.appendlist(
+                        f'question_select_{allocation["subject_id"]}_{allocation["subtitle_id"] or 0}',
+                        str(question_id),
+                    )
 
     state = _build_setup_state(request, request.company, data=post_data)
     return render(

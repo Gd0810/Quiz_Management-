@@ -255,6 +255,30 @@
                                                         +
                                                     </button>
                                                 </div>
+                                                <details class="mt-4 rounded-xl border border-slate-200 bg-slate-50">
+                                                    <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700">
+                                                        Choose Your Own Questions
+                                                        <span class="ml-2 text-xs text-slate-500">
+                                                            {{ allocation.selected_question_ids|length }} selected / {{ allocation.requested_count }} needed
+                                                        </span>
+                                                    </summary>
+                                                    <div class="max-h-72 space-y-3 overflow-y-auto border-t border-slate-200 px-4 py-4">
+                                                        {% for question in allocation.available_questions %}
+                                                            <label class="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="{{ allocation.question_select_field }}"
+                                                                    value="{{ question.id }}"
+                                                                    {% if question.id in allocation.selected_question_ids %}checked{% endif %}
+                                                                    class="mt-1"
+                                                                >
+                                                                <span class="text-sm text-slate-700">{{ question.label }}</span>
+                                                            </label>
+                                                        {% empty %}
+                                                            <p class="text-sm text-slate-500">No available questions found for this selection.</p>
+                                                        {% endfor %}
+                                                    </div>
+                                                </details>
                                             {% else %}
                                                 <p class="mt-3 text-sm text-slate-700">{{ allocation.requested_count }} questions will be used by default.</p>
                                             {% endif %}
