@@ -610,6 +610,7 @@
                 hx-post="{% url 'quiz:setup_back' %}"
                 hx-target="#builder-panel"
                 hx-swap="outerHTML"
+                hx-include="[name=csrfmiddlewaretoken]"
                 class="bp-btn-ghost"
             >← Back to Setup</button>
         </div>

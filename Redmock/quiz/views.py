@@ -464,7 +464,6 @@ def setup_next(request):
 @company_login_required
 def setup_back(request):
     pending_setup = request.session.get(PENDING_TEST_SETUP_SESSION_KEY)
-    request.session.pop(PENDING_TEST_SETUP_SESSION_KEY, None)
     post_data = request.POST.copy()
 
     if pending_setup:
