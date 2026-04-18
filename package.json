@@ -1,0 +1,27 @@
+{
+  "name": "mock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:tailwind": "node ./node_modules/@tailwindcss/cli/dist/index.mjs -i ./src/tailwind-report.css -o ./Redmock/static/css/tailwind-build.css --minify",
+    "watch:tailwind": "node ./node_modules/@tailwindcss/cli/dist/index.mjs -i ./src/tailwind-report.css -o ./Redmock/static/css/tailwind-build.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gd0810/Quiz_Management-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Gd0810/Quiz_Management-/issues"
+  },
+  "homepage": "https://github.com/Gd0810/Quiz_Management-#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2"
+  }
+}
