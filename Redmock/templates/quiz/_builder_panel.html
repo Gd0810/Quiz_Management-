@@ -252,10 +252,24 @@
     display: flex; align-items: flex-start; gap: .625rem;
     padding: .625rem .75rem; border: 1.5px solid var(--c1); border-radius: .625rem;
     background: #f6fdff; cursor: pointer; transition: border-color .12s, background .12s;
+    position: relative;
 }
 .bp-q-row:hover { border-color: var(--c3); background: #edfafe; }
 .bp-q-row input[type="checkbox"] { accent-color: var(--c5); flex-shrink: 0; margin-top: .15rem; width: 1rem; height: 1rem; }
 .bp-q-text { font-size: .8125rem; color: var(--c8); line-height: 1.4; }
+.bp-q-image-icon {
+    position: absolute;
+    right: .75rem;
+    bottom: .75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c5);
+}
+.bp-q-image-icon iconify-icon {
+    width: 16px;
+    height: 16px;
+}
 
 .bp-info-bar {
     display: flex; align-items: center; justify-content: space-between;
@@ -657,6 +671,11 @@
                                                 <label class="bp-q-row">
                                                     <input type="checkbox" name="{{ allocation.question_select_field }}" value="{{ question.id }}" {% if question.id in allocation.selected_question_ids %}checked{% endif %}>
                                                     <span class="bp-q-text">{{ question.label }}</span>
+                                                    {% if question.has_image %}
+                                                        <span class="bp-q-image-icon" title="Question has image">
+                                                            <iconify-icon icon="rivet-icons:image" width="16" height="16"></iconify-icon>
+                                                        </span>
+                                                    {% endif %}
                                                 </label>
                                             {% empty %}
                                                 <p style="font-size:.8125rem;color:var(--c4);padding:.5rem 0;">No questions available.</p>

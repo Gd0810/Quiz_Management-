@@ -114,6 +114,7 @@ def _available_questions_for_allocation(company, subject, subtitle, level):
         {
             'id': question.id,
             'label': question.question[:140],
+            'has_image': bool(question.question_image),
         }
         for question in queryset.order_by('id')
     ]
