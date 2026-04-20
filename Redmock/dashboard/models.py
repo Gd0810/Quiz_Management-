@@ -24,6 +24,7 @@ class Company(models.Model):
 class TestSubject(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='subjects')
     subject = models.CharField(max_length=150)
+    subject_svg = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
