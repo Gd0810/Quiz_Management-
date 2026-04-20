@@ -16,16 +16,8 @@
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900" style="font-family: 'Poppins', sans-serif;">
     <div class="min-h-screen">
+        {% include 'toaster.html' %}
         <main class="mx-auto max-w-7xl px-4 py-8">
-            {% if messages %}
-                <div class="mb-6 space-y-2">
-                    {% for message in messages %}
-                        <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
             {% block content %}{% endblock %}
         </main>
     </div>
