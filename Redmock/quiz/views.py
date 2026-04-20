@@ -396,9 +396,16 @@ def _candidate_form_context(request, company, form=None):
     if form is None:
         form = CandidateDetailsForm()
 
+    # Build a name → svg lookup from live subjects
+    from dashboard.models import TestSubject
+    svg_by_name = {
+        s.subject: s.subject_svg or ''
+        for s in TestSubject.objects.filter(company=company).only('subject', 'subject_svg')
+    }
+
     summary = {}
     for allocation in pending_setup['allocations']:
-        key = (allocation['subject_name'], allocation['level'])
+        key = (allocation['subject_name'], allocation['level'], svg_by_name.get(allocation['subject_name'], ''))
         summary.setdefault(key, []).append(allocation)
 
     return {
