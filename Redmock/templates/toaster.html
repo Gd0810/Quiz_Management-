@@ -35,161 +35,196 @@
     pointer-events: none;
 }
 .toast__icon {
-    position: relative;
-    z-index: 1;
-    width: 2.4rem;
-    height: 2.4rem;
-    min-width: 2.4rem;
+    position: relative; z-index: 1;
+    width: 2.4rem; height: 2.4rem; min-width: 2.4rem;
     border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     background: rgba(14, 165, 233, 0.12);
     color: #0f172a;
     font-size: 1.2rem;
 }
-.toast__content {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    gap: 0.25rem;
-}
-.toast__title {
-    font-weight: 700;
-    color: #0f172a;
-    font-size: 0.97rem;
-}
-.toast__message {
-    font-size: 0.95rem;
-    color: rgba(15, 23, 42, 0.82);
-    line-height: 1.45;
-}
+.toast__content { position: relative; z-index: 1; display: grid; gap: 0.25rem; }
+.toast__title   { font-weight: 700; color: #0f172a; font-size: 0.97rem; }
+.toast__message { font-size: 0.95rem; color: rgba(15,23,42,0.82); line-height: 1.45; }
 .toast__close {
-    position: relative;
-    z-index: 1;
-    border: none;
-    background: transparent;
-    color: rgba(15, 23, 42, 0.65);
-    cursor: pointer;
-    padding: 0.1rem;
-    border-radius: 999px;
-    transition: transform 0.2s ease, color 0.2s ease;
+    position: relative; z-index: 1;
+    border: none; background: transparent;
+    color: rgba(15,23,42,0.65); cursor: pointer;
+    padding: 0.1rem; border-radius: 999px;
+    transition: transform .2s ease, color .2s ease;
     font-size: 1.1rem;
 }
-.toast__close:hover {
-    transform: scale(1.08);
-    color: rgba(15, 23, 42, 0.92);
-}
-.toast--success { border-color: rgba(16, 185, 129, 0.35); }
-.toast--warning { border-color: rgba(234, 179, 8, 0.35); }
-.toast--error { border-color: rgba(239, 68, 68, 0.35); }
-.toast--info { border-color: rgba(59, 130, 246, 0.35); }
-.toast--loading { border-color: rgba(56, 189, 248, 0.45); }
-.toast--success .toast__icon { background: rgba(16, 185, 129, 0.16); color: #047857; }
-.toast--warning .toast__icon { background: rgba(234, 179, 8, 0.16); color: #92400e; }
-.toast--error .toast__icon { background: rgba(239, 68, 68, 0.16); color: #991b1b; }
-.toast--info .toast__icon { background: rgba(59, 130, 246, 0.16); color: #1d4ed8; }
-.toast--loading .toast__icon { background: rgba(56, 189, 248, 0.16); color: #0ea5e9; }
+.toast__close:hover { transform: scale(1.08); color: rgba(15,23,42,0.92); }
+.toast--success { border-color: rgba(16,185,129,0.35); }
+.toast--warning { border-color: rgba(234,179,8,0.35); }
+.toast--error   { border-color: rgba(239,68,68,0.35); }
+.toast--info    { border-color: rgba(59,130,246,0.35); }
+.toast--loading { border-color: rgba(56,189,248,0.45); }
+.toast--success .toast__icon { background: rgba(16,185,129,0.16); color: #047857; }
+.toast--warning .toast__icon { background: rgba(234,179,8,0.16);  color: #92400e; }
+.toast--error   .toast__icon { background: rgba(239,68,68,0.16);  color: #991b1b; }
+.toast--info    .toast__icon { background: rgba(59,130,246,0.16); color: #1d4ed8; }
+.toast--loading .toast__icon { background: rgba(56,189,248,0.16); color: #0ea5e9; }
 .toast--loading .toast__ring {
-    height: 1.75rem;
-    width: 1.75rem;
-    border: 3px solid rgba(14, 165, 233, 0.35);
-    border-top-color: rgba(56, 189, 248, 0.85);
+    height: 1.75rem; width: 1.75rem;
+    border: 3px solid rgba(14,165,233,0.35);
+    border-top-color: rgba(56,189,248,0.85);
     border-radius: 50%;
     animation: toast-spin 1s linear infinite;
 }
 @keyframes toast-slide-in {
     from { opacity: 0; transform: translateX(16px); }
-    to { opacity: 1; transform: translateX(0); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 @keyframes toast-fade-out {
     from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 0; transform: translateX(16px); }
 }
-@keyframes toast-spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes toast-spin { to { transform: rotate(360deg); } }
 </style>
 
 <script>
 (function () {
+    "use strict";
+
     var container = document.getElementById('toast-container');
     if (!container) return;
 
-    function getToastType(tags) {
+    /* ── helpers ── */
+    function getType(tags) {
         if (!tags) return 'info';
-        tags = tags.split(' ');
-        if (tags.indexOf('success') !== -1) return 'success';
-        if (tags.indexOf('warning') !== -1) return 'warning';
-        if (tags.indexOf('error') !== -1 || tags.indexOf('danger') !== -1) return 'error';
-        if (tags.indexOf('loading') !== -1) return 'loading';
+        var t = String(tags).split(' ');
+        if (t.indexOf('success') !== -1) return 'success';
+        if (t.indexOf('warning') !== -1) return 'warning';
+        if (t.indexOf('error')   !== -1 || t.indexOf('danger') !== -1) return 'error';
+        if (t.indexOf('loading') !== -1) return 'loading';
         return 'info';
     }
 
+    function iconFor(type) {
+        var icons = {
+            success: 'ic:round-check-circle',
+            warning: 'ic:round-warning',
+            error:   'ic:round-error',
+            info:    'ic:round-info',
+            loading: null
+        };
+        return icons[type] || icons.info;
+    }
+
+    function removeToast(el) {
+        if (!el || !el.parentNode) return;
+        el.style.animation = 'toast-fade-out 0.24s ease forwards';
+        setTimeout(function () { el.parentNode && el.parentNode.removeChild(el); }, 240);
+    }
+
     function createToast(type, title, message, duration) {
-        duration = duration || (type === 'loading' ? 0 : 4500);
+        type     = type    || 'info';
+        duration = (duration !== undefined) ? duration : (type === 'loading' ? 0 : 4500);
+
         var toast = document.createElement('article');
         toast.className = 'toast toast--' + type;
 
+        /* icon */
         var iconEl = document.createElement('span');
         iconEl.className = 'toast__icon';
-        if (type === 'success') {
-            iconEl.innerHTML = '<iconify-icon icon="ic:round-check-circle" width="20" height="20"></iconify-icon>';
-        } else if (type === 'warning') {
-            iconEl.innerHTML = '<iconify-icon icon="ic:round-warning" width="20" height="20"></iconify-icon>';
-        } else if (type === 'error') {
-            iconEl.innerHTML = '<iconify-icon icon="ic:round-error" width="20" height="20"></iconify-icon>';
-        } else if (type === 'loading') {
+        if (type === 'loading') {
             iconEl.innerHTML = '<span class="toast__ring"></span>';
         } else {
-            iconEl.innerHTML = '<iconify-icon icon="ic:round-info" width="20" height="20"></iconify-icon>';
+            iconEl.innerHTML = '<iconify-icon icon="' + iconFor(type) + '" width="20" height="20"></iconify-icon>';
         }
 
-        var content = document.createElement('div');
+        /* content */
+        var content  = document.createElement('div');
         content.className = 'toast__content';
-        var titleEl = document.createElement('p');
-        titleEl.className = 'toast__title';
+        var titleEl  = document.createElement('p');
+        titleEl.className   = 'toast__title';
         titleEl.textContent = title || (type.charAt(0).toUpperCase() + type.slice(1));
-        var messageEl = document.createElement('p');
-        messageEl.className = 'toast__message';
-        messageEl.textContent = message || '';
         content.appendChild(titleEl);
-        if (message) content.appendChild(messageEl);
+        if (message) {
+            var msgEl = document.createElement('p');
+            msgEl.className   = 'toast__message';
+            msgEl.textContent = message;
+            content.appendChild(msgEl);
+        }
 
-        var closeButton = document.createElement('button');
-        closeButton.className = 'toast__close';
-        closeButton.type = 'button';
-        closeButton.innerHTML = '<iconify-icon icon="ic:round-close" width="18" height="18"></iconify-icon>';
-        closeButton.addEventListener('click', function () { removeToast(toast); });
+        /* close */
+        var closeBtn = document.createElement('button');
+        closeBtn.className = 'toast__close';
+        closeBtn.type      = 'button';
+        closeBtn.innerHTML = '<iconify-icon icon="ic:round-close" width="18" height="18"></iconify-icon>';
+        closeBtn.addEventListener('click', function () { removeToast(toast); });
 
         toast.appendChild(iconEl);
         toast.appendChild(content);
-        toast.appendChild(closeButton);
+        toast.appendChild(closeBtn);
         container.appendChild(toast);
 
         if (duration > 0) {
-            window.setTimeout(function () { removeToast(toast); }, duration);
+            setTimeout(function () { removeToast(toast); }, duration);
         }
         return toast;
     }
 
-    function removeToast(toast) {
-        if (!toast) return;
-        toast.style.animation = 'toast-fade-out 0.24s ease forwards';
-        window.setTimeout(function () {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 240);
+    /*
+     * ── THE FIX ────────────────────────────────────────────────────────────
+     *
+     * Root cause of the one-swap-late bug:
+     *
+     *   hx-swap="outerHTML" replaces the TARGET element itself.
+     *   After the swap, evt.detail.target points to the OLD (now detached)
+     *   node — the new content is already live in the DOM as a sibling/
+     *   replacement.  So scanning evt.detail.target finds NOTHING (the node
+     *   was replaced), and the next swap scans the then-current DOM which
+     *   still holds the .toast-data-holder from the PREVIOUS response.
+     *
+     * Fix: always scan `document` (the live DOM) and immediately remove every
+     *   .toast-data element after processing so it can never fire twice.
+     *   Use htmx:afterSettle (fires after CSS transitions settle) instead of
+     *   htmx:afterSwap so the new nodes are guaranteed to be in the DOM.
+     * ────────────────────────────────────────────────────────────────────── */
+    function drainToastData() {
+        document.querySelectorAll('.toast-data').forEach(function (el) {
+            var level   = el.dataset.toastLevel  || 'info';
+            var title   = el.dataset.toastTitle  || (level.charAt(0).toUpperCase() + level.slice(1));
+            var message = el.textContent.trim();
+            /* Remove BEFORE showing — prevents double-fire if drainToastData
+               is called again before the element is gone from the DOM.       */
+            el.parentNode && el.parentNode.removeChild(el);
+            if (message) {
+                createToast(level, title, message);
+            }
+        });
     }
 
-    window.showToast = function (type, title, message, duration) {
-        return createToast(type, title, message, duration);
-    };
-    window.toastSuccess = function (title, message, duration) { return createToast('success', title, message, duration); };
-    window.toastWarning = function (title, message, duration) { return createToast('warning', title, message, duration); };
-    window.toastError = function (title, message, duration) { return createToast('error', title, message, duration); };
-    window.toastInfo = function (title, message, duration) { return createToast('info', title, message, duration); };
-    window.toastLoading = function (title, message) { return createToast('loading', title, message, 0); };
-    window.toastDone = function (toast, title, message, duration) {
+    /* Use htmx:afterSettle — new DOM is fully in place, no timing race */
+    document.addEventListener('htmx:afterSettle', function () {
+        drainToastData();
+    });
+
+    /* Also drain on initial page load for server-rendered errors */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', drainToastData);
+    } else {
+        drainToastData();
+    }
+
+    /* ── Django messages (server-side, rendered into the template) ── */
+    var djangoMessages = [
+        {% for message in messages %}
+        { level: getType('{{ message.tags }}'), title: '{{ message.tags|default:"Info"|escapejs }}', content: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    djangoMessages.forEach(function (m) { createToast(m.level, m.title, m.content); });
+
+    /* ── Public API ── */
+    window.showToast    = createToast;
+    window.toastSuccess = function (t, m, d) { return createToast('success', t, m, d); };
+    window.toastWarning = function (t, m, d) { return createToast('warning', t, m, d); };
+    window.toastError   = function (t, m, d) { return createToast('error',   t, m, d); };
+    window.toastInfo    = function (t, m, d) { return createToast('info',    t, m, d); };
+    window.toastLoading = function (t, m)    { return createToast('loading', t, m, 0); };
+    window.toastDone    = function (toast, title, message, duration) {
         if (!toast) return;
         toast.className = 'toast toast--success';
         toast.querySelector('.toast__title').textContent = title || 'Success';
@@ -200,22 +235,10 @@
             toast.querySelector('.toast__content').appendChild(msgEl);
         }
         msgEl.textContent = message || '';
-        toast.querySelector('.toast__icon').innerHTML = '<iconify-icon icon="ic:round-check-circle" width="20" height="20"></iconify-icon>';
-        if (duration !== 0) { window.setTimeout(function () { removeToast(toast); }, duration || 2200); }
+        toast.querySelector('.toast__icon').innerHTML =
+            '<iconify-icon icon="ic:round-check-circle" width="20" height="20"></iconify-icon>';
+        var d = (duration !== undefined) ? duration : 2200;
+        if (d !== 0) { setTimeout(function () { removeToast(toast); }, d); }
     };
-
-    var djangoMessages = [
-        {% for message in messages %}
-        {
-            level: getToastType('{{ message.tags }}'),
-            title: '{{ message.tags|default:"Info"|escapejs }}',
-            content: '{{ message|escapejs }}'
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    djangoMessages.forEach(function (item) {
-        createToast(item.level, item.title, item.content);
-    });
-})();
+}());
 </script>

@@ -59,22 +59,15 @@
     color: var(--c6);
 }
 
-.bp-input-wrap {
-    position: relative;
-}
+.bp-input-wrap { position: relative; }
 .bp-input-wrap .bp-input-icon {
     position: absolute;
-    left: 1rem;
-    top: 50%;
+    left: 1rem; top: 50%;
     transform: translateY(-50%);
     color: var(--c5);
     z-index: 1;
     pointer-events: none;
-    width: auto;
-    height: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     font-size: 1rem;
     transition: color .2s ease, transform .2s ease;
 }
@@ -89,9 +82,8 @@
     color: var(--c8);
     background: #f6fdff;
     outline: none;
-    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
-    -webkit-appearance: none;
-    appearance: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    -webkit-appearance: none; appearance: none;
 }
 .bp-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%230096c7' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -112,19 +104,15 @@
     background: var(--c0);
     border: 1.5px solid var(--c2);
     border-radius: .875rem;
-    padding: .25rem;
-    gap: .25rem;
+    padding: .25rem; gap: .25rem;
 }
 .bp-toggle-opt { display: none; }
 .bp-toggle-lbl {
-    flex: 1;
-    text-align: center;
+    flex: 1; text-align: center;
     padding: .625rem 1rem;
     border-radius: .625rem;
-    font-size: .875rem;
-    font-weight: 600;
-    color: var(--c6);
-    cursor: pointer;
+    font-size: .875rem; font-weight: 600;
+    color: var(--c6); cursor: pointer;
     transition: background .18s, color .18s, box-shadow .18s;
     user-select: none;
 }
@@ -135,9 +123,7 @@
 }
 
 .bp-switch-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     padding: .875rem 1.1rem;
     background: #f6fdff;
     border: 1.5px solid var(--c2);
@@ -148,27 +134,18 @@
 .bp-switch-wrap:hover { border-color: var(--c4); background: #edfafe; }
 .bp-switch-text { font-size: .875rem; font-weight: 600; color: var(--c7); }
 .bp-switch-desc { font-size: .75rem; color: var(--c5); margin-top: .1rem; }
-.bp-switch {
-    position: relative;
-    width: 2.75rem; height: 1.5rem;
-    flex-shrink: 0;
-}
+.bp-switch { position: relative; width: 2.75rem; height: 1.5rem; flex-shrink: 0; }
 .bp-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .bp-switch-track {
     position: absolute; inset: 0;
-    background: var(--c2);
-    border-radius: 999px;
-    transition: background .2s;
-    cursor: pointer;
+    background: var(--c2); border-radius: 999px;
+    transition: background .2s; cursor: pointer;
 }
 .bp-switch-track::after {
     content: '';
-    position: absolute;
-    left: .2rem; top: .2rem;
-    width: 1.1rem; height: 1.1rem;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    position: absolute; left: .2rem; top: .2rem;
+    width: 1.1rem; height: 1.1rem; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
     transition: transform .2s;
 }
 .bp-switch input:checked ~ .bp-switch-track { background: var(--c5); }
@@ -181,272 +158,128 @@
 }
 .bp-subject-opt { display: none; }
 .bp-subject-card {
-    display: flex;
-    align-items: center;
-    gap: .625rem;
+    display: flex; align-items: center; gap: .625rem;
     padding: .75rem 1rem;
-    border: 1.5px solid var(--c1);
-    border-radius: .75rem;
-    background: #f6fdff;
-    cursor: pointer;
-    font-size: .875rem;
-    font-weight: 500;
-    color: var(--c7);
+    border: 1.5px solid var(--c1); border-radius: .75rem;
+    background: #f6fdff; cursor: pointer;
+    font-size: .875rem; font-weight: 500; color: var(--c7);
     transition: border-color .15s, background .15s, box-shadow .15s;
     user-select: none;
 }
 .bp-subject-card::before {
-    content: '';
-    width: 1rem; height: 1rem;
-    border-radius: .25rem;
-    border: 1.5px solid var(--c3);
-    flex-shrink: 0;
-    background: #fff;
+    content: ''; width: 1rem; height: 1rem;
+    border-radius: .25rem; border: 1.5px solid var(--c3);
+    flex-shrink: 0; background: #fff;
     transition: background .15s, border-color .15s;
 }
 .bp-subject-opt:checked + .bp-subject-card {
     border-color: var(--c4);
     background: linear-gradient(135deg, rgba(0,180,216,.08), rgba(0,150,199,.05));
-    color: var(--c7);
     box-shadow: 0 2px 8px rgba(0,150,199,.15);
     font-weight: 700;
 }
 .bp-subject-opt:checked + .bp-subject-card::before {
-    background: var(--c5);
-    border-color: var(--c5);
+    background: var(--c5); border-color: var(--c5);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l3 3 5-6' stroke='%23fff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
+    background-repeat: no-repeat; background-position: center;
 }
 
-.bp-subject-block {
-    border: 1.5px solid var(--c2);
-    border-radius: .875rem;
-    overflow: hidden;
-    margin-bottom: 1rem;
-}
+.bp-subject-block { border: 1.5px solid var(--c2); border-radius: .875rem; overflow: hidden; margin-bottom: 1rem; }
 .bp-subject-block-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
     padding: 1rem 1.25rem;
     background: linear-gradient(90deg, rgba(0,180,216,.08), rgba(0,119,182,.04));
     border-bottom: 1.5px solid var(--c2);
 }
-.bp-subject-name {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--c8);
-}
+.bp-subject-name { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: var(--c8); }
 .bp-subject-block-body { padding: 1.25rem; background: #fff; }
 .bp-level-wrap { display: flex; align-items: center; gap: .75rem; }
 .bp-level-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--c5); white-space: nowrap; }
 .bp-select-sm {
     padding: .5rem 2.25rem .5rem .875rem;
-    border: 1.5px solid var(--c2);
-    border-radius: .625rem;
-    font-family: 'Poppins', sans-serif;
-    font-size: .85rem;
-    color: var(--c8);
+    border: 1.5px solid var(--c2); border-radius: .625rem;
+    font-family: 'Poppins', sans-serif; font-size: .85rem; color: var(--c8);
     background: #f6fdff;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230096c7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right .6rem center;
-    -webkit-appearance: none; appearance: none;
-    outline: none;
-    cursor: pointer;
+    background-repeat: no-repeat; background-position: right .6rem center;
+    -webkit-appearance: none; appearance: none; outline: none; cursor: pointer;
 }
 .bp-select-sm:focus { border-color: var(--c4); box-shadow: 0 0 0 3px rgba(0,180,216,.14); }
 
-.bp-alloc-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
-}
+.bp-alloc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
 .bp-alloc-card {
-    border: 1.5px solid var(--c1);
-    border-radius: .875rem;
-    background: #f6fdff;
-    padding: 1.1rem;
+    border: 1.5px solid var(--c1); border-radius: .875rem;
+    background: #f6fdff; padding: 1.1rem;
     transition: border-color .15s, box-shadow .15s;
 }
 .bp-alloc-card:hover { border-color: var(--c3); box-shadow: 0 4px 14px rgba(0,180,216,.1); }
 .bp-alloc-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .875rem; }
 .bp-alloc-name { font-weight: 700; font-size: .9rem; color: var(--c8); }
-.bp-avail-tag {
-    font-size: .7rem; font-weight: 600;
-    padding: .2rem .6rem;
-    border-radius: 999px;
-    background: var(--c0);
-    color: var(--c6);
-    white-space: nowrap;
-}
-.bp-alloc-default {
-    font-size: .85rem;
-    color: var(--c5);
-    padding: .5rem 0;
-}
+.bp-avail-tag { font-size: .7rem; font-weight: 600; padding: .2rem .6rem; border-radius: 999px; background: var(--c0); color: var(--c6); white-space: nowrap; }
+.bp-alloc-default { font-size: .85rem; color: var(--c5); padding: .5rem 0; }
 
-.bp-stepper {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    background: #fff;
-    border: 1.5px solid var(--c2);
-    border-radius: .75rem;
-    padding: .3rem;
-}
+.bp-stepper { display: flex; align-items: center; gap: .5rem; background: #fff; border: 1.5px solid var(--c2); border-radius: .75rem; padding: .3rem; }
 .bp-stepper-btn {
-    width: 2.1rem; height: 2.1rem;
-    border-radius: .5rem;
-    border: none;
-    background: var(--c0);
-    color: var(--c7);
-    font-size: 1.2rem; font-weight: 700;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: background .12s, color .12s;
-    line-height: 1;
+    width: 2.1rem; height: 2.1rem; border-radius: .5rem; border: none;
+    background: var(--c0); color: var(--c7);
+    font-size: 1.2rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background .12s, color .12s; line-height: 1;
 }
 .bp-stepper-btn:hover { background: var(--c3); color: #fff; }
 .bp-stepper-input {
-    flex: 1;
-    text-align: center;
-    border: none;
-    background: transparent;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--c8);
-    outline: none;
-    -moz-appearance: textfield;
-    min-width: 0;
+    flex: 1; text-align: center; border: none; background: transparent;
+    font-family: 'Poppins', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--c8);
+    outline: none; -moz-appearance: textfield; min-width: 0;
 }
 .bp-stepper-input::-webkit-inner-spin-button,
 .bp-stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-.bp-accordion {
-    margin-top: .875rem;
-    border: 1.5px solid var(--c1);
-    border-radius: .75rem;
-    overflow: hidden;
-    background: #fff;
-}
+.bp-accordion { margin-top: .875rem; border: 1.5px solid var(--c1); border-radius: .75rem; overflow: hidden; background: #fff; }
 .bp-accordion summary {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: .75rem 1rem;
-    font-size: .8125rem;
-    font-weight: 600;
-    color: var(--c6);
-    cursor: pointer;
-    user-select: none;
-    background: rgba(202,240,248,.35);
-    transition: background .15s;
+    list-style: none; display: flex; align-items: center; justify-content: space-between;
+    padding: .75rem 1rem; font-size: .8125rem; font-weight: 600; color: var(--c6);
+    cursor: pointer; user-select: none; background: rgba(202,240,248,.35); transition: background .15s;
 }
 .bp-accordion summary::-webkit-details-marker { display: none; }
-.bp-accordion summary::after {
-    content: '▾';
-    font-size: .7rem;
-    color: var(--c4);
-    transition: transform .2s;
-}
+.bp-accordion summary::after { content: '▾'; font-size: .7rem; color: var(--c4); transition: transform .2s; }
 .bp-accordion[open] summary { border-bottom: 1.5px solid var(--c1); background: rgba(202,240,248,.6); }
 .bp-accordion[open] summary::after { transform: rotate(-180deg); }
 .bp-accordion-meta { font-size: .7rem; font-weight: 500; color: var(--c4); }
-.bp-accordion-body {
-    max-height: 260px;
-    overflow-y: auto;
-    padding: .75rem;
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-}
+.bp-accordion-body { max-height: 260px; overflow-y: auto; padding: .75rem; display: flex; flex-direction: column; gap: .5rem; }
 .bp-q-row {
-    display: flex;
-    align-items: flex-start;
-    gap: .625rem;
-    padding: .625rem .75rem;
-    border: 1.5px solid var(--c1);
-    border-radius: .625rem;
-    background: #f6fdff;
-    cursor: pointer;
-    transition: border-color .12s, background .12s;
+    display: flex; align-items: flex-start; gap: .625rem;
+    padding: .625rem .75rem; border: 1.5px solid var(--c1); border-radius: .625rem;
+    background: #f6fdff; cursor: pointer; transition: border-color .12s, background .12s;
 }
 .bp-q-row:hover { border-color: var(--c3); background: #edfafe; }
-.bp-q-row input[type="checkbox"] {
-    accent-color: var(--c5);
-    flex-shrink: 0;
-    margin-top: .15rem;
-    width: 1rem; height: 1rem;
-}
+.bp-q-row input[type="checkbox"] { accent-color: var(--c5); flex-shrink: 0; margin-top: .15rem; width: 1rem; height: 1rem; }
 .bp-q-text { font-size: .8125rem; color: var(--c8); line-height: 1.4; }
 
 .bp-info-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     padding: .875rem 1.25rem;
     background: linear-gradient(90deg, rgba(0,180,216,.08), rgba(0,150,199,.04));
-    border: 1.5px solid var(--c2);
-    border-radius: .75rem;
-    margin-bottom: 1.25rem;
-    font-size: .875rem;
-    font-weight: 500;
-    color: var(--c7);
+    border: 1.5px solid var(--c2); border-radius: .75rem;
+    margin-bottom: 1.25rem; font-size: .875rem; font-weight: 500; color: var(--c7);
 }
 .bp-info-bar strong { font-weight: 800; color: var(--c6); font-size: 1.1rem; }
 
-.bp-stats-row {
-    display: flex;
-    gap: .75rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-.bp-stat {
-    flex: 1;
-    min-width: 100px;
-    padding: 1rem;
-    border-radius: .875rem;
-    background: #fff;
-    border: 1.5px solid var(--c1);
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,150,199,.06);
-}
+.bp-stats-row { display: flex; gap: .75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.bp-stat { flex: 1; min-width: 100px; padding: 1rem; border-radius: .875rem; background: #fff; border: 1.5px solid var(--c1); text-align: center; box-shadow: 0 2px 8px rgba(0,150,199,.06); }
 .bp-stat-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--c5); }
 .bp-stat-value { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--c8); margin-top: .25rem; }
 
 .bp-summary-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     padding: .75rem 1rem;
-    background: rgba(202,240,248,.35);
-    border: 1px solid var(--c1);
-    border-radius: .625rem;
-    font-size: .875rem;
-    color: var(--c8);
-    margin-bottom: .5rem;
+    background: rgba(202,240,248,.35); border: 1px solid var(--c1); border-radius: .625rem;
+    font-size: .875rem; color: var(--c8); margin-bottom: .5rem;
 }
-.bp-summary-badge {
-    font-size: .75rem; font-weight: 700;
-    padding: .2rem .75rem;
-    border-radius: 999px;
-    background: var(--c7);
-    color: #fff;
-}
+.bp-summary-badge { font-size: .75rem; font-weight: 700; padding: .2rem .75rem; border-radius: 999px; background: var(--c7); color: #fff; }
 
-.bp-candidate-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
+.bp-candidate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 @media (max-width: 800px) { .bp-candidate-grid { grid-template-columns: 1fr; } }
 
 .bp-form-field input,
@@ -454,111 +287,64 @@
 .bp-form-field textarea {
     width: 100%;
     padding: .9rem 1.1rem .9rem 3rem;
-    border: 1.5px solid var(--c2);
-    border-radius: .75rem;
-    font-family: 'Poppins', sans-serif;
-    font-size: .9375rem;
-    color: var(--c8);
-    background: #f6fdff;
-    outline: none;
+    border: 1.5px solid var(--c2); border-radius: .75rem;
+    font-family: 'Poppins', sans-serif; font-size: .9375rem; color: var(--c8);
+    background: #f6fdff; outline: none;
     transition: border-color .15s, box-shadow .15s, background .15s;
     -webkit-appearance: none; appearance: none;
 }
 .bp-form-field input:focus,
 .bp-form-field select:focus,
 .bp-form-field textarea:focus {
-    border-color: var(--c4);
-    background: #fff;
+    border-color: var(--c4); background: #fff;
     box-shadow: 0 0 0 3.5px rgba(0,180,216,.16);
 }
-
-.bp-input-wrap.focused .bp-input-icon {
-    color: var(--c4);
-    transform: translateY(-50%) scale(1.05);
-}
+.bp-input-wrap.focused .bp-input-icon { color: var(--c4); transform: translateY(-50%) scale(1.05); }
 
 .bp-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .5rem;
-    padding: .875rem 2.25rem;
-    border-radius: .875rem;
-    border: none;
-    font-family: 'Poppins', sans-serif;
-    font-size: .9375rem;
-    font-weight: 700;
-    letter-spacing: .01em;
-    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .875rem 2.25rem; border-radius: .875rem; border: none;
+    font-family: 'Poppins', sans-serif; font-size: .9375rem; font-weight: 700;
+    letter-spacing: .01em; color: #fff;
     background: linear-gradient(135deg, var(--c4) 0%, var(--c7) 100%);
-    cursor: pointer;
-    box-shadow: 0 4px 18px rgba(0,119,182,.35);
-    transition: transform .15s, box-shadow .15s, filter .15s;
-    white-space: nowrap;
+    cursor: pointer; box-shadow: 0 4px 18px rgba(0,119,182,.35);
+    transition: transform .15s, box-shadow .15s, filter .15s; white-space: nowrap;
 }
 .bp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,119,182,.45); filter: brightness(1.06); }
 .bp-btn-primary:active { transform: translateY(0); box-shadow: 0 3px 10px rgba(0,119,182,.3); }
 
 .bp-btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: .375rem;
-    padding: .625rem 1.25rem;
-    border-radius: .75rem;
-    border: 1.5px solid var(--c2);
-    background: #fff;
-    font-family: 'Poppins', sans-serif;
-    font-size: .875rem;
-    font-weight: 600;
-    color: var(--c6);
-    cursor: pointer;
-    transition: border-color .15s, background .15s;
+    display: inline-flex; align-items: center; gap: .375rem;
+    padding: .625rem 1.25rem; border-radius: .75rem;
+    border: 1.5px solid var(--c2); background: #fff;
+    font-family: 'Poppins', sans-serif; font-size: .875rem; font-weight: 600; color: var(--c6);
+    cursor: pointer; transition: border-color .15s, background .15s;
 }
 .bp-btn-ghost:hover { border-color: var(--c4); background: rgba(0,180,216,.05); }
 
 .bp-error {
-    padding: .875rem 1.1rem;
-    border: 1.5px solid #fca5a5;
-    border-radius: .75rem;
-    background: #fff5f5;
-    color: #b91c1c;
-    font-size: .875rem;
-    margin-bottom: 1.25rem;
+    padding: .875rem 1.1rem; border: 1.5px solid #fca5a5; border-radius: .75rem;
+    background: #fff5f5; color: #b91c1c; font-size: .875rem; margin-bottom: 1.25rem;
 }
 .bp-error li { list-style: none; padding: .15rem 0; }
 .bp-error li::before { content: '✕  '; }
 
 .bp-progress {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    z-index: 9999;
+    display: none; position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 9999;
     background: linear-gradient(90deg, var(--c3), var(--c5), var(--c7));
     background-size: 200% 100%;
     animation: bp-shimmer 1.2s linear infinite;
 }
 .bp-progress.is-active { display: block; }
-@keyframes bp-shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: -100% 0; }
-}
+@keyframes bp-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
-.bp-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--c2), transparent);
-    margin: 1.5rem 0;
-}
+.bp-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--c2), transparent); margin: 1.5rem 0; }
 
 @media (max-width: 600px) {
     .bp-field-grid { grid-template-columns: 1fr; }
     .bp-alloc-grid { grid-template-columns: 1fr; }
     .bp-subject-grid { grid-template-columns: 1fr; }
-    .bp-info-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: .35rem;
-    }
+    .bp-info-bar { flex-direction: column; align-items: flex-start; gap: .35rem; }
 }
 </style>
 
@@ -567,6 +353,16 @@
 <div id="htmx-spinner" class="bp-progress"></div>
 
 {% if step == 'candidate' %}
+{# ── STEP 2: CANDIDATE FORM ── #}
+
+{% if candidate_form.non_field_errors %}
+    <div class="bp-toast-seed">
+        {% for e in candidate_form.non_field_errors %}
+            <span class="toast-data" data-toast-level="error" data-toast-title="Validation Error">{{ e }}</span>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <div class="bp-candidate-grid">
     <div>
         <div class="bp-section">
@@ -628,10 +424,6 @@
         <div class="bp-tile">
             <form method="post" action="{% url 'quiz:begin' %}">
                 {% csrf_token %}
-                {% if candidate_form.non_field_errors %}
-                    <div class="bp-error"><ul>{% for e in candidate_form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
-                {% endif %}
-
                 <div style="display:flex;flex-direction:column;gap:1.1rem;">
                     {% for field in candidate_form %}
                         <div class="bp-form-field">
@@ -654,17 +446,25 @@
                         </div>
                     {% endfor %}
                 </div>
-
                 <div style="margin-top:1.75rem;">
-                    <button type="submit" class="bp-btn-primary" style="width:100%;">
-                        Start Test →
-                    </button>
+                    <button type="submit" class="bp-btn-primary" style="width:100%;">Start Test →</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 {% else %}
+{# ── STEP 1: SESSION SETUP ── #}
+
+{% if setup_state.errors %}
+    <div class="bp-toast-seed">
+        {% for e in setup_state.errors %}
+            <span class="toast-data" data-toast-level="error" data-toast-title="Setup Error">{{ e }}</span>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <form
     id="setup-form"
     method="post"
@@ -676,10 +476,6 @@
 >
     {% csrf_token %}
 
-    {% if setup_state.errors %}
-        <div class="bp-error"><ul>{% for e in setup_state.errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
-    {% endif %}
-
     <div class="bp-tile">
         <div class="bp-section">
             <div class="bp-section-icon"><iconify-icon icon="ant-design:setting-filled" width="26" height="26"></iconify-icon></div>
@@ -688,7 +484,6 @@
                 <div class="bp-section-sub">Set type, question count and duration</div>
             </div>
         </div>
-
         <div class="bp-field-grid">
             <div class="bp-field">
                 <span class="bp-label">Session Type</span>
@@ -699,21 +494,18 @@
                     <label class="bp-toggle-lbl" for="st-multi">Multi</label>
                 </div>
             </div>
-
             <div class="bp-field">
                 <label class="bp-label" for="id_duration_minutes">Duration (minutes)</label>
                 <div class="bp-input-wrap">
                     <input id="id_duration_minutes" type="number" min="1" name="duration_minutes" value="{{ setup_state.duration_minutes }}" class="bp-input" placeholder="e.g. 60">
                 </div>
             </div>
-
             <div class="bp-field">
                 <label class="bp-label" for="id_question_count">Question Count</label>
                 <div class="bp-input-wrap">
                     <input id="id_question_count" type="number" min="1" name="question_count" value="{{ setup_state.question_count }}" class="bp-input" placeholder="e.g. 50">
                 </div>
             </div>
-
             <div class="bp-field">
                 <span class="bp-label">Mode</span>
                 <label class="bp-switch-wrap">
@@ -735,11 +527,10 @@
             <div class="bp-section">
                 <div class="bp-section-icon"><iconify-icon icon="mingcute:vibe-coding-fill" width="26" height="26"></iconify-icon></div>
                 <div>
-                    <div class="bp-section-title">Subject & Level</div>
+                    <div class="bp-section-title">Subject &amp; Level</div>
                     <div class="bp-section-sub">Choose one subject for this session</div>
                 </div>
             </div>
-
             <div class="bp-field-grid">
                 <div class="bp-field">
                     <label class="bp-label" for="id_single_subject">Subject</label>
@@ -763,7 +554,6 @@
                     </select>
                 </div>
             </div>
-
             {% if setup_state.subject_configs %}
                 <div class="bp-divider"></div>
                 <p class="bp-label" style="margin-bottom:.875rem;">Sub Topics</p>
@@ -791,7 +581,6 @@
                 {% endfor %}
             </div>
         </div>
-
         {% for config in setup_state.subject_configs %}
             <div class="bp-subject-block">
                 <div class="bp-subject-block-head">
@@ -827,7 +616,6 @@
                     <div class="bp-section-sub">How questions are distributed across topics</div>
                 </div>
             </div>
-
             {% if setup_state.custom_mode %}
                 <div class="bp-info-bar">
                     <span>Custom total selected</span>
@@ -837,7 +625,6 @@
                     </div>
                 </div>
             {% endif %}
-
             {% for row in setup_state.summary_rows %}
                 <div style="margin-bottom:1.5rem;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem;">
@@ -847,7 +634,6 @@
                         </div>
                         <span class="bp-summary-badge">{{ row.total_requested }} questions</span>
                     </div>
-
                     <div class="bp-alloc-grid">
                         {% for allocation in row.allocations %}
                             <div class="bp-alloc-card">
@@ -855,22 +641,12 @@
                                     <span class="bp-alloc-name">{% if allocation.subtitle %}{{ allocation.subtitle.title }}{% else %}General{% endif %}</span>
                                     <span class="bp-avail-tag">{{ allocation.available_count }} avail</span>
                                 </div>
-
                                 {% if setup_state.custom_mode %}
                                     <div class="bp-stepper">
                                         <button type="button" class="bp-stepper-btn" onclick="updateQuestionCount('{{ allocation.field_name }}', -1)">−</button>
-                                        <input
-                                            id="{{ allocation.field_name }}"
-                                            type="number"
-                                            min="0"
-                                            max="{{ allocation.available_count }}"
-                                            name="{{ allocation.field_name }}"
-                                            value="{{ allocation.requested_count }}"
-                                            data-custom-count="true"
-                                            class="bp-stepper-input">
+                                        <input id="{{ allocation.field_name }}" type="number" min="0" max="{{ allocation.available_count }}" name="{{ allocation.field_name }}" value="{{ allocation.requested_count }}" data-custom-count="true" class="bp-stepper-input">
                                         <button type="button" class="bp-stepper-btn" onclick="updateQuestionCount('{{ allocation.field_name }}', 1)">+</button>
                                     </div>
-
                                     <details class="bp-accordion">
                                         <summary>
                                             Choose questions
@@ -894,7 +670,6 @@
                         {% endfor %}
                     </div>
                 </div>
-
                 {% if not forloop.last %}<div class="bp-divider"></div>{% endif %}
             {% endfor %}
         </div>
@@ -908,14 +683,23 @@
             hx-target="#builder-panel"
             hx-swap="outerHTML"
             class="bp-btn-primary"
-        >
-            Next: Candidate Details →
-        </button>
+        >Next: Candidate Details →</button>
     </div>
 </form>
 {% endif %}
 
 </div>
+
+<style>
+/* Seeds are in the DOM for JS to scan, but invisible */
+.bp-toast-seed {
+    position: absolute;
+    width: 0; height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden;
+}
+</style>
 
 <script>
 (function () {
@@ -923,16 +707,15 @@
 
     function setProgressBar(active) {
         var bar = document.getElementById("htmx-spinner");
-        if (!bar) return;
-        bar.classList.toggle("is-active", !!active);
+        if (bar) bar.classList.toggle("is-active", !!active);
     }
 
     window.updateQuestionCount = function (fieldId, delta) {
         var input = document.getElementById(fieldId);
         if (!input) return;
-        var min = parseInt(input.min || "0", 10);
-        var max = parseInt(input.max || "999999", 10);
-        var curr = parseInt(input.value || "0", 10);
+        var min  = parseInt(input.min  || "0",      10);
+        var max  = parseInt(input.max  || "999999", 10);
+        var curr = parseInt(input.value || "0",     10);
         var next = Math.min(max, Math.max(min, curr + delta));
         if (next === curr) return;
         input.value = next;
@@ -953,74 +736,30 @@
         el.textContent = total;
     };
 
-    // Prevent accordion from closing when clicking checkboxes
     function setupAccordionBehavior() {
-        document.querySelectorAll(".bp-accordion").forEach(function (accordion, accordionIndex) {
-            // Watch for changes to the 'open' attribute
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'open') {
-                        var isOpen = accordion.hasAttribute('open');
+        document.querySelectorAll(".bp-accordion").forEach(function (accordion) {
+            var body = accordion.querySelector(".bp-accordion-body");
+            if (!body) return;
+
+            /* Stop clicks inside the body from bubbling to <details> summary */
+            body.addEventListener("click", function (e) { e.stopPropagation(); });
+
+            accordion.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+                cb.addEventListener("change", function (e) {
+                    /* Update live counter in summary */
+                    var summary = accordion.querySelector("summary");
+                    var meta    = summary && summary.querySelector(".bp-accordion-meta");
+                    if (meta) {
+                        var checked  = accordion.querySelectorAll('input[type="checkbox"]:checked').length;
+                        var needed   = parseInt((meta.textContent.split("/")[1] || "0").trim(), 10);
+                        meta.textContent = checked + " / " + needed;
+                        if (checked >= needed) accordion.removeAttribute("open");
                     }
-                });
-            });
-            
-            observer.observe(accordion, { attributes: true });
-            
-            // Prevent any click on the accordion body from closing it
-            var accordionBody = accordion.querySelector(".bp-accordion-body");
-            if (accordionBody) {
-                accordionBody.addEventListener("click", function (e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                });
-                
-                accordionBody.addEventListener("mousedown", function (e) {
-                });
-                
-                accordionBody.addEventListener("mouseup", function (e) {
-                });
-            }
-            
-            // Get all checkboxes and prevent their default behavior
-            var checkboxes = accordion.querySelectorAll('input[type="checkbox"]');
-            
-            checkboxes.forEach(function(checkbox, cbIndex) {
-                checkbox.addEventListener("change", function (e) {
-                    // UPDATE THE COUNTER LIVE
-                    var accordion = this.closest(".bp-accordion");
-                    if (accordion) {
-                        var summary = accordion.querySelector("summary");
-                        var meta = summary ? summary.querySelector(".bp-accordion-meta") : null;
-                        if (meta) {
-                            var checkedCount = accordion.querySelectorAll('input[type="checkbox"]:checked').length;
-                            var parts = meta.textContent.split(" / ");
-                            var totalNeeded = parts[1] ? parts[1].trim() : "?";
-                            meta.textContent = checkedCount + " / " + totalNeeded;
-                            
-                            // Close accordion if reached the required count
-                            if (checkedCount >= parseInt(totalNeeded)) {
-                                accordion.removeAttribute('open');
-                            }
-                        }
-                    }
-                    
-                    // PREVENT change event from bubbling to form (which triggers HTMX)
+                    /* Block from bubbling to hx-trigger="change" on the form */
                     e.stopPropagation();
                     e.stopImmediatePropagation();
                 });
-                
-                checkbox.addEventListener("click", function (e) {
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                });
-            });
-            
-            // Also prevent clicks on individual question rows
-            var questionRows = accordion.querySelectorAll(".bp-q-row");
-            
-            questionRows.forEach(function (row, rowIndex) {
-                row.addEventListener("click", function (e) {
+                cb.addEventListener("click", function (e) {
                     e.stopPropagation();
                     e.stopImmediatePropagation();
                 });
@@ -1028,61 +767,35 @@
         });
     }
 
-    document.addEventListener("htmx:beforeRequest", function () {
-        setProgressBar(true);
-    });
+    document.addEventListener("htmx:beforeRequest", function () { setProgressBar(true);  });
+    document.addEventListener("htmx:afterRequest",  function () { setProgressBar(false); });
+    document.addEventListener("htmx:responseError", function () { setProgressBar(false); });
 
-    document.addEventListener("htmx:afterRequest", function () {
-        setProgressBar(false);
-    });
-
-    document.addEventListener("htmx:responseError", function () {
-        setProgressBar(false);
-    });
-
-    document.addEventListener("htmx:afterSwap", function (evt) {
+    document.addEventListener("htmx:afterSettle", function (evt) {
         if (evt.detail && evt.detail.target && evt.detail.target.id === "builder-panel") {
             refreshCustomTotal();
             setupAccordionBehavior();
             setProgressBar(false);
+            /* drainToastData is called by toaster.html's own htmx:afterSettle listener */
         }
     });
 
     document.addEventListener("DOMContentLoaded", function () {
         setupAccordionBehavior();
-        
-        // Set placeholders for candidate form fields
+
         var placeholders = {
-            'candidate_name': 'Enter your full name',
-            'candidate_email': 'Enter your email address',
-            'designation_tech': 'Enter your designation'
+            candidate_name:   'Enter your full name',
+            candidate_email:  'Enter your email address',
+            designation_tech: 'Enter your designation'
         };
-        
-        document.querySelectorAll('#builder-panel .bp-form-field input, #builder-panel .bp-form-field select, #builder-panel .bp-form-field textarea').forEach(function(input) {
-            if (input.name in placeholders) {
-                input.placeholder = placeholders[input.name];
-            }
-            
-            // Add focus/blur for icon color change
+        document.querySelectorAll('#builder-panel .bp-form-field input, #builder-panel .bp-form-field select, #builder-panel .bp-form-field textarea').forEach(function (input) {
+            if (input.name in placeholders) input.placeholder = placeholders[input.name];
             var wrapper = input.closest('.bp-input-wrap');
             if (!wrapper) return;
-
-            input.addEventListener('focus', function() {
-                wrapper.classList.add('focused');
-            });
-            input.addEventListener('blur', function() {
-                wrapper.classList.remove('focused');
-            });
+            input.addEventListener('focus', function () { wrapper.classList.add('focused'); });
+            input.addEventListener('blur',  function () { wrapper.classList.remove('focused'); });
         });
     });
-
-    // Global click tracker for all details elements
-    document.addEventListener("click", function(e) {
-        var details = e.target.closest("details");
-        if (details && details.classList.contains("bp-accordion")) {
-            var isSummary = e.target.closest("summary");
-        }
-    }, true); // Use capture phase to log all clicks
 
     refreshCustomTotal();
 }());
