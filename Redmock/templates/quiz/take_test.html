@@ -4,75 +4,865 @@
 {% block title %}Take Test | Redmock{% endblock %}
 
 {% block content %}
-<section class="mb-6 flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="text-2xl font-bold">Mock Test</h1>
-        <p class="text-slate-500">{{ attempt.candidate.name }} | {{ attempt.level|title }} | {{ attempt.question_count }} questions</p>
-    </div>
-    <div class="rounded-xl bg-slate-900 px-4 py-3 text-white">
-        Time Left: <span id="countdown">--:--</span>
-    </div>
-</section>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
-<form method="post" id="test-form" class="space-y-5">
-    {% csrf_token %}
-    {% for question in questions %}
-        <section class="rounded-2xl bg-white p-6 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">
-                {{ forloop.counter }}. {{ question.test_subject.subject }} / {% if question.sub_title %}{{ question.sub_title.title }}{% else %}General{% endif %}
-            </p>
-            {% if question.question_paragraph %}
-                <p class="mt-3 rounded-xl bg-slate-50 p-4 text-slate-600">{{ question.question_paragraph }}</p>
-            {% endif %}
-            <h2 class="mt-4 text-lg font-semibold">{{ question.question }}</h2>
-            <div class="mt-4 space-y-3">
-                <label class="flex items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input type="radio" name="question_{{ question.id }}" value="option_1" {% if initial_answers|get_item:question.id == 'option_1' %}checked{% endif %}>
-                    <span>{{ question.option_1 }}</span>
-                </label>
-                <label class="flex items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input type="radio" name="question_{{ question.id }}" value="option_2" {% if initial_answers|get_item:question.id == 'option_2' %}checked{% endif %}>
-                    <span>{{ question.option_2 }}</span>
-                </label>
-                <label class="flex items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input type="radio" name="question_{{ question.id }}" value="option_3" {% if initial_answers|get_item:question.id == 'option_3' %}checked{% endif %}>
-                    <span>{{ question.option_3 }}</span>
-                </label>
-                <label class="flex items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input type="radio" name="question_{{ question.id }}" value="option_4" {% if initial_answers|get_item:question.id == 'option_4' %}checked{% endif %}>
-                    <span>{{ question.option_4 }}</span>
-                </label>
+/* ── Ocean Blue Serenity palette ── */
+:root {
+    --c0:#caf0f8; --c1:#ade8f4; --c2:#90e0ef; --c3:#48cae4;
+    --c4:#00b4d8; --c5:#0096c7; --c6:#0077b6; --c7:#023e8a; --c8:#03045e; --c9:#02033a;
+
+    /* question palette states */
+    --qs-answered:    var(--c5);
+    --qs-marked:      #7c3aed;
+    --qs-marked-ans:  #0d9488;
+    --qs-not-visited: #94a3b8;
+    --qs-not-answered:#ef4444;
+
+    --topbar-h: 56px;
+    --secbar-h: 44px;
+    --botbar-h: 60px;
+    --sidebar-w: 280px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'DM Sans', sans-serif; background: var(--c9); color: #1e293b; }
+
+/* ════════════════════════════════════
+   TOP BAR
+════════════════════════════════════ */
+.tt-topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--topbar-h);
+    background: var(--c8);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.25rem;
+    gap: 1rem;
+    border-bottom: 2px solid var(--c7);
+}
+.tt-brand {
+    display: flex; align-items: center; gap: .625rem; flex-shrink: 0;
+}
+.tt-brand-dot {
+    width: .5rem; height: .5rem; border-radius: 50%;
+    background: var(--c3); box-shadow: 0 0 6px var(--c4);
+}
+.tt-brand-name {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+    color: #fff; letter-spacing: -.03em;
+}
+.tt-title {
+    font-size: .8125rem; font-weight: 500; color: var(--c1);
+    padding-left: 1rem; border-left: 1px solid rgba(144,224,239,.25);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 300px;
+}
+.tt-timer-wrap {
+    display: flex; align-items: center; gap: .625rem;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(144,224,239,.2);
+    border-radius: .75rem; padding: .375rem 1rem;
+    flex-shrink: 0;
+}
+.tt-timer-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c1); }
+.tt-timer-val {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+    color: #fff; letter-spacing: .05em;
+    transition: color .3s;
+}
+.tt-timer-val.urgent { color: #fca5a5; animation: pulse-urgent 1s ease-in-out infinite; }
+@keyframes pulse-urgent { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+
+.tt-topbar-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+.tt-btn-outline {
+    padding: .375rem .875rem; border-radius: .625rem;
+    border: 1.5px solid rgba(144,224,239,.3); background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: .8125rem; font-weight: 600;
+    color: var(--c1); cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.tt-btn-outline:hover { border-color: var(--c3); background: rgba(72,202,228,.08); }
+
+/* ════════════════════════════════════
+   SECTION BAR
+════════════════════════════════════ */
+.tt-secbar {
+    position: fixed; top: var(--topbar-h); left: 0; right: 0; z-index: 99;
+    height: var(--secbar-h);
+    background: #fff;
+    border-bottom: 1.5px solid rgba(0,180,216,.15);
+    display: flex; align-items: center;
+    padding: 0 1.25rem;
+    gap: .75rem;
+    overflow-x: auto;
+}
+.tt-secbar::-webkit-scrollbar { display: none; }
+.tt-sec-tab {
+    display: inline-flex; align-items: center; gap: .375rem;
+    padding: .375rem 1rem; border-radius: 999px;
+    font-size: .8125rem; font-weight: 600; white-space: nowrap;
+    cursor: pointer; border: 1.5px solid transparent;
+    transition: all .15s;
+    color: var(--c6);
+    background: var(--c0);
+    border-color: var(--c2);
+}
+.tt-sec-tab.active {
+    background: linear-gradient(135deg, var(--c5), var(--c7));
+    color: #fff; border-color: transparent;
+    box-shadow: 0 3px 10px rgba(0,119,182,.3);
+}
+
+/* ════════════════════════════════════
+   MAIN LAYOUT
+════════════════════════════════════ */
+.tt-layout {
+    position: fixed;
+    top: calc(var(--topbar-h) + var(--secbar-h));
+    bottom: var(--botbar-h);
+    left: 0; right: 0;
+    display: grid;
+    grid-template-columns: 1fr var(--sidebar-w);
+    overflow: hidden;
+}
+
+/* ════════════════════════════════════
+   QUESTION PANEL (LEFT)
+════════════════════════════════════ */
+.tt-qpanel {
+    overflow-y: auto;
+    background: #f0fafd;
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.tt-qpanel::-webkit-scrollbar { width: 4px; }
+.tt-qpanel::-webkit-scrollbar-track { background: transparent; }
+.tt-qpanel::-webkit-scrollbar-thumb { background: var(--c2); border-radius: 2px; }
+
+/* question header bar */
+.tt-qheader {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
+    border-radius: .875rem; padding: .75rem 1.25rem;
+}
+.tt-qnum {
+    font-family: 'Syne', sans-serif; font-size: .9375rem; font-weight: 700; color: var(--c8);
+}
+.tt-qmeta { display: flex; align-items: center; gap: 1rem; }
+.tt-marks-wrap { display: flex; align-items: center; gap: .375rem; }
+.tt-mark-pill {
+    font-size: .75rem; font-weight: 700; padding: .2rem .6rem;
+    border-radius: 999px; font-family: 'Syne', sans-serif;
+}
+.tt-mark-pill.pos { background: rgba(16,185,129,.15); color: #047857; }
+.tt-mark-pill.neg { background: rgba(239,68,68,.12); color: #b91c1c; }
+.tt-time-badge {
+    font-size: .75rem; font-weight: 600; color: var(--c6);
+    background: var(--c0); border: 1px solid var(--c2);
+    border-radius: .5rem; padding: .2rem .625rem;
+}
+.tt-report-btn {
+    font-size: .75rem; font-weight: 600; color: #f59e0b;
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2);
+    border-radius: .5rem; padding: .2rem .625rem; cursor: pointer;
+    transition: background .15s;
+}
+.tt-report-btn:hover { background: rgba(245,158,11,.15); }
+
+/* comprehension block */
+.tt-comprehension {
+    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
+    border-radius: .875rem; padding: 1.25rem 1.5rem;
+}
+.tt-comp-label {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--c5); margin-bottom: .625rem;
+}
+.tt-comp-text { font-size: .9rem; line-height: 1.7; color: #334155; }
+
+/* question card */
+.tt-qcard {
+    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
+    border-radius: .875rem; padding: 1.25rem 1.5rem;
+}
+.tt-qlabel {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--c5); margin-bottom: .75rem;
+}
+.tt-qtext {
+    font-size: .9875rem; font-weight: 500; line-height: 1.65; color: #1e293b;
+    margin-bottom: 1.25rem;
+}
+
+/* options */
+.tt-options { display: flex; flex-direction: column; gap: .625rem; }
+.tt-option {
+    display: flex; align-items: center; gap: .875rem;
+    padding: .875rem 1.1rem;
+    border: 1.5px solid rgba(0,180,216,.18);
+    border-radius: .75rem;
+    background: #f6fdff;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+    user-select: none;
+}
+.tt-option:hover { border-color: var(--c4); background: #edfafe; }
+.tt-option input[type="radio"] { display: none; }
+.tt-option-bubble {
+    width: 1.375rem; height: 1.375rem; border-radius: 50%;
+    border: 2px solid var(--c3); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, background .15s;
+    position: relative;
+}
+.tt-option-bubble::after {
+    content: ''; width: .55rem; height: .55rem; border-radius: 50%;
+    background: var(--c5); transform: scale(0); transition: transform .15s;
+}
+.tt-option input:checked ~ .tt-option-bubble { border-color: var(--c5); background: rgba(0,150,199,.08); }
+.tt-option input:checked ~ .tt-option-bubble::after { transform: scale(1); }
+.tt-option:has(input:checked) {
+    border-color: var(--c4);
+    background: linear-gradient(135deg, rgba(0,180,216,.07), rgba(0,150,199,.04));
+    box-shadow: 0 2px 8px rgba(0,150,199,.12);
+}
+.tt-option-key {
+    width: 1.5rem; height: 1.5rem; border-radius: .375rem; flex-shrink: 0;
+    background: var(--c0); border: 1px solid var(--c2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 800; color: var(--c7);
+    font-family: 'Syne', sans-serif;
+}
+.tt-option:has(input:checked) .tt-option-key {
+    background: var(--c5); border-color: var(--c5); color: #fff;
+}
+.tt-option-text { font-size: .9rem; color: #1e293b; flex: 1; line-height: 1.5; }
+
+/* ════════════════════════════════════
+   SIDEBAR (RIGHT)
+════════════════════════════════════ */
+.tt-sidebar {
+    background: #fff;
+    border-left: 1.5px solid rgba(0,180,216,.18);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+
+/* candidate info strip */
+.tt-cand-strip {
+    padding: .875rem 1rem;
+    background: linear-gradient(135deg, var(--c8), var(--c7));
+    display: flex; align-items: center; gap: .75rem;
+    flex-shrink: 0;
+}
+.tt-avatar {
+    width: 2.25rem; height: 2.25rem; border-radius: 50%;
+    background: linear-gradient(135deg, var(--c3), var(--c5));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: .875rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+}
+.tt-cand-name { font-size: .875rem; font-weight: 600; color: #fff; }
+.tt-cand-sub  { font-size: .7rem; color: var(--c1); margin-top: .1rem; }
+
+/* legend */
+.tt-legend {
+    padding: .75rem 1rem;
+    background: #f8feff;
+    border-bottom: 1.5px solid rgba(0,180,216,.12);
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: .4rem .75rem;
+    flex-shrink: 0;
+}
+.tt-legend-item {
+    display: flex; align-items: center; gap: .375rem;
+    font-size: .7rem; color: #475569; white-space: nowrap;
+}
+.tt-legend-dot {
+    width: 1.25rem; height: 1.25rem; border-radius: .3rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .6rem; font-weight: 700; color: #fff;
+}
+
+/* section heading */
+.tt-palette-section {
+    padding: .625rem 1rem .3rem;
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--c6);
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(0,180,216,.1);
+    background: #fff;
+}
+
+/* number grid */
+.tt-palette-scroll { overflow-y: auto; flex: 1; padding: .75rem 1rem; }
+.tt-palette-scroll::-webkit-scrollbar { width: 3px; }
+.tt-palette-scroll::-webkit-scrollbar-thumb { background: var(--c2); border-radius: 2px; }
+.tt-palette-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem;
+}
+.tt-pnum {
+    aspect-ratio: 1; border-radius: .5rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; font-family: 'Syne', sans-serif;
+    cursor: pointer; border: 2px solid transparent;
+    transition: transform .12s, box-shadow .12s;
+    position: relative;
+}
+.tt-pnum:hover { transform: scale(1.08); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.tt-pnum.current {
+    box-shadow: 0 0 0 3px rgba(0,180,216,.5);
+    transform: scale(1.08);
+}
+/* states */
+.tt-pnum.answered    { background: var(--qs-answered); color: #fff; }
+.tt-pnum.marked      { background: var(--qs-marked); color: #fff; }
+.tt-pnum.marked-ans  { background: var(--qs-marked-ans); color: #fff; }
+.tt-pnum.not-answered{ background: var(--qs-not-answered); color: #fff; }
+.tt-pnum.not-visited { background: #fff; color: #64748b; border-color: #cbd5e1; }
+
+/* sidebar footer: tabs */
+.tt-sidebar-tabs {
+    display: flex; border-top: 1.5px solid rgba(0,180,216,.15);
+    flex-shrink: 0;
+}
+.tt-stab {
+    flex: 1; padding: .625rem .5rem;
+    font-size: .75rem; font-weight: 600; color: var(--c6);
+    background: #f8feff; cursor: pointer; border: none;
+    transition: background .15s, color .15s;
+    text-align: center;
+}
+.tt-stab.active { background: var(--c5); color: #fff; }
+.tt-stab:not(:last-child) { border-right: 1px solid rgba(0,180,216,.15); }
+
+/* ════════════════════════════════════
+   BOTTOM BAR
+════════════════════════════════════ */
+.tt-botbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    height: var(--botbar-h);
+    background: #fff;
+    border-top: 1.5px solid rgba(0,180,216,.2);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.25rem;
+    gap: .75rem;
+    box-shadow: 0 -4px 20px rgba(0,150,199,.08);
+}
+.tt-botbar-left  { display: flex; gap: .625rem; }
+.tt-botbar-right { display: flex; gap: .625rem; }
+
+.tt-bot-btn {
+    padding: .5rem 1.1rem; border-radius: .75rem;
+    font-family: 'DM Sans', sans-serif; font-size: .8125rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: transform .12s, box-shadow .12s;
+}
+.tt-bot-btn:active { transform: scale(.97); }
+
+.tt-bot-btn--review {
+    background: rgba(124,58,237,.1); color: #6d28d9;
+    border: 1.5px solid rgba(124,58,237,.25);
+}
+.tt-bot-btn--review:hover { background: rgba(124,58,237,.16); }
+
+.tt-bot-btn--clear {
+    background: rgba(239,68,68,.08); color: #dc2626;
+    border: 1.5px solid rgba(239,68,68,.2);
+}
+.tt-bot-btn--clear:hover { background: rgba(239,68,68,.14); }
+
+.tt-bot-btn--prev {
+    background: var(--c0); color: var(--c7);
+    border: 1.5px solid var(--c2);
+}
+.tt-bot-btn--prev:hover { background: var(--c1); }
+
+.tt-bot-btn--save {
+    background: linear-gradient(135deg, var(--c5), var(--c7));
+    color: #fff; border: none;
+    box-shadow: 0 3px 12px rgba(0,119,182,.35);
+    padding: .5rem 1.5rem;
+}
+.tt-bot-btn--save:hover { box-shadow: 0 5px 18px rgba(0,119,182,.45); filter: brightness(1.05); }
+
+.tt-bot-btn--submit {
+    background: linear-gradient(135deg, #0f9488, #065f46);
+    color: #fff; border: none;
+    box-shadow: 0 3px 12px rgba(6,95,70,.3);
+    padding: .5rem 1.5rem;
+}
+.tt-bot-btn--submit:hover { box-shadow: 0 5px 18px rgba(6,95,70,.4); filter: brightness(1.05); }
+
+/* ════════════════════════════════════
+   SUBMIT CONFIRMATION MODAL
+════════════════════════════════════ */
+.tt-modal-backdrop {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(2,3,94,.55);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+}
+.tt-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.tt-modal {
+    background: #fff; border-radius: 1.25rem;
+    padding: 2rem; width: min(420px, calc(100vw - 2rem));
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    transform: scale(.93); transition: transform .22s cubic-bezier(.34,1.3,.64,1);
+}
+.tt-modal-backdrop.open .tt-modal { transform: scale(1); }
+.tt-modal-title { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--c8); margin-bottom: .5rem; }
+.tt-modal-sub   { font-size: .875rem; color: #64748b; line-height: 1.6; margin-bottom: 1.5rem; }
+.tt-modal-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem;
+    margin-bottom: 1.5rem;
+}
+.tt-mstat { border-radius: .75rem; padding: .75rem; text-align: center; }
+.tt-mstat-val { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+.tt-mstat-lbl { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-top: .2rem; }
+.tt-mstat.green { background: rgba(16,185,129,.1); }
+.tt-mstat.green .tt-mstat-val { color: #047857; }
+.tt-mstat.green .tt-mstat-lbl { color: #065f46; }
+.tt-mstat.red   { background: rgba(239,68,68,.08); }
+.tt-mstat.red .tt-mstat-val { color: #dc2626; }
+.tt-mstat.red .tt-mstat-lbl { color: #991b1b; }
+.tt-mstat.blue  { background: var(--c0); }
+.tt-mstat.blue .tt-mstat-val { color: var(--c7); }
+.tt-mstat.blue .tt-mstat-lbl { color: var(--c6); }
+.tt-modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+.tt-modal-cancel {
+    padding: .625rem 1.25rem; border-radius: .75rem;
+    border: 1.5px solid var(--c2); background: #fff; color: var(--c6);
+    font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 600;
+    cursor: pointer;
+}
+.tt-modal-cancel:hover { border-color: var(--c4); background: var(--c0); }
+.tt-modal-confirm {
+    padding: .625rem 1.5rem; border-radius: .75rem; border: none;
+    background: linear-gradient(135deg, #0f9488, #065f46);
+    color: #fff; font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 3px 10px rgba(6,95,70,.3);
+}
+.tt-modal-confirm:hover { filter: brightness(1.07); }
+
+/* ════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════ */
+@media (max-width: 768px) {
+    :root { --sidebar-w: 0px; }
+    .tt-sidebar { display: none; }
+    .tt-layout  { grid-template-columns: 1fr; }
+    .tt-title   { display: none; }
+    .tt-botbar  { flex-wrap: wrap; height: auto; padding: .625rem 1rem; }
+}
+</style>
+
+{# ── FIXED: top bar ── #}
+<div class="tt-topbar">
+    <div style="display:flex;align-items:center;gap:1rem;flex:1;min-width:0;">
+        <div class="tt-brand">
+            <span class="tt-brand-dot"></span>
+            <span class="tt-brand-name">Redmock</span>
+        </div>
+        <span class="tt-title">{{ attempt.candidate.name }} — {{ attempt.level|title }}</span>
+    </div>
+    <div class="tt-timer-wrap">
+        <span class="tt-timer-label">Time Left</span>
+        <span class="tt-timer-val" id="countdown">--:--:--</span>
+    </div>
+    <div class="tt-topbar-actions">
+        <button class="tt-btn-outline" onclick="toggleFullscreen()">⛶ Full Screen</button>
+        <button class="tt-btn-outline" id="pauseBtn">⏸ Pause</button>
+    </div>
+</div>
+
+{# ── FIXED: section tabs bar ── #}
+<div class="tt-secbar">
+    <div class="tt-sec-tab active">📋 All Questions</div>
+    {# Additional subject tabs can be added here if needed #}
+</div>
+
+{# ── MAIN LAYOUT ── #}
+<div class="tt-layout">
+
+    {# LEFT: question panel #}
+    <div class="tt-qpanel" id="qpanel">
+        <form method="post" id="test-form">
+            {% csrf_token %}
+
+            {% for question in questions %}
+            <div class="tt-question-block" id="qblock-{{ question.id }}" data-qid="{{ question.id }}" data-idx="{{ forloop.counter0 }}">
+
+                {# question header #}
+                <div class="tt-qheader">
+                    <span class="tt-qnum">Question No. {{ forloop.counter }}</span>
+                    <div class="tt-qmeta">
+                        <div class="tt-marks-wrap">
+                            <span class="tt-mark-pill pos">+{{ attempt.positive_mark|default:"1" }}</span>
+                            <span class="tt-mark-pill neg">-{{ attempt.negative_mark|default:"0.5" }}</span>
+                        </div>
+                        <span class="tt-time-badge" id="qt-{{ question.id }}">00:00</span>
+                        <button type="button" class="tt-report-btn">⚑ Report</button>
+                    </div>
+                </div>
+
+                {# comprehension paragraph #}
+                {% if question.question_paragraph %}
+                <div class="tt-comprehension">
+                    <div class="tt-comp-label">Comprehension</div>
+                    <div class="tt-comp-text">{{ question.question_paragraph }}</div>
+                </div>
+                {% endif %}
+
+                {# question + options #}
+                <div class="tt-qcard">
+                    <div class="tt-qlabel">Question</div>
+                    <div class="tt-qtext">{{ question.question }}</div>
+                    <div class="tt-options">
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_1"
+                                {% if initial_answers|get_item:question.id == 'option_1' %}checked{% endif %}
+                                onchange="markAnswered({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">A</span>
+                            <span class="tt-option-text">{{ question.option_1 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_2"
+                                {% if initial_answers|get_item:question.id == 'option_2' %}checked{% endif %}
+                                onchange="markAnswered({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">B</span>
+                            <span class="tt-option-text">{{ question.option_2 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_3"
+                                {% if initial_answers|get_item:question.id == 'option_3' %}checked{% endif %}
+                                onchange="markAnswered({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">C</span>
+                            <span class="tt-option-text">{{ question.option_3 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_4"
+                                {% if initial_answers|get_item:question.id == 'option_4' %}checked{% endif %}
+                                onchange="markAnswered({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">D</span>
+                            <span class="tt-option-text">{{ question.option_4 }}</span>
+                        </label>
+                    </div>
+                </div>
+
             </div>
-        </section>
-    {% empty %}
-        <section class="rounded-2xl bg-white p-6 shadow-sm">
-            <p class="text-slate-500">No questions available for this attempt.</p>
-        </section>
-    {% endfor %}
+            {% empty %}
+            <div class="tt-qcard">
+                <p style="color:var(--c5);font-size:.9rem;">No questions available for this attempt.</p>
+            </div>
+            {% endfor %}
 
-    <button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 text-white">Submit Test</button>
-</form>
+        </form>
+    </div>
+
+    {# RIGHT: sidebar #}
+    <aside class="tt-sidebar">
+
+        {# candidate strip #}
+        <div class="tt-cand-strip">
+            <div class="tt-avatar" id="avatarEl">--</div>
+            <div>
+                <div class="tt-cand-name">{{ attempt.candidate.name }}</div>
+                <div class="tt-cand-sub">{{ attempt.level|title }} · {{ attempt.question_count }} Qs</div>
+            </div>
+        </div>
+
+        {# legend #}
+        <div class="tt-legend">
+            <div class="tt-legend-item">
+                <div class="tt-legend-dot" style="background:var(--qs-answered);">1</div>
+                <span>Answered</span>
+            </div>
+            <div class="tt-legend-item">
+                <div class="tt-legend-dot" style="background:var(--qs-marked);">1</div>
+                <span>Marked</span>
+            </div>
+            <div class="tt-legend-item">
+                <div class="tt-legend-dot" style="background:var(--qs-not-answered);">1</div>
+                <span>Not Answered</span>
+            </div>
+            <div class="tt-legend-item">
+                <div class="tt-legend-dot" style="background:#fff;border:1.5px solid #cbd5e1;color:#64748b;">1</div>
+                <span>Not Visited</span>
+            </div>
+        </div>
+
+        {# section label #}
+        <div class="tt-palette-section">Section : All Questions</div>
+
+        {# number palette #}
+        <div class="tt-palette-scroll">
+            <div class="tt-palette-grid" id="palette">
+                {% for question in questions %}
+                <div class="tt-pnum not-visited {% if forloop.first %}current{% endif %}"
+                     id="pnum-{{ forloop.counter0 }}"
+                     data-idx="{{ forloop.counter0 }}"
+                     onclick="scrollToQuestion({{ forloop.counter0 }})">
+                    {{ forloop.counter }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# sidebar footer tabs #}
+        <div class="tt-sidebar-tabs">
+            <button class="tt-stab active">Question Paper</button>
+            <button class="tt-stab">Instructions</button>
+        </div>
+    </aside>
+</div>
+
+{# ── FIXED: bottom bar ── #}
+<div class="tt-botbar">
+    <div class="tt-botbar-left">
+        <button type="button" class="tt-bot-btn tt-bot-btn--review" id="btnMark">
+            ★ Mark for Review &amp; Next
+        </button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--clear" id="btnClear">
+            ✕ Clear Response
+        </button>
+    </div>
+    <div class="tt-botbar-right">
+        <button type="button" class="tt-bot-btn tt-bot-btn--prev" id="btnPrev">
+            ← Previous
+        </button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--save" id="btnSave">
+            Save &amp; Next →
+        </button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--submit" id="btnSubmit">
+            ✓ Submit Test
+        </button>
+    </div>
+</div>
+
+{# ── Submit confirmation modal ── #}
+<div class="tt-modal-backdrop" id="submitModal">
+    <div class="tt-modal">
+        <div class="tt-modal-title">Submit Test?</div>
+        <div class="tt-modal-sub">You are about to submit the test. This action cannot be undone. Review your progress below.</div>
+        <div class="tt-modal-stats">
+            <div class="tt-mstat green">
+                <div class="tt-mstat-val" id="ms-answered">0</div>
+                <div class="tt-mstat-lbl">Answered</div>
+            </div>
+            <div class="tt-mstat red">
+                <div class="tt-mstat-val" id="ms-unanswered">0</div>
+                <div class="tt-mstat-lbl">Unanswered</div>
+            </div>
+            <div class="tt-mstat blue">
+                <div class="tt-mstat-val" id="ms-marked">0</div>
+                <div class="tt-mstat-lbl">Marked</div>
+            </div>
+        </div>
+        <div class="tt-modal-actions">
+            <button class="tt-modal-cancel" onclick="closeModal()">Continue Test</button>
+            <button class="tt-modal-confirm" onclick="confirmSubmit()">Submit Now</button>
+        </div>
+    </div>
+</div>
 
 <script>
-    const endTimeIso = "{{ end_time_iso }}";
-    const countdown = document.getElementById("countdown");
-    const testForm = document.getElementById("test-form");
+(function () {
+"use strict";
 
-    if (endTimeIso) {
-        const endTime = new Date(endTimeIso);
-        const timer = setInterval(() => {
-            const now = new Date();
-            const diff = endTime - now;
-            if (diff <= 0) {
-                clearInterval(timer);
-                countdown.textContent = "00:00";
-                testForm.submit();
-                return;
-            }
-            const minutes = String(Math.floor(diff / 60000)).padStart(2, "0");
-            const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
-            countdown.textContent = `${minutes}:${seconds}`;
-        }, 1000);
+/* ── state ── */
+var TOTAL = document.querySelectorAll('.tt-question-block').length;
+var states = new Array(TOTAL).fill('not-visited');
+var currentIdx = 0;
+
+/* set initial answered states */
+document.querySelectorAll('.tt-question-block').forEach(function (block, idx) {
+    var checked = block.querySelector('input[type="radio"]:checked');
+    if (checked) states[idx] = 'answered';
+    else         states[idx] = 'not-visited';
+});
+states[0] = states[0] === 'answered' ? 'answered' : 'not-answered';
+renderPalette();
+
+/* ── avatar initials ── */
+var nameEl = document.querySelector('.tt-cand-name');
+var avatarEl = document.getElementById('avatarEl');
+if (nameEl && avatarEl) {
+    var parts = (nameEl.textContent || '').trim().split(' ');
+    avatarEl.textContent = ((parts[0]||'')[0]||(parts[1]||'')[0]||'?').toUpperCase()
+        + ((parts[1]||'')[0]||'').toUpperCase();
+}
+
+/* ── timer ── */
+var endTimeIso = "{{ end_time_iso }}";
+var countdownEl = document.getElementById('countdown');
+var testForm = document.getElementById('test-form');
+
+function fmtTime(ms) {
+    if (ms <= 0) return '00:00:00';
+    var s = Math.floor(ms / 1000);
+    var h = Math.floor(s / 3600); s %= 3600;
+    var m = Math.floor(s / 60);   s %= 60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+if (endTimeIso) {
+    var endTime = new Date(endTimeIso);
+    var timerInterval = setInterval(function () {
+        var diff = endTime - new Date();
+        if (diff <= 0) {
+            clearInterval(timerInterval);
+            countdownEl.textContent = '00:00:00';
+            testForm.submit();
+            return;
+        }
+        countdownEl.textContent = fmtTime(diff);
+        countdownEl.classList.toggle('urgent', diff < 300000); /* red under 5 min */
+    }, 1000);
+}
+
+/* ── question time tracker ── */
+var qTimers = new Array(TOTAL).fill(0);
+var qTimerStart = Date.now();
+setInterval(function () {
+    qTimers[currentIdx] += Date.now() - qTimerStart;
+    qTimerStart = Date.now();
+    var el = document.querySelectorAll('[id^="qt-"]')[currentIdx];
+    if (el) {
+        var s = Math.floor(qTimers[currentIdx] / 1000);
+        el.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
     }
+}, 1000);
+
+/* ── palette ── */
+function renderPalette() {
+    document.querySelectorAll('.tt-pnum').forEach(function (el, i) {
+        el.className = 'tt-pnum ' + states[i] + (i === currentIdx ? ' current' : '');
+    });
+}
+
+function setCurrentQ(idx) {
+    if (idx < 0 || idx >= TOTAL) return;
+    /* mark previous as not-answered if still not-visited */
+    if (states[currentIdx] === 'not-visited') states[currentIdx] = 'not-answered';
+    currentIdx = idx;
+    /* mark current as at least not-answered (visited) */
+    if (states[currentIdx] === 'not-visited') states[currentIdx] = 'not-answered';
+    renderPalette();
+}
+
+window.scrollToQuestion = function (idx) {
+    setCurrentQ(idx);
+    var block = document.getElementById('qblock-' + getQid(idx));
+    if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+function getQid(idx) {
+    var blocks = document.querySelectorAll('.tt-question-block');
+    return blocks[idx] ? blocks[idx].dataset.qid : null;
+}
+
+window.markAnswered = function (idx) {
+    if (states[idx] !== 'marked') states[idx] = 'answered';
+    renderPalette();
+};
+
+/* watch radio changes */
+document.getElementById('test-form').addEventListener('change', function (e) {
+    if (e.target.type === 'radio') {
+        var block = e.target.closest('.tt-question-block');
+        if (block) {
+            var idx = parseInt(block.dataset.idx, 10);
+            if (!isNaN(idx) && states[idx] !== 'marked') states[idx] = 'answered';
+            renderPalette();
+        }
+    }
+});
+
+/* ── bottom bar buttons ── */
+document.getElementById('btnSave').addEventListener('click', function () {
+    if (states[currentIdx] !== 'marked') states[currentIdx] = 'answered';
+    renderPalette();
+    if (currentIdx < TOTAL - 1) window.scrollToQuestion(currentIdx + 1);
+});
+
+document.getElementById('btnPrev').addEventListener('click', function () {
+    if (currentIdx > 0) window.scrollToQuestion(currentIdx - 1);
+});
+
+document.getElementById('btnMark').addEventListener('click', function () {
+    states[currentIdx] = 'marked';
+    renderPalette();
+    if (currentIdx < TOTAL - 1) window.scrollToQuestion(currentIdx + 1);
+});
+
+document.getElementById('btnClear').addEventListener('click', function () {
+    var block = document.querySelectorAll('.tt-question-block')[currentIdx];
+    if (block) block.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
+    states[currentIdx] = 'not-answered';
+    renderPalette();
+});
+
+/* ── submit modal ── */
+document.getElementById('btnSubmit').addEventListener('click', function () {
+    var answered = states.filter(function (s) { return s === 'answered'; }).length;
+    var marked   = states.filter(function (s) { return s === 'marked'; }).length;
+    document.getElementById('ms-answered').textContent = answered;
+    document.getElementById('ms-unanswered').textContent = TOTAL - answered - marked;
+    document.getElementById('ms-marked').textContent = marked;
+    document.getElementById('submitModal').classList.add('open');
+});
+
+window.closeModal = function () {
+    document.getElementById('submitModal').classList.remove('open');
+};
+
+window.confirmSubmit = function () {
+    document.getElementById('test-form').submit();
+};
+
+/* close modal on backdrop click */
+document.getElementById('submitModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+});
+
+/* ── fullscreen ── */
+window.toggleFullscreen = function () {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    else document.exitFullscreen && document.exitFullscreen();
+};
+
+/* ── intersection observer: track current question while scrolling ── */
+var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+            var idx = parseInt(entry.target.dataset.idx, 10);
+            if (!isNaN(idx)) {
+                if (states[idx] === 'not-visited') states[idx] = 'not-answered';
+                currentIdx = idx;
+                renderPalette();
+            }
+        }
+    });
+}, { root: document.getElementById('qpanel'), threshold: 0.35 });
+
+document.querySelectorAll('.tt-question-block').forEach(function (b) { observer.observe(b); });
+
+/* ── sidebar tabs ── */
+document.querySelectorAll('.tt-stab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.tt-stab').forEach(function (b) { b.classList.remove('active'); });
+        this.classList.add('active');
+    });
+});
+
+}());
 </script>
 {% endblock %}
