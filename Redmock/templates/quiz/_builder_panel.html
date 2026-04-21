@@ -331,6 +331,26 @@
 .bp-stepper-input::-webkit-inner-spin-button,
 .bp-stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
+/* ── Question filter pill strip ── */
+.bp-q-filters {
+    display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .75rem;
+}
+.bp-q-filter-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .28rem .8rem; border-radius: 999px;
+    border: 1.5px solid var(--c2); background: #f6fdff;
+    font-family: 'Poppins', sans-serif; font-size: .72rem; font-weight: 600;
+    color: var(--c6); cursor: pointer;
+    transition: background .14s, border-color .14s, color .14s, box-shadow .14s;
+    user-select: none; white-space: nowrap; line-height: 1.6;
+}
+.bp-q-filter-btn:hover { border-color: var(--c4); background: rgba(0,180,216,.07); }
+.bp-q-filter-btn.active {
+    background: linear-gradient(135deg, var(--c4), var(--c7));
+    border-color: transparent; color: #fff;
+    box-shadow: 0 2px 8px rgba(0,119,182,.28);
+}
+
 .bp-accordion { margin-top: .875rem; border: 1.5px solid var(--c1); border-radius: .75rem; overflow: hidden; background: #fff; }
 .bp-accordion summary {
     list-style: none; display: flex; align-items: center; justify-content: space-between;
@@ -852,6 +872,21 @@
                                         <input id="{{ allocation.field_name }}" type="number" min="0" max="{{ allocation.available_count }}" name="{{ allocation.field_name }}" value="{{ allocation.requested_count }}" data-custom-count="true" class="bp-stepper-input">
                                         <button type="button" class="bp-stepper-btn" onclick="updateQuestionCount('{{ allocation.field_name }}', 1)">+</button>
                                     </div>
+                                    {# ── Four smart filter buttons ── #}
+                                    <div class="bp-q-filters" data-filter-for="{{ allocation.field_name }}">
+                                        <button type="button" class="bp-q-filter-btn" data-filter="latest" title="Pick the most recently updated questions">
+                                            <iconify-icon icon="mdi:clock-fast" width="13" height="13"></iconify-icon> Latest
+                                        </button>
+                                        <button type="button" class="bp-q-filter-btn" data-filter="images" title="Pick only questions that have an image">
+                                            <iconify-icon icon="rivet-icons:image" width="13" height="13"></iconify-icon> Images
+                                        </button>
+                                        <button type="button" class="bp-q-filter-btn" data-filter="shuffler" title="Randomly pick questions up to your count">
+                                            <iconify-icon icon="mdi:shuffle-variant" width="13" height="13"></iconify-icon> Shuffler
+                                        </button>
+                                        <button type="button" class="bp-q-filter-btn" data-filter="remain" title="Fill remaining slots randomly from unselected questions">
+                                            <iconify-icon icon="mdi:lightning-bolt" width="13" height="13"></iconify-icon> Remain
+                                        </button>
+                                    </div>
                                     <details class="bp-accordion">
                                         <summary>
                                             Choose questions
@@ -859,7 +894,10 @@
                                         </summary>
                                         <div class="bp-accordion-body">
                                             {% for question in allocation.available_questions %}
-                                                <label class="bp-q-row">
+                                                <label class="bp-q-row"
+                                                    data-has-image="{% if question.has_image %}1{% else %}0{% endif %}"
+                                                    data-updated="{{ question.updated_at }}"
+                                                >
                                                     <input type="checkbox" name="{{ allocation.question_select_field }}" value="{{ question.id }}" {% if question.id in allocation.selected_question_ids %}checked{% endif %}>
                                                     <span class="bp-q-text">{{ question.label }}</span>
                                                     {% if question.has_image %}
@@ -946,6 +984,103 @@
         el.textContent = total;
     };
 
+    /* ════════════════════════════════════════
+       Smart Filter Logic
+       ════════════════════════════════════════ */
+    function shuffleArr(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+        }
+        return arr;
+    }
+
+    function syncAccordionMeta(accordion) {
+        var meta = accordion.querySelector('summary .bp-accordion-meta');
+        if (!meta) return;
+        var checked = accordion.querySelectorAll('input[type="checkbox"]:checked').length;
+        var parts   = meta.textContent.split('/');
+        var needed  = parseInt((parts[1] || '0').trim(), 10);
+        meta.textContent = checked + ' / ' + needed;
+        if (checked >= needed) accordion.removeAttribute('open');
+    }
+
+    function applyFilter(strip, filterName) {
+        var fieldId   = strip.getAttribute('data-filter-for');
+        var countInp  = document.getElementById(fieldId);
+        var want      = countInp ? Math.max(0, parseInt(countInp.value || '0', 10)) : 0;
+        /* The <details> immediately follows the filter strip */
+        var accordion = strip.nextElementSibling;
+        if (!accordion) return;
+        var rows = Array.from(accordion.querySelectorAll('.bp-q-row'));
+
+        /* Snapshot already-checked rows BEFORE we clear (for Remain) */
+        var prevChecked = rows.filter(function (r) {
+            return r.querySelector('input[type="checkbox"]').checked;
+        });
+
+        /* Clear all */
+        rows.forEach(function (r) { r.querySelector('input[type="checkbox"]').checked = false; });
+
+        var pool = [];
+
+        if (filterName === 'latest') {
+            pool = rows.slice()
+                .sort(function (a, b) {
+                    return parseInt(b.dataset.updated || '0', 10)
+                         - parseInt(a.dataset.updated || '0', 10);
+                })
+                .slice(0, want);
+
+        } else if (filterName === 'images') {
+            pool = rows.filter(function (r) {
+                return r.dataset.hasImage === '1';
+            }).slice(0, want);
+
+        } else if (filterName === 'shuffler') {
+            pool = shuffleArr(rows.slice()).slice(0, want);
+
+        } else if (filterName === 'remain') {
+            /* Re-apply the previously checked ones */
+            prevChecked.forEach(function (r) {
+                r.querySelector('input[type="checkbox"]').checked = true;
+            });
+            var stillNeed = want - prevChecked.length;
+            if (stillNeed > 0) {
+                var unchecked = rows.filter(function (r) {
+                    return !r.querySelector('input[type="checkbox"]').checked;
+                });
+                shuffleArr(unchecked).slice(0, stillNeed).forEach(function (r) {
+                    r.querySelector('input[type="checkbox"]').checked = true;
+                });
+            }
+            syncAccordionMeta(accordion);
+            /* toggle active state */
+            strip.querySelectorAll('.bp-q-filter-btn').forEach(function (b) {
+                b.classList.toggle('active', b.dataset.filter === filterName);
+            });
+            return;
+        }
+
+        pool.forEach(function (r) { r.querySelector('input[type="checkbox"]').checked = true; });
+        syncAccordionMeta(accordion);
+        strip.querySelectorAll('.bp-q-filter-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.filter === filterName);
+        });
+    }
+
+    function setupFilterButtons() {
+        document.querySelectorAll('.bp-q-filters').forEach(function (strip) {
+            strip.querySelectorAll('.bp-q-filter-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    applyFilter(strip, btn.dataset.filter);
+                });
+            });
+        });
+    }
+
     function setupAccordionBehavior() {
         document.querySelectorAll(".bp-accordion").forEach(function (accordion) {
             var body = accordion.querySelector(".bp-accordion-body");
@@ -985,6 +1120,7 @@
         if (evt.detail && evt.detail.target && evt.detail.target.id === "builder-panel") {
             refreshCustomTotal();
             setupAccordionBehavior();
+            setupFilterButtons();
             setProgressBar(false);
             /* drainToastData is called by toaster.html's own htmx:afterSettle listener */
         }
@@ -992,6 +1128,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         setupAccordionBehavior();
+        setupFilterButtons();
 
         var placeholders = {
             candidate_name:   'Enter your full name',

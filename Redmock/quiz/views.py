@@ -115,6 +115,7 @@ def _available_questions_for_allocation(company, subject, subtitle, level):
             'id': question.id,
             'label': question.question[:140],
             'has_image': bool(question.question_image),
+            'updated_at': int(question.updated_at.timestamp()) if question.updated_at else 0,
         }
         for question in queryset.order_by('id')
     ]
