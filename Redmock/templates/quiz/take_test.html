@@ -337,6 +337,8 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-palette-scroll::-webkit-scrollbar { width:3px; }
 .tt-palette-scroll::-webkit-scrollbar-thumb { background:var(--c2); border-radius:2px; }
 .tt-palette-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.375rem; }
+.tt-drawer-panel { display:none; flex:1; min-height:0; }
+.tt-drawer-panel.active { display:block; }
 .tt-pnum {
     aspect-ratio:1; border-radius:.5rem;
     display:flex; align-items:center; justify-content:center;
@@ -360,6 +362,59 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 }
 .tt-stab.active { background:var(--c5); color:#fff; }
 .tt-stab:not(:last-child) { border-right:1px solid rgba(0,180,216,.15); }
+.tt-instructions {
+    height:100%;
+    overflow-y:auto;
+    padding:1rem .95rem 1.1rem;
+    background:linear-gradient(180deg, #fbfeff 0%, #f4fbfd 100%);
+}
+.tt-instructions::-webkit-scrollbar { width:3px; }
+.tt-instructions::-webkit-scrollbar-thumb { background:var(--c2); border-radius:2px; }
+.tt-inst-title {
+    font-size:.92rem;
+    font-weight:800;
+    color:var(--c8);
+    margin-bottom:.25rem;
+}
+.tt-inst-sub {
+    font-size:.72rem;
+    line-height:1.5;
+    color:#64748b;
+    margin-bottom:.95rem;
+}
+.tt-inst-list {
+    display:flex;
+    flex-direction:column;
+    gap:.65rem;
+}
+.tt-inst-item {
+    display:flex;
+    gap:.55rem;
+    align-items:flex-start;
+    padding:.7rem .75rem;
+    border:1px solid rgba(0,180,216,.12);
+    border-radius:.8rem;
+    background:#fff;
+}
+.tt-inst-badge {
+    width:1.35rem;
+    height:1.35rem;
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--c4), var(--c6));
+    color:#fff;
+    font-size:.68rem;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    margin-top:.05rem;
+}
+.tt-inst-text {
+    font-size:.76rem;
+    line-height:1.55;
+    color:#334155;
+}
 
 /* ══ BOTTOM BAR ══ */
 .tt-botbar {
@@ -600,6 +655,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         {% endif %}
     </div>
 
+    <div class="tt-drawer-panel active" data-drawer-panel="paper">
     <div class="tt-palette-scroll">
         {% for section in question_sections %}
         <div class="tt-palette-group">
@@ -632,10 +688,48 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         <div class="tt-palette-grid" id="palette"></div>
         {% endfor %}
     </div>
+    </div>
+
+    <div class="tt-drawer-panel" data-drawer-panel="instructions">
+        <div class="tt-instructions">
+            <div class="tt-inst-title">Online Test Instructions</div>
+            <div class="tt-inst-sub">Read these rules before submitting your exam. Your timer will continue while you review this panel.</div>
+            <div class="tt-inst-list">
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">1</div>
+                    <div class="tt-inst-text">Read each question carefully before choosing an answer. Only one option can be selected for each question.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">2</div>
+                    <div class="tt-inst-text">Use <strong>Save &amp; Next</strong> after choosing an option so you can move through the paper in order.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">3</div>
+                    <div class="tt-inst-text">Questions shown in red are visited but not answered. Questions shown in blue are answered. Purple means marked for review.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">4</div>
+                    <div class="tt-inst-text">You can jump to any question using the question palette on the right side at any time during the exam.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">5</div>
+                    <div class="tt-inst-text">Do not refresh the browser, close the tab, or use the back button while the test is running.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">6</div>
+                    <div class="tt-inst-text">The test will submit automatically when the timer reaches zero, so review unanswered questions before time ends.</div>
+                </div>
+                <div class="tt-inst-item">
+                    <div class="tt-inst-badge">7</div>
+                    <div class="tt-inst-text">Use the final <strong>Submit</strong> button only when you are sure you have completed the test.</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="tt-drawer-tabs">
-        <button class="tt-stab active">Question Paper</button>
-        <button class="tt-stab">Instructions</button>
+        <button class="tt-stab active" data-drawer-tab="paper">Question Paper</button>
+        <button class="tt-stab" data-drawer-tab="instructions">Instructions</button>
     </div>
 </div>
 </aside>
@@ -903,6 +997,10 @@ document.querySelectorAll('.tt-stab').forEach(function (btn) {
     btn.addEventListener('click', function () {
         document.querySelectorAll('.tt-stab').forEach(function (b) { b.classList.remove('active'); });
         this.classList.add('active');
+        var target = this.dataset.drawerTab;
+        document.querySelectorAll('[data-drawer-panel]').forEach(function (panel) {
+            panel.classList.toggle('active', panel.dataset.drawerPanel === target);
+        });
     });
 });
 
