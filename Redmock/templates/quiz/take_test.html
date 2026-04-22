@@ -101,12 +101,61 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     color:#fff; border-color:transparent;
     box-shadow:0 2px 8px rgba(0,119,182,.3);
 }
-.tt-palette-group + .tt-palette-group { margin-top:.9rem; }
-.tt-palette-group-title {
-    margin-bottom:.45rem;
-    font-size:.72rem;
-    font-weight:700;
+.tt-palette-group {
+    position:relative;
+}
+.tt-palette-group + .tt-palette-group {
+    margin-top:1rem;
+    padding-top:1rem;
+}
+.tt-palette-group + .tt-palette-group::before {
+    content:'';
+    position:absolute;
+    top:0;
+    left:.125rem;
+    right:.125rem;
+    height:1px;
+    background:linear-gradient(90deg, rgba(144,224,239,.15), rgba(0,150,199,.35), rgba(144,224,239,.15));
+}
+.tt-palette-group-head {
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    margin-bottom:.7rem;
+}
+.tt-palette-icon {
+    width:2rem;
+    height:2rem;
+    border-radius:.7rem;
+    background:linear-gradient(135deg, rgba(0,180,216,.14), rgba(2,62,138,.18));
+    border:1px solid rgba(0,150,199,.18);
+    display:flex;
+    align-items:center;
+    justify-content:center;
     color:var(--c7);
+    overflow:hidden;
+    flex-shrink:0;
+}
+.tt-palette-icon svg {
+    width:1.15rem;
+    height:1.15rem;
+    display:block;
+}
+.tt-palette-meta {
+    min-width:0;
+}
+.tt-palette-group-title {
+    font-size:.9rem;
+    font-weight:800;
+    color:var(--c8);
+    line-height:1.1;
+    text-transform:capitalize;
+}
+.tt-palette-group-count {
+    margin-top:.18rem;
+    font-size:.68rem;
+    font-weight:600;
+    color:var(--c6);
 }
 
 /* ══ QUESTION AREA ══ */
@@ -554,9 +603,19 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     <div class="tt-palette-scroll">
         {% for section in question_sections %}
         <div class="tt-palette-group">
-            {% if attempt.session_type == 'multi' %}
-            <div class="tt-palette-group-title">{{ section.subject_name }}</div>
-            {% endif %}
+            <div class="tt-palette-group-head">
+                <div class="tt-palette-icon">
+                    {% if section.subject_svg %}
+                        {{ section.subject_svg|safe }}
+                    {% else %}
+                        <span>{{ section.subject_name|first|upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="tt-palette-meta">
+                    <div class="tt-palette-group-title">{{ section.subject_name }}</div>
+                    <div class="tt-palette-group-count">{{ section.questions|length }} questions</div>
+                </div>
+            </div>
             <div class="tt-palette-grid">
                 {% for section_question in section.questions %}
                 <div class="tt-pnum not-visited{% if forloop.parentloop.first and forloop.first %} current{% endif %}"

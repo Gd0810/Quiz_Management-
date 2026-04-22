@@ -587,6 +587,7 @@ def take_test(request, attempt_id):
         if subject_name not in section_lookup:
             section_lookup[subject_name] = {
                 'subject_name': subject_name,
+                'subject_svg': question.test_subject.subject_svg or '',
                 'first_index': index,
                 'questions': [],
             }
