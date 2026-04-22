@@ -101,6 +101,13 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     color:#fff; border-color:transparent;
     box-shadow:0 2px 8px rgba(0,119,182,.3);
 }
+.tt-palette-group + .tt-palette-group { margin-top:.9rem; }
+.tt-palette-group-title {
+    margin-bottom:.45rem;
+    font-size:.72rem;
+    font-weight:700;
+    color:var(--c7);
+}
 
 /* ══ QUESTION AREA ══ */
 .tt-qarea {
@@ -399,7 +406,18 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 
 {# ══ SECTION BAR ══ #}
 <div class="tt-secbar">
-    <div class="tt-sec-tab active">📋 All Questions</div>
+    {% for section in question_sections %}
+    <button
+        type="button"
+        class="tt-sec-tab{% if forloop.first %} active{% endif %}"
+        data-section-tab="{{ forloop.counter0 }}"
+        onclick="goToQuestion({{ section.first_index }})"
+    >
+        {{ section.subject_name }}
+    </button>
+    {% empty %}
+    <div class="tt-sec-tab active">Questions</div>
+    {% endfor %}
 </div>
 
 {# ══ MAIN BODY: question area + sidebar ══ #}
@@ -524,19 +542,36 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         </div>
     </div>
 
-    <div class="tt-palette-section">Section : All Questions</div>
+    <div class="tt-palette-section">
+        Section :
+        {% if attempt.session_type == 'single' and question_sections %}
+            {{ question_sections.0.subject_name }}
+        {% else %}
+            Selected Subjects
+        {% endif %}
+    </div>
 
     <div class="tt-palette-scroll">
-        <div class="tt-palette-grid" id="palette">
-            {% for question in questions %}
-            <div class="tt-pnum not-visited{% if forloop.first %} current{% endif %}"
-                 id="pnum-{{ forloop.counter0 }}"
-                 data-idx="{{ forloop.counter0 }}"
-                 onclick="goToQuestion({{ forloop.counter0 }})">
-                {{ forloop.counter }}
+        {% for section in question_sections %}
+        <div class="tt-palette-group">
+            {% if attempt.session_type == 'multi' %}
+            <div class="tt-palette-group-title">{{ section.subject_name }}</div>
+            {% endif %}
+            <div class="tt-palette-grid">
+                {% for section_question in section.questions %}
+                <div class="tt-pnum not-visited{% if forloop.parentloop.first and forloop.first %} current{% endif %}"
+                     id="pnum-{{ section_question.index }}"
+                     data-idx="{{ section_question.index }}"
+                     data-subject="{{ section.subject_name }}"
+                     onclick="goToQuestion({{ section_question.index }})">
+                    {{ section_question.number }}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+        {% empty %}
+        <div class="tt-palette-grid" id="palette"></div>
+        {% endfor %}
     </div>
 
     <div class="tt-drawer-tabs">
@@ -673,6 +708,7 @@ function showQuestion(idx, dir) {
         newBlock.classList.add('active');
     }, oldBlock && oldBlock !== newBlock ? 160 : 0);
 
+    syncSectionTabs();
     renderPalette();
     updateProgress();
 }
@@ -688,6 +724,18 @@ function renderPalette() {
         var el = document.getElementById('pnum-' + i);
         if (el) el.className = 'tt-pnum ' + states[i] + (i === curIdx ? ' current' : '');
     }
+}
+
+function syncSectionTabs() {
+    var currentBlock = document.getElementById('qblock-' + curIdx);
+    if (!currentBlock) return;
+
+    var subjectLabel = currentBlock.querySelector('.tt-qnum-sub');
+    var currentSubject = subjectLabel ? subjectLabel.textContent.split('/')[0].trim() : '';
+
+    document.querySelectorAll('[data-section-tab]').forEach(function (tab) {
+        tab.classList.toggle('active', tab.textContent.trim() === currentSubject);
+    });
 }
 
 /* ── progress bar ── */
@@ -795,6 +843,7 @@ document.querySelectorAll('.tt-stab').forEach(function (btn) {
 /* ── init ── */
 renderPalette();
 updateProgress();
+syncSectionTabs();
 
 }());
 </script>

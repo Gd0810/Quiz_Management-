@@ -579,6 +579,25 @@ def take_test(request, attempt_id):
     )
     question_map = {question.id: question for question in questions}
     ordered_questions = [question_map[qid] for qid in question_ids if qid in question_map]
+    question_sections = []
+    section_lookup = {}
+
+    for index, question in enumerate(ordered_questions):
+        subject_name = question.test_subject.subject
+        if subject_name not in section_lookup:
+            section_lookup[subject_name] = {
+                'subject_name': subject_name,
+                'first_index': index,
+                'questions': [],
+            }
+            question_sections.append(section_lookup[subject_name])
+
+        section_lookup[subject_name]['questions'].append(
+            {
+                'index': index,
+                'number': index + 1,
+            }
+        )
 
     if request.method == 'POST':
         updated_answers = []
@@ -620,6 +639,7 @@ def take_test(request, attempt_id):
     context = {
         'attempt': attempt,
         'questions': ordered_questions,
+        'question_sections': question_sections,
         'initial_answers': initial_answers,
         'end_time_iso': (
             attempt.started_at + timedelta(minutes=attempt.duration_minutes)
