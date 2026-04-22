@@ -826,9 +826,16 @@ document.getElementById('test-form').addEventListener('change', function (e) {
     }
 });
 
+function hasSelectedAnswer(idx) {
+    var block = document.getElementById('qblock-' + idx);
+    return !!(block && block.querySelector('input[type="radio"]:checked'));
+}
+
 /* ── bottom buttons ── */
 document.getElementById('btnSave').addEventListener('click', function () {
-    if (states[curIdx] !== 'marked') states[curIdx] = 'answered';
+    if (states[curIdx] !== 'marked') {
+        states[curIdx] = hasSelectedAnswer(curIdx) ? 'answered' : 'not-answered';
+    }
     renderPalette(); updateProgress();
     if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
