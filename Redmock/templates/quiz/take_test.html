@@ -7,664 +7,558 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
-/* ── Ocean Blue Serenity palette ── */
 :root {
     --c0:#caf0f8; --c1:#ade8f4; --c2:#90e0ef; --c3:#48cae4;
     --c4:#00b4d8; --c5:#0096c7; --c6:#0077b6; --c7:#023e8a; --c8:#03045e; --c9:#02033a;
-
-    /* question palette states */
-    --qs-answered:    var(--c5);
-    --qs-marked:      #7c3aed;
-    --qs-marked-ans:  #0d9488;
-    --qs-not-visited: #94a3b8;
-    --qs-not-answered:#ef4444;
-
-    --topbar-h: 56px;
-    --secbar-h: 44px;
-    --botbar-h: 60px;
-    --sidebar-w: 280px;
+    --qs-answered:#0096c7; --qs-marked:#7c3aed; --qs-not-answered:#ef4444;
+    --topbar-h:56px; --secbar-h:42px; --botbar-h:62px;
+    --drawer-w:300px;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: 'DM Sans', sans-serif; background: var(--c9); color: #1e293b; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; overflow:hidden; }
+body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 
-/* ════════════════════════════════════
-   TOP BAR
-════════════════════════════════════ */
-.tt-topbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    height: var(--topbar-h);
-    background: var(--c8);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 1.25rem;
-    gap: 1rem;
-    border-bottom: 2px solid var(--c7);
+/* ══ TOPBAR ══ */
+.tt-top {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    height:var(--topbar-h);
+    background:var(--c8);
+    display:flex; align-items:center; padding:0 1rem; gap:.75rem;
+    border-bottom:2px solid var(--c7);
 }
-.tt-brand {
-    display: flex; align-items: center; gap: .625rem; flex-shrink: 0;
-}
-.tt-brand-dot {
-    width: .5rem; height: .5rem; border-radius: 50%;
-    background: var(--c3); box-shadow: 0 0 6px var(--c4);
-}
-.tt-brand-name {
-    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
-    color: #fff; letter-spacing: -.03em;
-}
+.tt-brand { display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+.tt-brand-dot { width:.45rem; height:.45rem; border-radius:50%; background:var(--c3); box-shadow:0 0 6px var(--c4); }
+.tt-brand-name { font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:800; color:#fff; letter-spacing:-.03em; }
 .tt-title {
-    font-size: .8125rem; font-weight: 500; color: var(--c1);
-    padding-left: 1rem; border-left: 1px solid rgba(144,224,239,.25);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 300px;
+    font-size:.8rem; font-weight:500; color:var(--c1);
+    padding-left:.875rem; border-left:1px solid rgba(144,224,239,.2);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; flex:1;
 }
 .tt-timer-wrap {
-    display: flex; align-items: center; gap: .625rem;
-    background: rgba(255,255,255,.07);
-    border: 1px solid rgba(144,224,239,.2);
-    border-radius: .75rem; padding: .375rem 1rem;
-    flex-shrink: 0;
+    display:flex; align-items:center; gap:.5rem;
+    background:rgba(255,255,255,.07); border:1px solid rgba(144,224,239,.2);
+    border-radius:.75rem; padding:.3rem .875rem; flex-shrink:0;
 }
-.tt-timer-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--c1); }
-.tt-timer-val {
-    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
-    color: #fff; letter-spacing: .05em;
-    transition: color .3s;
-}
-.tt-timer-val.urgent { color: #fca5a5; animation: pulse-urgent 1s ease-in-out infinite; }
-@keyframes pulse-urgent { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+.tt-timer-label { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c1); }
+.tt-timer-val { font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:700; color:#fff; letter-spacing:.06em; }
+.tt-timer-val.urgent { color:#fca5a5; animation:pulse-u 1s ease-in-out infinite; }
+@keyframes pulse-u { 0%,100%{opacity:1} 50%{opacity:.55} }
 
-.tt-topbar-actions { display: flex; gap: .5rem; flex-shrink: 0; }
-.tt-btn-outline {
-    padding: .375rem .875rem; border-radius: .625rem;
-    border: 1.5px solid rgba(144,224,239,.3); background: transparent;
-    font-family: 'DM Sans', sans-serif; font-size: .8125rem; font-weight: 600;
-    color: var(--c1); cursor: pointer;
-    transition: border-color .15s, background .15s;
+.tt-top-actions { display:flex; gap:.4rem; flex-shrink:0; margin-left:auto; }
+.tt-btn-sm {
+    padding:.3rem .7rem; border-radius:.5rem;
+    border:1.5px solid rgba(144,224,239,.25); background:transparent;
+    font-family:'DM Sans',sans-serif; font-size:.75rem; font-weight:600;
+    color:var(--c1); cursor:pointer; transition:border-color .15s, background .15s;
+    white-space:nowrap;
 }
-.tt-btn-outline:hover { border-color: var(--c3); background: rgba(72,202,228,.08); }
+.tt-btn-sm:hover { border-color:var(--c3); background:rgba(72,202,228,.1); }
 
-/* ════════════════════════════════════
-   SECTION BAR
-════════════════════════════════════ */
+/* palette drawer toggle button */
+.tt-drawer-toggle {
+    display:flex; align-items:center; justify-content:center; gap:.375rem;
+    padding:.3rem .875rem; border-radius:.5rem;
+    border:1.5px solid rgba(144,224,239,.3); background:rgba(255,255,255,.07);
+    font-family:'DM Sans',sans-serif; font-size:.75rem; font-weight:700;
+    color:#fff; cursor:pointer; transition:background .15s, border-color .15s;
+    flex-shrink:0;
+}
+.tt-drawer-toggle:hover { background:rgba(255,255,255,.14); border-color:var(--c3); }
+.tt-drawer-toggle .icon { font-size:.9rem; transition:transform .3s; }
+.tt-drawer-toggle.open .icon { transform:rotate(180deg); }
+
+/* ══ SECTION BAR ══ */
 .tt-secbar {
-    position: fixed; top: var(--topbar-h); left: 0; right: 0; z-index: 99;
-    height: var(--secbar-h);
-    background: #fff;
-    border-bottom: 1.5px solid rgba(0,180,216,.15);
-    display: flex; align-items: center;
-    padding: 0 1.25rem;
-    gap: .75rem;
-    overflow-x: auto;
+    position:fixed; top:var(--topbar-h); left:0; right:0; z-index:190;
+    height:var(--secbar-h);
+    background:#fff; border-bottom:1.5px solid rgba(0,180,216,.15);
+    display:flex; align-items:center; padding:0 1rem; gap:.625rem;
+    overflow-x:auto;
 }
-.tt-secbar::-webkit-scrollbar { display: none; }
+.tt-secbar::-webkit-scrollbar { display:none; }
 .tt-sec-tab {
-    display: inline-flex; align-items: center; gap: .375rem;
-    padding: .375rem 1rem; border-radius: 999px;
-    font-size: .8125rem; font-weight: 600; white-space: nowrap;
-    cursor: pointer; border: 1.5px solid transparent;
-    transition: all .15s;
-    color: var(--c6);
-    background: var(--c0);
-    border-color: var(--c2);
+    padding:.3rem .875rem; border-radius:999px;
+    font-size:.78rem; font-weight:600; white-space:nowrap; cursor:pointer;
+    border:1.5px solid var(--c2); color:var(--c6); background:var(--c0);
+    transition:all .15s;
 }
 .tt-sec-tab.active {
-    background: linear-gradient(135deg, var(--c5), var(--c7));
-    color: #fff; border-color: transparent;
-    box-shadow: 0 3px 10px rgba(0,119,182,.3);
+    background:linear-gradient(135deg,var(--c5),var(--c7));
+    color:#fff; border-color:transparent;
+    box-shadow:0 2px 8px rgba(0,119,182,.3);
 }
 
-/* ════════════════════════════════════
-   MAIN LAYOUT
-════════════════════════════════════ */
-.tt-layout {
-    position: fixed;
-    top: calc(var(--topbar-h) + var(--secbar-h));
-    bottom: var(--botbar-h);
-    left: 0; right: 0;
-    display: grid;
-    grid-template-columns: 1fr var(--sidebar-w);
-    overflow: hidden;
+/* ══ QUESTION AREA ══ */
+.tt-qarea {
+    flex:1;
+    min-width:0;
+    overflow-y:auto;
+    background:#eaf7fc;
+    display:flex; flex-direction:column;
+    align-items:center;
+    padding:1.5rem 1rem;
+}
+.tt-qarea::-webkit-scrollbar { width:4px; }
+.tt-qarea::-webkit-scrollbar-thumb { background:var(--c2); border-radius:2px; }
+
+/* question block: hidden by default, only .active is shown */
+.tt-qblock {
+    display:none;
+    flex-direction:column;
+    gap:1rem;
+    width:100%; max-width:780px;
+    animation:q-in .28s cubic-bezier(.34,1.2,.64,1) both;
+}
+.tt-qblock.active { display:flex; }
+@keyframes q-in {
+    from { opacity:0; transform:translateY(12px) scale(.98); }
+    to   { opacity:1; transform:none; }
+}
+.q-exit { animation:q-out .18s ease-in both !important; }
+@keyframes q-out {
+    from { opacity:1; transform:none; }
+    to   { opacity:0; transform:translateY(-8px); }
 }
 
-/* ════════════════════════════════════
-   QUESTION PANEL (LEFT)
-════════════════════════════════════ */
-.tt-qpanel {
-    overflow-y: auto;
-    background: #f0fafd;
-    padding: 1.5rem;
-    display: flex; flex-direction: column; gap: 1.25rem;
-}
-.tt-qpanel::-webkit-scrollbar { width: 4px; }
-.tt-qpanel::-webkit-scrollbar-track { background: transparent; }
-.tt-qpanel::-webkit-scrollbar-thumb { background: var(--c2); border-radius: 2px; }
-
-/* question header bar */
+/* question header */
 .tt-qheader {
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
-    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
-    border-radius: .875rem; padding: .75rem 1.25rem;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.625rem;
+    background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
+    padding:.625rem 1.1rem;
 }
-.tt-qnum {
-    font-family: 'Syne', sans-serif; font-size: .9375rem; font-weight: 700; color: var(--c8);
-}
-.tt-qmeta { display: flex; align-items: center; gap: 1rem; }
-.tt-marks-wrap { display: flex; align-items: center; gap: .375rem; }
-.tt-mark-pill {
-    font-size: .75rem; font-weight: 700; padding: .2rem .6rem;
-    border-radius: 999px; font-family: 'Syne', sans-serif;
-}
-.tt-mark-pill.pos { background: rgba(16,185,129,.15); color: #047857; }
-.tt-mark-pill.neg { background: rgba(239,68,68,.12); color: #b91c1c; }
-.tt-time-badge {
-    font-size: .75rem; font-weight: 600; color: var(--c6);
-    background: var(--c0); border: 1px solid var(--c2);
-    border-radius: .5rem; padding: .2rem .625rem;
-}
-.tt-report-btn {
-    font-size: .75rem; font-weight: 600; color: #f59e0b;
-    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2);
-    border-radius: .5rem; padding: .2rem .625rem; cursor: pointer;
-    transition: background .15s;
-}
-.tt-report-btn:hover { background: rgba(245,158,11,.15); }
+.tt-qnum { font-family:'Syne',sans-serif; font-size:.9375rem; font-weight:700; color:var(--c8); }
+.tt-qnum-sub { font-size:.75rem; color:var(--c5); font-weight:500; margin-top:.1rem; }
+.tt-qmeta { display:flex; align-items:center; gap:.625rem; flex-wrap:wrap; }
+.tt-mark-pill { font-size:.72rem; font-weight:700; padding:.18rem .55rem; border-radius:999px; font-family:'Syne',sans-serif; }
+.tt-mark-pill.pos { background:rgba(16,185,129,.15); color:#047857; }
+.tt-mark-pill.neg { background:rgba(239,68,68,.1); color:#b91c1c; }
+.tt-time-badge { font-size:.72rem; font-weight:600; color:var(--c6); background:var(--c0); border:1px solid var(--c2); border-radius:.45rem; padding:.18rem .55rem; }
+.tt-report-btn { font-size:.72rem; font-weight:600; color:#f59e0b; background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); border-radius:.45rem; padding:.18rem .55rem; cursor:pointer; }
 
-/* comprehension block */
+/* comprehension */
 .tt-comprehension {
-    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
-    border-radius: .875rem; padding: 1.25rem 1.5rem;
+    background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
+    padding:1.1rem 1.25rem;
 }
-.tt-comp-label {
-    font-size: .7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .09em; color: var(--c5); margin-bottom: .625rem;
-}
-.tt-comp-text { font-size: .9rem; line-height: 1.7; color: #334155; }
+.tt-comp-label { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c5); margin-bottom:.5rem; }
+.tt-comp-text { font-size:.875rem; line-height:1.7; color:#334155; }
 
 /* question card */
-.tt-qcard {
-    background: #fff; border: 1.5px solid rgba(0,180,216,.15);
-    border-radius: .875rem; padding: 1.25rem 1.5rem;
-}
-.tt-qlabel {
-    font-size: .7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .09em; color: var(--c5); margin-bottom: .75rem;
-}
-.tt-qtext {
-    font-size: .9875rem; font-weight: 500; line-height: 1.65; color: #1e293b;
-    margin-bottom: 1.25rem;
-}
+.tt-qcard { background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem; padding:1.1rem 1.25rem; }
+.tt-qlabel { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c5); margin-bottom:.625rem; }
+.tt-qtext { font-size:.9875rem; font-weight:500; line-height:1.65; color:#1e293b; margin-bottom:1.1rem; }
 
 /* options */
-.tt-options { display: flex; flex-direction: column; gap: .625rem; }
+.tt-options { display:flex; flex-direction:column; gap:.55rem; }
 .tt-option {
-    display: flex; align-items: center; gap: .875rem;
-    padding: .875rem 1.1rem;
-    border: 1.5px solid rgba(0,180,216,.18);
-    border-radius: .75rem;
-    background: #f6fdff;
-    cursor: pointer;
-    transition: border-color .15s, background .15s, box-shadow .15s;
-    user-select: none;
+    display:flex; align-items:center; gap:.75rem;
+    padding:.8rem 1rem;
+    border:1.5px solid rgba(0,180,216,.18); border-radius:.75rem;
+    background:#f6fdff; cursor:pointer;
+    transition:border-color .15s, background .15s, box-shadow .15s;
+    user-select:none;
 }
-.tt-option:hover { border-color: var(--c4); background: #edfafe; }
-.tt-option input[type="radio"] { display: none; }
+.tt-option:hover { border-color:var(--c4); background:#edfafe; }
+.tt-option input[type="radio"] { display:none; }
 .tt-option-bubble {
-    width: 1.375rem; height: 1.375rem; border-radius: 50%;
-    border: 2px solid var(--c3); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color .15s, background .15s;
-    position: relative;
+    width:1.25rem; height:1.25rem; border-radius:50%;
+    border:2px solid var(--c3); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s, background .15s; position:relative;
 }
 .tt-option-bubble::after {
-    content: ''; width: .55rem; height: .55rem; border-radius: 50%;
-    background: var(--c5); transform: scale(0); transition: transform .15s;
+    content:''; width:.5rem; height:.5rem; border-radius:50%;
+    background:var(--c5); transform:scale(0); transition:transform .15s;
 }
-.tt-option input:checked ~ .tt-option-bubble { border-color: var(--c5); background: rgba(0,150,199,.08); }
-.tt-option input:checked ~ .tt-option-bubble::after { transform: scale(1); }
-.tt-option:has(input:checked) {
-    border-color: var(--c4);
-    background: linear-gradient(135deg, rgba(0,180,216,.07), rgba(0,150,199,.04));
-    box-shadow: 0 2px 8px rgba(0,150,199,.12);
-}
+.tt-option:has(input:checked) { border-color:var(--c4); background:linear-gradient(135deg,rgba(0,180,216,.07),rgba(0,150,199,.03)); box-shadow:0 2px 8px rgba(0,150,199,.1); }
+.tt-option:has(input:checked) .tt-option-bubble { border-color:var(--c5); }
+.tt-option:has(input:checked) .tt-option-bubble::after { transform:scale(1); }
 .tt-option-key {
-    width: 1.5rem; height: 1.5rem; border-radius: .375rem; flex-shrink: 0;
-    background: var(--c0); border: 1px solid var(--c2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: .7rem; font-weight: 800; color: var(--c7);
-    font-family: 'Syne', sans-serif;
+    width:1.4rem; height:1.4rem; border-radius:.35rem; flex-shrink:0;
+    background:var(--c0); border:1px solid var(--c2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.68rem; font-weight:800; color:var(--c7); font-family:'Syne',sans-serif;
 }
-.tt-option:has(input:checked) .tt-option-key {
-    background: var(--c5); border-color: var(--c5); color: #fff;
-}
-.tt-option-text { font-size: .9rem; color: #1e293b; flex: 1; line-height: 1.5; }
+.tt-option:has(input:checked) .tt-option-key { background:var(--c5); border-color:var(--c5); color:#fff; }
+.tt-option-text { font-size:.9rem; color:#1e293b; flex:1; line-height:1.45; }
 
-/* ════════════════════════════════════
-   SIDEBAR (RIGHT)
-════════════════════════════════════ */
-.tt-sidebar {
-    background: #fff;
-    border-left: 1.5px solid rgba(0,180,216,.18);
-    display: flex; flex-direction: column;
-    overflow: hidden;
+/* ══ DRAWER — push layout, no overlay ══ */
+.tt-body {
+    position:fixed;
+    top:calc(var(--topbar-h) + var(--secbar-h));
+    bottom:var(--botbar-h);
+    left:0; right:0;
+    display:flex;
+    overflow:hidden;
 }
 
-/* candidate info strip */
-.tt-cand-strip {
-    padding: .875rem 1rem;
-    background: linear-gradient(135deg, var(--c8), var(--c7));
-    display: flex; align-items: center; gap: .75rem;
-    flex-shrink: 0;
+.tt-drawer {
+    width:0;
+    flex-shrink:0;
+    overflow:hidden;
+    background:#fff;
+    border-left:1.5px solid rgba(0,180,216,.18);
+    box-shadow:-4px 0 20px rgba(2,3,94,.08);
+    display:flex; flex-direction:column;
+    transition:width .3s cubic-bezier(.4,0,.2,1);
+}
+.tt-drawer.open { width:var(--drawer-w); }
+.tt-drawer-inner {
+    width:var(--drawer-w);
+    flex-shrink:0;
+    display:flex; flex-direction:column;
+    height:100%;
+    overflow:hidden;
+}
+
+/* drawer header */
+.tt-drawer-head {
+    background:linear-gradient(135deg,var(--c8),var(--c7));
+    padding:.875rem 1rem;
+    display:flex; align-items:center; gap:.75rem; flex-shrink:0;
 }
 .tt-avatar {
-    width: 2.25rem; height: 2.25rem; border-radius: 50%;
-    background: linear-gradient(135deg, var(--c3), var(--c5));
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-size: .875rem; font-weight: 700; color: #fff;
-    flex-shrink: 0;
+    width:2.25rem; height:2.25rem; border-radius:50%;
+    background:linear-gradient(135deg,var(--c3),var(--c5));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-size:.875rem; font-weight:700; color:#fff; flex-shrink:0;
 }
-.tt-cand-name { font-size: .875rem; font-weight: 600; color: #fff; }
-.tt-cand-sub  { font-size: .7rem; color: var(--c1); margin-top: .1rem; }
+.tt-cand-name { font-size:.875rem; font-weight:600; color:#fff; }
+.tt-cand-sub  { font-size:.7rem; color:var(--c1); margin-top:.1rem; }
+.tt-drawer-close {
+    margin-left:auto; width:1.75rem; height:1.75rem;
+    border-radius:50%; border:1.5px solid rgba(144,224,239,.3);
+    background:transparent; color:var(--c1); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem; transition:background .15s;
+    flex-shrink:0;
+}
+.tt-drawer-close:hover { background:rgba(255,255,255,.12); }
 
 /* legend */
 .tt-legend {
-    padding: .75rem 1rem;
-    background: #f8feff;
-    border-bottom: 1.5px solid rgba(0,180,216,.12);
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: .4rem .75rem;
-    flex-shrink: 0;
+    padding:.625rem .875rem;
+    background:#f8feff; border-bottom:1.5px solid rgba(0,180,216,.12);
+    display:grid; grid-template-columns:1fr 1fr; gap:.3rem .5rem; flex-shrink:0;
 }
-.tt-legend-item {
-    display: flex; align-items: center; gap: .375rem;
-    font-size: .7rem; color: #475569; white-space: nowrap;
-}
+.tt-legend-item { display:flex; align-items:center; gap:.3rem; font-size:.68rem; color:#475569; white-space:nowrap; }
 .tt-legend-dot {
-    width: 1.25rem; height: 1.25rem; border-radius: .3rem; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .6rem; font-weight: 700; color: #fff;
+    width:1.2rem; height:1.2rem; border-radius:.3rem; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.58rem; font-weight:700; color:#fff;
 }
 
-/* section heading */
+/* progress bar inside drawer */
+.tt-progress-wrap { padding:.625rem .875rem; border-bottom:1px solid rgba(0,180,216,.1); flex-shrink:0; }
+.tt-progress-row { display:flex; justify-content:space-between; font-size:.7rem; font-weight:600; color:var(--c6); margin-bottom:.35rem; }
+.tt-progress-track { height:.35rem; background:var(--c0); border-radius:999px; overflow:hidden; }
+.tt-progress-fill { height:100%; background:linear-gradient(90deg,var(--c4),var(--c6)); border-radius:999px; transition:width .4s ease; width:0%; }
+
+/* palette section label */
 .tt-palette-section {
-    padding: .625rem 1rem .3rem;
-    font-size: .65rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .09em; color: var(--c6);
-    flex-shrink: 0;
-    border-bottom: 1px solid rgba(0,180,216,.1);
-    background: #fff;
+    padding:.5rem .875rem .25rem;
+    font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c6);
+    flex-shrink:0;
 }
 
-/* number grid */
-.tt-palette-scroll { overflow-y: auto; flex: 1; padding: .75rem 1rem; }
-.tt-palette-scroll::-webkit-scrollbar { width: 3px; }
-.tt-palette-scroll::-webkit-scrollbar-thumb { background: var(--c2); border-radius: 2px; }
-.tt-palette-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem;
-}
+/* palette grid */
+.tt-palette-scroll { overflow-y:auto; flex:1; padding:.5rem .875rem .875rem; }
+.tt-palette-scroll::-webkit-scrollbar { width:3px; }
+.tt-palette-scroll::-webkit-scrollbar-thumb { background:var(--c2); border-radius:2px; }
+.tt-palette-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.375rem; }
 .tt-pnum {
-    aspect-ratio: 1; border-radius: .5rem;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .75rem; font-weight: 700; font-family: 'Syne', sans-serif;
-    cursor: pointer; border: 2px solid transparent;
-    transition: transform .12s, box-shadow .12s;
-    position: relative;
+    aspect-ratio:1; border-radius:.5rem;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:700; font-family:'Syne',sans-serif;
+    cursor:pointer; border:2px solid transparent;
+    transition:transform .12s, box-shadow .12s;
 }
-.tt-pnum:hover { transform: scale(1.08); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-.tt-pnum.current {
-    box-shadow: 0 0 0 3px rgba(0,180,216,.5);
-    transform: scale(1.08);
-}
-/* states */
-.tt-pnum.answered    { background: var(--qs-answered); color: #fff; }
-.tt-pnum.marked      { background: var(--qs-marked); color: #fff; }
-.tt-pnum.marked-ans  { background: var(--qs-marked-ans); color: #fff; }
-.tt-pnum.not-answered{ background: var(--qs-not-answered); color: #fff; }
-.tt-pnum.not-visited { background: #fff; color: #64748b; border-color: #cbd5e1; }
+.tt-pnum:hover { transform:scale(1.1); }
+.tt-pnum.current { box-shadow:0 0 0 3px rgba(0,180,216,.55); transform:scale(1.1); }
+.tt-pnum.answered     { background:var(--qs-answered); color:#fff; }
+.tt-pnum.marked       { background:var(--qs-marked); color:#fff; }
+.tt-pnum.not-answered { background:var(--qs-not-answered); color:#fff; }
+.tt-pnum.not-visited  { background:#fff; color:#64748b; border-color:#cbd5e1; }
 
-/* sidebar footer: tabs */
-.tt-sidebar-tabs {
-    display: flex; border-top: 1.5px solid rgba(0,180,216,.15);
-    flex-shrink: 0;
-}
+/* drawer footer tabs */
+.tt-drawer-tabs { display:flex; border-top:1.5px solid rgba(0,180,216,.15); flex-shrink:0; }
 .tt-stab {
-    flex: 1; padding: .625rem .5rem;
-    font-size: .75rem; font-weight: 600; color: var(--c6);
-    background: #f8feff; cursor: pointer; border: none;
-    transition: background .15s, color .15s;
-    text-align: center;
+    flex:1; padding:.55rem .5rem; font-size:.72rem; font-weight:600; color:var(--c6);
+    background:#f8feff; cursor:pointer; border:none; text-align:center;
+    transition:background .15s, color .15s;
 }
-.tt-stab.active { background: var(--c5); color: #fff; }
-.tt-stab:not(:last-child) { border-right: 1px solid rgba(0,180,216,.15); }
+.tt-stab.active { background:var(--c5); color:#fff; }
+.tt-stab:not(:last-child) { border-right:1px solid rgba(0,180,216,.15); }
 
-/* ════════════════════════════════════
-   BOTTOM BAR
-════════════════════════════════════ */
+/* ══ BOTTOM BAR ══ */
 .tt-botbar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    height: var(--botbar-h);
-    background: #fff;
-    border-top: 1.5px solid rgba(0,180,216,.2);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 1.25rem;
-    gap: .75rem;
-    box-shadow: 0 -4px 20px rgba(0,150,199,.08);
+    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    height:var(--botbar-h);
+    background:#fff; border-top:1.5px solid rgba(0,180,216,.2);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 1rem; gap:.5rem;
+    box-shadow:0 -4px 20px rgba(0,150,199,.08);
 }
-.tt-botbar-left  { display: flex; gap: .625rem; }
-.tt-botbar-right { display: flex; gap: .625rem; }
-
+.tt-botbar-left  { display:flex; gap:.5rem; }
+.tt-botbar-right { display:flex; gap:.5rem; }
 .tt-bot-btn {
-    padding: .5rem 1.1rem; border-radius: .75rem;
-    font-family: 'DM Sans', sans-serif; font-size: .8125rem; font-weight: 600;
-    cursor: pointer; white-space: nowrap;
-    transition: transform .12s, box-shadow .12s;
+    padding:.45rem .9rem; border-radius:.7rem;
+    font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600;
+    cursor:pointer; white-space:nowrap; transition:transform .12s, filter .12s;
 }
-.tt-bot-btn:active { transform: scale(.97); }
+.tt-bot-btn:active { transform:scale(.96); }
+.tt-bot-btn--review  { background:rgba(124,58,237,.1); color:#6d28d9; border:1.5px solid rgba(124,58,237,.22); }
+.tt-bot-btn--review:hover  { background:rgba(124,58,237,.17); }
+.tt-bot-btn--clear   { background:rgba(239,68,68,.08); color:#dc2626; border:1.5px solid rgba(239,68,68,.2); }
+.tt-bot-btn--clear:hover   { background:rgba(239,68,68,.14); }
+.tt-bot-btn--prev    { background:var(--c0); color:var(--c7); border:1.5px solid var(--c2); }
+.tt-bot-btn--prev:hover    { background:var(--c1); }
+.tt-bot-btn--save    { background:linear-gradient(135deg,var(--c5),var(--c7)); color:#fff; border:none; box-shadow:0 3px 12px rgba(0,119,182,.32); padding:.45rem 1.2rem; }
+.tt-bot-btn--save:hover    { filter:brightness(1.07); }
+.tt-bot-btn--submit  { background:linear-gradient(135deg,#0f9488,#065f46); color:#fff; border:none; box-shadow:0 3px 12px rgba(6,95,70,.28); padding:.45rem 1.1rem; }
+.tt-bot-btn--submit:hover  { filter:brightness(1.07); }
 
-.tt-bot-btn--review {
-    background: rgba(124,58,237,.1); color: #6d28d9;
-    border: 1.5px solid rgba(124,58,237,.25);
-}
-.tt-bot-btn--review:hover { background: rgba(124,58,237,.16); }
-
-.tt-bot-btn--clear {
-    background: rgba(239,68,68,.08); color: #dc2626;
-    border: 1.5px solid rgba(239,68,68,.2);
-}
-.tt-bot-btn--clear:hover { background: rgba(239,68,68,.14); }
-
-.tt-bot-btn--prev {
-    background: var(--c0); color: var(--c7);
-    border: 1.5px solid var(--c2);
-}
-.tt-bot-btn--prev:hover { background: var(--c1); }
-
-.tt-bot-btn--save {
-    background: linear-gradient(135deg, var(--c5), var(--c7));
-    color: #fff; border: none;
-    box-shadow: 0 3px 12px rgba(0,119,182,.35);
-    padding: .5rem 1.5rem;
-}
-.tt-bot-btn--save:hover { box-shadow: 0 5px 18px rgba(0,119,182,.45); filter: brightness(1.05); }
-
-.tt-bot-btn--submit {
-    background: linear-gradient(135deg, #0f9488, #065f46);
-    color: #fff; border: none;
-    box-shadow: 0 3px 12px rgba(6,95,70,.3);
-    padding: .5rem 1.5rem;
-}
-.tt-bot-btn--submit:hover { box-shadow: 0 5px 18px rgba(6,95,70,.4); filter: brightness(1.05); }
-
-/* ════════════════════════════════════
-   SUBMIT CONFIRMATION MODAL
-════════════════════════════════════ */
+/* ══ SUBMIT MODAL ══ */
 .tt-modal-backdrop {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(2,3,94,.55);
-    backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none;
-    transition: opacity .2s;
+    position:fixed; inset:0; z-index:400;
+    background:rgba(2,3,94,.55); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .2s;
 }
-.tt-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.tt-modal-backdrop.open { opacity:1; pointer-events:auto; }
 .tt-modal {
-    background: #fff; border-radius: 1.25rem;
-    padding: 2rem; width: min(420px, calc(100vw - 2rem));
-    box-shadow: 0 20px 60px rgba(0,0,0,.25);
-    transform: scale(.93); transition: transform .22s cubic-bezier(.34,1.3,.64,1);
+    background:#fff; border-radius:1.25rem; padding:1.75rem;
+    width:min(400px,calc(100vw - 2rem));
+    box-shadow:0 20px 60px rgba(0,0,0,.22);
+    transform:scale(.93); transition:transform .22s cubic-bezier(.34,1.3,.64,1);
 }
-.tt-modal-backdrop.open .tt-modal { transform: scale(1); }
-.tt-modal-title { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--c8); margin-bottom: .5rem; }
-.tt-modal-sub   { font-size: .875rem; color: #64748b; line-height: 1.6; margin-bottom: 1.5rem; }
-.tt-modal-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem;
-    margin-bottom: 1.5rem;
-}
-.tt-mstat { border-radius: .75rem; padding: .75rem; text-align: center; }
-.tt-mstat-val { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
-.tt-mstat-lbl { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-top: .2rem; }
-.tt-mstat.green { background: rgba(16,185,129,.1); }
-.tt-mstat.green .tt-mstat-val { color: #047857; }
-.tt-mstat.green .tt-mstat-lbl { color: #065f46; }
-.tt-mstat.red   { background: rgba(239,68,68,.08); }
-.tt-mstat.red .tt-mstat-val { color: #dc2626; }
-.tt-mstat.red .tt-mstat-lbl { color: #991b1b; }
-.tt-mstat.blue  { background: var(--c0); }
-.tt-mstat.blue .tt-mstat-val { color: var(--c7); }
-.tt-mstat.blue .tt-mstat-lbl { color: var(--c6); }
-.tt-modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
-.tt-modal-cancel {
-    padding: .625rem 1.25rem; border-radius: .75rem;
-    border: 1.5px solid var(--c2); background: #fff; color: var(--c6);
-    font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 600;
-    cursor: pointer;
-}
-.tt-modal-cancel:hover { border-color: var(--c4); background: var(--c0); }
-.tt-modal-confirm {
-    padding: .625rem 1.5rem; border-radius: .75rem; border: none;
-    background: linear-gradient(135deg, #0f9488, #065f46);
-    color: #fff; font-family: 'DM Sans', sans-serif; font-size: .875rem; font-weight: 700;
-    cursor: pointer; box-shadow: 0 3px 10px rgba(6,95,70,.3);
-}
-.tt-modal-confirm:hover { filter: brightness(1.07); }
+.tt-modal-backdrop.open .tt-modal { transform:scale(1); }
+.tt-modal-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; color:var(--c8); margin-bottom:.4rem; }
+.tt-modal-sub   { font-size:.85rem; color:#64748b; line-height:1.6; margin-bottom:1.25rem; }
+.tt-modal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; margin-bottom:1.25rem; }
+.tt-mstat { border-radius:.75rem; padding:.625rem; text-align:center; }
+.tt-mstat-val { font-family:'Syne',sans-serif; font-size:1.35rem; font-weight:800; }
+.tt-mstat-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; margin-top:.2rem; }
+.tt-mstat.green { background:rgba(16,185,129,.1); }
+.tt-mstat.green .tt-mstat-val { color:#047857; }
+.tt-mstat.green .tt-mstat-lbl { color:#065f46; }
+.tt-mstat.red   { background:rgba(239,68,68,.08); }
+.tt-mstat.red .tt-mstat-val  { color:#dc2626; }
+.tt-mstat.red .tt-mstat-lbl  { color:#991b1b; }
+.tt-mstat.blue  { background:var(--c0); }
+.tt-mstat.blue .tt-mstat-val  { color:var(--c7); }
+.tt-mstat.blue .tt-mstat-lbl  { color:var(--c6); }
+.tt-modal-actions { display:flex; gap:.625rem; justify-content:flex-end; }
+.tt-modal-cancel  { padding:.55rem 1.1rem; border-radius:.7rem; border:1.5px solid var(--c2); background:#fff; color:var(--c6); font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600; cursor:pointer; }
+.tt-modal-cancel:hover  { border-color:var(--c4); background:var(--c0); }
+.tt-modal-confirm { padding:.55rem 1.25rem; border-radius:.7rem; border:none; background:linear-gradient(135deg,#0f9488,#065f46); color:#fff; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; }
+.tt-modal-confirm:hover { filter:brightness(1.07); }
 
-/* ════════════════════════════════════
-   RESPONSIVE
-════════════════════════════════════ */
-@media (max-width: 768px) {
-    :root { --sidebar-w: 0px; }
-    .tt-sidebar { display: none; }
-    .tt-layout  { grid-template-columns: 1fr; }
-    .tt-title   { display: none; }
-    .tt-botbar  { flex-wrap: wrap; height: auto; padding: .625rem 1rem; }
+/* ══ RESPONSIVE ══ */
+@media (max-width:600px) {
+    .tt-title { display:none; }
+    .tt-btn-sm { display:none; }
+    .tt-botbar { padding:0 .625rem; gap:.35rem; }
+    .tt-bot-btn { padding:.4rem .6rem; font-size:.72rem; }
+    .tt-bot-btn--review span.label { display:none; }
+    .tt-qarea { padding:1rem .75rem; }
+    :root { --drawer-w:260px; }
 }
 </style>
 
-{# ── FIXED: top bar ── #}
-<div class="tt-topbar">
-    <div style="display:flex;align-items:center;gap:1rem;flex:1;min-width:0;">
-        <div class="tt-brand">
-            <span class="tt-brand-dot"></span>
-            <span class="tt-brand-name">Redmock</span>
-        </div>
-        <span class="tt-title">{{ attempt.candidate.name }} — {{ attempt.level|title }}</span>
+{# ══ TOP BAR ══ #}
+<div class="tt-top">
+    <div class="tt-brand">
+        <span class="tt-brand-dot"></span>
+        <span class="tt-brand-name">Redmock</span>
     </div>
+    <span class="tt-title">{{ attempt.candidate.name }} — {{ attempt.level|title }}</span>
     <div class="tt-timer-wrap">
         <span class="tt-timer-label">Time Left</span>
         <span class="tt-timer-val" id="countdown">--:--:--</span>
     </div>
-    <div class="tt-topbar-actions">
-        <button class="tt-btn-outline" onclick="toggleFullscreen()">⛶ Full Screen</button>
-        <button class="tt-btn-outline" id="pauseBtn">⏸ Pause</button>
+    <div class="tt-top-actions">
+        <button class="tt-btn-sm" onclick="toggleFullscreen()">⛶ Full Screen</button>
+        <button class="tt-drawer-toggle" id="drawerToggle" onclick="toggleDrawer()">
+            <span class="icon">☰</span> Questions
+        </button>
     </div>
 </div>
 
-{# ── FIXED: section tabs bar ── #}
+{# ══ SECTION BAR ══ #}
 <div class="tt-secbar">
     <div class="tt-sec-tab active">📋 All Questions</div>
-    {# Additional subject tabs can be added here if needed #}
 </div>
 
-{# ── MAIN LAYOUT ── #}
-<div class="tt-layout">
+{# ══ MAIN BODY: question area + sidebar ══ #}
+<div class="tt-body">
+<div class="tt-qarea" id="qarea">
+    <form method="post" id="test-form" style="width:100%;max-width:780px;display:contents;">
+        {% csrf_token %}
+        {% for question in questions %}
+        <div class="tt-qblock{% if forloop.first %} active{% endif %}"
+             id="qblock-{{ forloop.counter0 }}"
+             data-qid="{{ question.id }}"
+             data-idx="{{ forloop.counter0 }}">
 
-    {# LEFT: question panel #}
-    <div class="tt-qpanel" id="qpanel">
-        <form method="post" id="test-form">
-            {% csrf_token %}
-
-            {% for question in questions %}
-            <div class="tt-question-block" id="qblock-{{ question.id }}" data-qid="{{ question.id }}" data-idx="{{ forloop.counter0 }}">
-
-                {# question header #}
-                <div class="tt-qheader">
-                    <span class="tt-qnum">Question No. {{ forloop.counter }}</span>
-                    <div class="tt-qmeta">
-                        <div class="tt-marks-wrap">
-                            <span class="tt-mark-pill pos">+{{ attempt.positive_mark|default:"1" }}</span>
-                            <span class="tt-mark-pill neg">-{{ attempt.negative_mark|default:"0.5" }}</span>
-                        </div>
-                        <span class="tt-time-badge" id="qt-{{ question.id }}">00:00</span>
-                        <button type="button" class="tt-report-btn">⚑ Report</button>
-                    </div>
+            {# header #}
+            <div class="tt-qheader">
+                <div>
+                    <div class="tt-qnum">Question No. {{ forloop.counter }}</div>
+                    <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
                 </div>
-
-                {# comprehension paragraph #}
-                {% if question.question_paragraph %}
-                <div class="tt-comprehension">
-                    <div class="tt-comp-label">Comprehension</div>
-                    <div class="tt-comp-text">{{ question.question_paragraph }}</div>
+                <div class="tt-qmeta">
+                    <span class="tt-mark-pill pos">+{{ attempt.positive_mark|default:"1" }}</span>
+                    <span class="tt-mark-pill neg">-{{ attempt.negative_mark|default:"0.5" }}</span>
+                    <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">00:00</span>
+                    <button type="button" class="tt-report-btn">⚑ Report</button>
                 </div>
-                {% endif %}
-
-                {# question + options #}
-                <div class="tt-qcard">
-                    <div class="tt-qlabel">Question</div>
-                    <div class="tt-qtext">{{ question.question }}</div>
-                    <div class="tt-options">
-                        <label class="tt-option">
-                            <input type="radio" name="question_{{ question.id }}" value="option_1"
-                                {% if initial_answers|get_item:question.id == 'option_1' %}checked{% endif %}
-                                onchange="markAnswered({{ forloop.counter0 }})">
-                            <div class="tt-option-bubble"></div>
-                            <span class="tt-option-key">A</span>
-                            <span class="tt-option-text">{{ question.option_1 }}</span>
-                        </label>
-                        <label class="tt-option">
-                            <input type="radio" name="question_{{ question.id }}" value="option_2"
-                                {% if initial_answers|get_item:question.id == 'option_2' %}checked{% endif %}
-                                onchange="markAnswered({{ forloop.counter0 }})">
-                            <div class="tt-option-bubble"></div>
-                            <span class="tt-option-key">B</span>
-                            <span class="tt-option-text">{{ question.option_2 }}</span>
-                        </label>
-                        <label class="tt-option">
-                            <input type="radio" name="question_{{ question.id }}" value="option_3"
-                                {% if initial_answers|get_item:question.id == 'option_3' %}checked{% endif %}
-                                onchange="markAnswered({{ forloop.counter0 }})">
-                            <div class="tt-option-bubble"></div>
-                            <span class="tt-option-key">C</span>
-                            <span class="tt-option-text">{{ question.option_3 }}</span>
-                        </label>
-                        <label class="tt-option">
-                            <input type="radio" name="question_{{ question.id }}" value="option_4"
-                                {% if initial_answers|get_item:question.id == 'option_4' %}checked{% endif %}
-                                onchange="markAnswered({{ forloop.counter0 }})">
-                            <div class="tt-option-bubble"></div>
-                            <span class="tt-option-key">D</span>
-                            <span class="tt-option-text">{{ question.option_4 }}</span>
-                        </label>
-                    </div>
-                </div>
-
             </div>
-            {% empty %}
+
+            {# comprehension #}
+            {% if question.question_paragraph %}
+            <div class="tt-comprehension">
+                <div class="tt-comp-label">Comprehension</div>
+                <div class="tt-comp-text">{{ question.question_paragraph }}</div>
+            </div>
+            {% endif %}
+
+            {# question + options #}
             <div class="tt-qcard">
-                <p style="color:var(--c5);font-size:.9rem;">No questions available for this attempt.</p>
+                <div class="tt-qlabel">Question</div>
+                <div class="tt-qtext">{{ question.question }}</div>
+                <div class="tt-options">
+                    <label class="tt-option">
+                        <input type="radio" name="question_{{ question.id }}" value="option_1"
+                            {% if initial_answers|get_item:question.id == 'option_1' %}checked{% endif %}
+                            onchange="onAnswer({{ forloop.counter0 }})">
+                        <div class="tt-option-bubble"></div>
+                        <span class="tt-option-key">A</span>
+                        <span class="tt-option-text">{{ question.option_1 }}</span>
+                    </label>
+                    <label class="tt-option">
+                        <input type="radio" name="question_{{ question.id }}" value="option_2"
+                            {% if initial_answers|get_item:question.id == 'option_2' %}checked{% endif %}
+                            onchange="onAnswer({{ forloop.counter0 }})">
+                        <div class="tt-option-bubble"></div>
+                        <span class="tt-option-key">B</span>
+                        <span class="tt-option-text">{{ question.option_2 }}</span>
+                    </label>
+                    <label class="tt-option">
+                        <input type="radio" name="question_{{ question.id }}" value="option_3"
+                            {% if initial_answers|get_item:question.id == 'option_3' %}checked{% endif %}
+                            onchange="onAnswer({{ forloop.counter0 }})">
+                        <div class="tt-option-bubble"></div>
+                        <span class="tt-option-key">C</span>
+                        <span class="tt-option-text">{{ question.option_3 }}</span>
+                    </label>
+                    <label class="tt-option">
+                        <input type="radio" name="question_{{ question.id }}" value="option_4"
+                            {% if initial_answers|get_item:question.id == 'option_4' %}checked{% endif %}
+                            onchange="onAnswer({{ forloop.counter0 }})">
+                        <div class="tt-option-bubble"></div>
+                        <span class="tt-option-key">D</span>
+                        <span class="tt-option-text">{{ question.option_4 }}</span>
+                    </label>
+                </div>
             </div>
-            {% endfor %}
 
-        </form>
+        </div>
+        {% empty %}
+        <div class="tt-qblock active">
+            <div class="tt-qcard"><p style="color:var(--c5)">No questions available for this attempt.</p></div>
+        </div>
+        {% endfor %}
+    </form>
+</div>
+
+{# ══ SIDEBAR DRAWER — sits beside question area, no overlay ══ #}
+<aside class="tt-drawer" id="drawer">
+<div class="tt-drawer-inner">
+
+    <div class="tt-drawer-head">
+        <div class="tt-avatar" id="avatarEl">--</div>
+        <div>
+            <div class="tt-cand-name">{{ attempt.candidate.name }}</div>
+            <div class="tt-cand-sub">{{ attempt.level|title }} · {{ attempt.question_count }} Qs</div>
+        </div>
     </div>
 
-    {# RIGHT: sidebar #}
-    <aside class="tt-sidebar">
-
-        {# candidate strip #}
-        <div class="tt-cand-strip">
-            <div class="tt-avatar" id="avatarEl">--</div>
-            <div>
-                <div class="tt-cand-name">{{ attempt.candidate.name }}</div>
-                <div class="tt-cand-sub">{{ attempt.level|title }} · {{ attempt.question_count }} Qs</div>
-            </div>
+    <div class="tt-legend">
+        <div class="tt-legend-item">
+            <div class="tt-legend-dot" style="background:var(--qs-answered)">1</div> Answered
         </div>
-
-        {# legend #}
-        <div class="tt-legend">
-            <div class="tt-legend-item">
-                <div class="tt-legend-dot" style="background:var(--qs-answered);">1</div>
-                <span>Answered</span>
-            </div>
-            <div class="tt-legend-item">
-                <div class="tt-legend-dot" style="background:var(--qs-marked);">1</div>
-                <span>Marked</span>
-            </div>
-            <div class="tt-legend-item">
-                <div class="tt-legend-dot" style="background:var(--qs-not-answered);">1</div>
-                <span>Not Answered</span>
-            </div>
-            <div class="tt-legend-item">
-                <div class="tt-legend-dot" style="background:#fff;border:1.5px solid #cbd5e1;color:#64748b;">1</div>
-                <span>Not Visited</span>
-            </div>
+        <div class="tt-legend-item">
+            <div class="tt-legend-dot" style="background:var(--qs-marked)">1</div> Marked
         </div>
+        <div class="tt-legend-item">
+            <div class="tt-legend-dot" style="background:var(--qs-not-answered)">1</div> Not Answered
+        </div>
+        <div class="tt-legend-item">
+            <div class="tt-legend-dot" style="background:#fff;border:1.5px solid #cbd5e1;color:#64748b">1</div> Not Visited
+        </div>
+    </div>
 
-        {# section label #}
-        <div class="tt-palette-section">Section : All Questions</div>
+    <div class="tt-progress-wrap">
+        <div class="tt-progress-row">
+            <span>Progress</span>
+            <span id="progressLabel">0 / {{ attempt.question_count }}</span>
+        </div>
+        <div class="tt-progress-track">
+            <div class="tt-progress-fill" id="progressFill"></div>
+        </div>
+    </div>
 
-        {# number palette #}
-        <div class="tt-palette-scroll">
-            <div class="tt-palette-grid" id="palette">
-                {% for question in questions %}
-                <div class="tt-pnum not-visited {% if forloop.first %}current{% endif %}"
-                     id="pnum-{{ forloop.counter0 }}"
-                     data-idx="{{ forloop.counter0 }}"
-                     onclick="scrollToQuestion({{ forloop.counter0 }})">
-                    {{ forloop.counter }}
-                </div>
-                {% endfor %}
+    <div class="tt-palette-section">Section : All Questions</div>
+
+    <div class="tt-palette-scroll">
+        <div class="tt-palette-grid" id="palette">
+            {% for question in questions %}
+            <div class="tt-pnum not-visited{% if forloop.first %} current{% endif %}"
+                 id="pnum-{{ forloop.counter0 }}"
+                 data-idx="{{ forloop.counter0 }}"
+                 onclick="goToQuestion({{ forloop.counter0 }})">
+                {{ forloop.counter }}
             </div>
+            {% endfor %}
         </div>
+    </div>
 
-        {# sidebar footer tabs #}
-        <div class="tt-sidebar-tabs">
-            <button class="tt-stab active">Question Paper</button>
-            <button class="tt-stab">Instructions</button>
-        </div>
-    </aside>
+    <div class="tt-drawer-tabs">
+        <button class="tt-stab active">Question Paper</button>
+        <button class="tt-stab">Instructions</button>
+    </div>
 </div>
+</aside>
+</div> {# end tt-body #}
 
-{# ── FIXED: bottom bar ── #}
+{# ══ BOTTOM BAR ══ #}
 <div class="tt-botbar">
     <div class="tt-botbar-left">
         <button type="button" class="tt-bot-btn tt-bot-btn--review" id="btnMark">
-            ★ Mark for Review &amp; Next
+            ★ <span class="label">Mark for Review &amp; Next</span>
         </button>
         <button type="button" class="tt-bot-btn tt-bot-btn--clear" id="btnClear">
-            ✕ Clear Response
+            ✕ Clear
         </button>
     </div>
     <div class="tt-botbar-right">
-        <button type="button" class="tt-bot-btn tt-bot-btn--prev" id="btnPrev">
-            ← Previous
-        </button>
-        <button type="button" class="tt-bot-btn tt-bot-btn--save" id="btnSave">
-            Save &amp; Next →
-        </button>
-        <button type="button" class="tt-bot-btn tt-bot-btn--submit" id="btnSubmit">
-            ✓ Submit Test
-        </button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--prev" id="btnPrev">← Prev</button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--save" id="btnSave">Save &amp; Next →</button>
+        <button type="button" class="tt-bot-btn tt-bot-btn--submit" id="btnSubmit">✓ Submit</button>
     </div>
 </div>
 
-{# ── Submit confirmation modal ── #}
+{# ══ SUBMIT MODAL ══ #}
 <div class="tt-modal-backdrop" id="submitModal">
     <div class="tt-modal">
         <div class="tt-modal-title">Submit Test?</div>
-        <div class="tt-modal-sub">You are about to submit the test. This action cannot be undone. Review your progress below.</div>
+        <div class="tt-modal-sub">This cannot be undone. Review your attempt summary below.</div>
         <div class="tt-modal-stats">
-            <div class="tt-mstat green">
-                <div class="tt-mstat-val" id="ms-answered">0</div>
-                <div class="tt-mstat-lbl">Answered</div>
-            </div>
-            <div class="tt-mstat red">
-                <div class="tt-mstat-val" id="ms-unanswered">0</div>
-                <div class="tt-mstat-lbl">Unanswered</div>
-            </div>
-            <div class="tt-mstat blue">
-                <div class="tt-mstat-val" id="ms-marked">0</div>
-                <div class="tt-mstat-lbl">Marked</div>
-            </div>
+            <div class="tt-mstat green"><div class="tt-mstat-val" id="ms-answered">0</div><div class="tt-mstat-lbl">Answered</div></div>
+            <div class="tt-mstat red"><div class="tt-mstat-val" id="ms-unanswered">0</div><div class="tt-mstat-lbl">Unanswered</div></div>
+            <div class="tt-mstat blue"><div class="tt-mstat-val" id="ms-marked">0</div><div class="tt-mstat-lbl">Marked</div></div>
         </div>
         <div class="tt-modal-actions">
             <button class="tt-modal-cancel" onclick="closeModal()">Continue Test</button>
@@ -678,190 +572,213 @@ body { font-family: 'DM Sans', sans-serif; background: var(--c9); color: #1e293b
 "use strict";
 
 /* ── state ── */
-var TOTAL = document.querySelectorAll('.tt-question-block').length;
-var states = new Array(TOTAL).fill('not-visited');
-var currentIdx = 0;
+var TOTAL    = document.querySelectorAll('.tt-qblock[data-idx]').length;
+var states   = new Array(TOTAL).fill('not-visited');
+var curIdx   = 0;
+var drawerOpen = false;
 
-/* set initial answered states */
-document.querySelectorAll('.tt-question-block').forEach(function (block, idx) {
-    var checked = block.querySelector('input[type="radio"]:checked');
-    if (checked) states[idx] = 'answered';
-    else         states[idx] = 'not-visited';
+/* init answered states from pre-checked radios */
+document.querySelectorAll('.tt-qblock').forEach(function (b, i) {
+    if (b.querySelector('input[type="radio"]:checked')) states[i] = 'answered';
 });
-states[0] = states[0] === 'answered' ? 'answered' : 'not-answered';
-renderPalette();
+/* current question starts as not-answered (visited) */
+if (states[0] !== 'answered') states[0] = 'not-answered';
 
-/* ── avatar initials ── */
+/* ── avatar ── */
 var nameEl = document.querySelector('.tt-cand-name');
 var avatarEl = document.getElementById('avatarEl');
 if (nameEl && avatarEl) {
-    var parts = (nameEl.textContent || '').trim().split(' ');
-    avatarEl.textContent = ((parts[0]||'')[0]||(parts[1]||'')[0]||'?').toUpperCase()
-        + ((parts[1]||'')[0]||'').toUpperCase();
+    var p = (nameEl.textContent || '').trim().split(' ');
+    avatarEl.textContent = (((p[0]||'')[0])||'').toUpperCase() + (((p[1]||'')[0])||'').toUpperCase() || '?';
 }
 
 /* ── timer ── */
 var endTimeIso = "{{ end_time_iso }}";
 var countdownEl = document.getElementById('countdown');
-var testForm = document.getElementById('test-form');
 
 function fmtTime(ms) {
     if (ms <= 0) return '00:00:00';
     var s = Math.floor(ms / 1000);
     var h = Math.floor(s / 3600); s %= 3600;
     var m = Math.floor(s / 60);   s %= 60;
-    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return pad(h) + ':' + pad(m) + ':' + pad(s);
 }
+function pad(n) { return String(n).padStart(2, '0'); }
 
 if (endTimeIso) {
     var endTime = new Date(endTimeIso);
-    var timerInterval = setInterval(function () {
+    setInterval(function () {
         var diff = endTime - new Date();
-        if (diff <= 0) {
-            clearInterval(timerInterval);
-            countdownEl.textContent = '00:00:00';
-            testForm.submit();
-            return;
-        }
+        if (diff <= 0) { countdownEl.textContent = '00:00:00'; document.getElementById('test-form').submit(); return; }
         countdownEl.textContent = fmtTime(diff);
-        countdownEl.classList.toggle('urgent', diff < 300000); /* red under 5 min */
+        countdownEl.classList.toggle('urgent', diff < 300000);
     }, 1000);
 }
 
-/* ── question time tracker ── */
+/* ── per-question timer ── */
 var qTimers = new Array(TOTAL).fill(0);
-var qTimerStart = Date.now();
+var qTick   = Date.now();
 setInterval(function () {
-    qTimers[currentIdx] += Date.now() - qTimerStart;
-    qTimerStart = Date.now();
-    var el = document.querySelectorAll('[id^="qt-"]')[currentIdx];
+    var now = Date.now();
+    qTimers[curIdx] += now - qTick;
+    qTick = now;
+    var el = document.getElementById('qt-' + curIdx);
     if (el) {
-        var s = Math.floor(qTimers[currentIdx] / 1000);
-        el.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+        var s = Math.floor(qTimers[curIdx] / 1000);
+        el.textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
     }
 }, 1000);
 
-/* ── palette ── */
-function renderPalette() {
-    document.querySelectorAll('.tt-pnum').forEach(function (el, i) {
-        el.className = 'tt-pnum ' + states[i] + (i === currentIdx ? ' current' : '');
-    });
-}
-
-function setCurrentQ(idx) {
+/* ── navigation ── */
+function showQuestion(idx, dir) {
     if (idx < 0 || idx >= TOTAL) return;
-    /* mark previous as not-answered if still not-visited */
-    if (states[currentIdx] === 'not-visited') states[currentIdx] = 'not-answered';
-    currentIdx = idx;
-    /* mark current as at least not-answered (visited) */
-    if (states[currentIdx] === 'not-visited') states[currentIdx] = 'not-answered';
+
+    var oldBlock = document.getElementById('qblock-' + curIdx);
+    var newBlock = document.getElementById('qblock-' + idx);
+    if (!newBlock) return;
+
+    /* mark old as visited */
+    if (states[curIdx] === 'not-visited') states[curIdx] = 'not-answered';
+
+    /* exit animation on old */
+    if (oldBlock && oldBlock !== newBlock) {
+        oldBlock.classList.add('q-exit');
+        setTimeout(function () {
+            oldBlock.classList.remove('active', 'q-exit');
+        }, 180);
+    }
+
+    curIdx = idx;
+    if (states[curIdx] === 'not-visited') states[curIdx] = 'not-answered';
+
+    /* reset scroll to top of qarea */
+    document.getElementById('qarea').scrollTop = 0;
+
+    /* show new with enter animation */
+    setTimeout(function () {
+        newBlock.classList.add('active');
+    }, oldBlock && oldBlock !== newBlock ? 160 : 0);
+
     renderPalette();
+    updateProgress();
 }
 
-window.scrollToQuestion = function (idx) {
-    setCurrentQ(idx);
-    var block = document.getElementById('qblock-' + getQid(idx));
-    if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+window.goToQuestion = function (idx) {
+    showQuestion(idx, idx > curIdx ? 1 : -1);
+    /* drawer stays open so user can keep navigating */
 };
 
-function getQid(idx) {
-    var blocks = document.querySelectorAll('.tt-question-block');
-    return blocks[idx] ? blocks[idx].dataset.qid : null;
+/* ── palette render ── */
+function renderPalette() {
+    for (var i = 0; i < TOTAL; i++) {
+        var el = document.getElementById('pnum-' + i);
+        if (el) el.className = 'tt-pnum ' + states[i] + (i === curIdx ? ' current' : '');
+    }
 }
 
-window.markAnswered = function (idx) {
+/* ── progress bar ── */
+function updateProgress() {
+    var answered = states.filter(function (s) { return s === 'answered' || s === 'marked'; }).length;
+    var pct = TOTAL > 0 ? (answered / TOTAL * 100).toFixed(1) : 0;
+    var fill = document.getElementById('progressFill');
+    var label = document.getElementById('progressLabel');
+    if (fill)  fill.style.width = pct + '%';
+    if (label) label.textContent = answered + ' / ' + TOTAL;
+}
+
+/* ── answer handler ── */
+window.onAnswer = function (idx) {
     if (states[idx] !== 'marked') states[idx] = 'answered';
     renderPalette();
+    updateProgress();
 };
 
-/* watch radio changes */
+/* also watch radio changes (handles pre-checked on load) */
 document.getElementById('test-form').addEventListener('change', function (e) {
-    if (e.target.type === 'radio') {
-        var block = e.target.closest('.tt-question-block');
-        if (block) {
-            var idx = parseInt(block.dataset.idx, 10);
-            if (!isNaN(idx) && states[idx] !== 'marked') states[idx] = 'answered';
-            renderPalette();
-        }
+    if (e.target.type !== 'radio') return;
+    var b = e.target.closest('.tt-qblock');
+    if (b) {
+        var i = parseInt(b.dataset.idx, 10);
+        if (!isNaN(i) && states[i] !== 'marked') states[i] = 'answered';
+        renderPalette();
+        updateProgress();
     }
 });
 
-/* ── bottom bar buttons ── */
+/* ── bottom buttons ── */
 document.getElementById('btnSave').addEventListener('click', function () {
-    if (states[currentIdx] !== 'marked') states[currentIdx] = 'answered';
-    renderPalette();
-    if (currentIdx < TOTAL - 1) window.scrollToQuestion(currentIdx + 1);
+    if (states[curIdx] !== 'marked') states[curIdx] = 'answered';
+    renderPalette(); updateProgress();
+    if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
 
 document.getElementById('btnPrev').addEventListener('click', function () {
-    if (currentIdx > 0) window.scrollToQuestion(currentIdx - 1);
+    if (curIdx > 0) showQuestion(curIdx - 1, -1);
 });
 
 document.getElementById('btnMark').addEventListener('click', function () {
-    states[currentIdx] = 'marked';
-    renderPalette();
-    if (currentIdx < TOTAL - 1) window.scrollToQuestion(currentIdx + 1);
+    states[curIdx] = 'marked';
+    renderPalette(); updateProgress();
+    if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
 
 document.getElementById('btnClear').addEventListener('click', function () {
-    var block = document.querySelectorAll('.tt-question-block')[currentIdx];
-    if (block) block.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
-    states[currentIdx] = 'not-answered';
-    renderPalette();
+    var b = document.getElementById('qblock-' + curIdx);
+    if (b) b.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
+    states[curIdx] = 'not-answered';
+    renderPalette(); updateProgress();
+});
+
+/* ── drawer: push layout, no overlay ── */
+window.toggleDrawer = function () { drawerOpen ? closeDrawer() : openDrawer(); };
+
+window.openDrawer = function () {
+    drawerOpen = true;
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerToggle').classList.add('open');
+};
+
+window.closeDrawer = function () {
+    drawerOpen = false;
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawerToggle').classList.remove('open');
+};
+
+/* close drawer on Escape */
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { if (drawerOpen) closeDrawer(); }
 });
 
 /* ── submit modal ── */
 document.getElementById('btnSubmit').addEventListener('click', function () {
     var answered = states.filter(function (s) { return s === 'answered'; }).length;
     var marked   = states.filter(function (s) { return s === 'marked'; }).length;
-    document.getElementById('ms-answered').textContent = answered;
+    document.getElementById('ms-answered').textContent   = answered;
     document.getElementById('ms-unanswered').textContent = TOTAL - answered - marked;
-    document.getElementById('ms-marked').textContent = marked;
+    document.getElementById('ms-marked').textContent     = marked;
     document.getElementById('submitModal').classList.add('open');
 });
-
-window.closeModal = function () {
-    document.getElementById('submitModal').classList.remove('open');
-};
-
-window.confirmSubmit = function () {
-    document.getElementById('test-form').submit();
-};
-
-/* close modal on backdrop click */
-document.getElementById('submitModal').addEventListener('click', function (e) {
-    if (e.target === this) closeModal();
-});
+window.closeModal    = function () { document.getElementById('submitModal').classList.remove('open'); };
+window.confirmSubmit = function () { document.getElementById('test-form').submit(); };
+document.getElementById('submitModal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
 /* ── fullscreen ── */
 window.toggleFullscreen = function () {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-    else document.exitFullscreen && document.exitFullscreen();
+    if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+    else { document.exitFullscreen && document.exitFullscreen(); }
 };
 
-/* ── intersection observer: track current question while scrolling ── */
-var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-            var idx = parseInt(entry.target.dataset.idx, 10);
-            if (!isNaN(idx)) {
-                if (states[idx] === 'not-visited') states[idx] = 'not-answered';
-                currentIdx = idx;
-                renderPalette();
-            }
-        }
-    });
-}, { root: document.getElementById('qpanel'), threshold: 0.35 });
-
-document.querySelectorAll('.tt-question-block').forEach(function (b) { observer.observe(b); });
-
-/* ── sidebar tabs ── */
+/* ── sidebar tab clicks ── */
 document.querySelectorAll('.tt-stab').forEach(function (btn) {
     btn.addEventListener('click', function () {
         document.querySelectorAll('.tt-stab').forEach(function (b) { b.classList.remove('active'); });
         this.classList.add('active');
     });
 });
+
+/* ── init ── */
+renderPalette();
+updateProgress();
 
 }());
 </script>
