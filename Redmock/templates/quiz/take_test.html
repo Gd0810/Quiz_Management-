@@ -1325,6 +1325,11 @@ function recordViolation(violationType) {
         });
 }
 
+function maybeRecordViolation(violationType) {
+    if (!tabSwitchGuardEnabled) return;
+    recordViolation(violationType);
+}
+
 /* ── bottom buttons ── */
 document.getElementById('btnSave').addEventListener('click', function () {
     if (isInteractionLocked()) return;
@@ -1482,17 +1487,31 @@ document.addEventListener('fullscreenchange', function () {
     refreshLockState();
 });
 
-document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-        recordViolation('tab_hidden');
-    }
-});
+if (tabSwitchGuardEnabled) {
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            maybeRecordViolation('visibility_hidden');
+        }
+    });
 
-window.addEventListener('blur', function () {
-    if (!document.hidden) {
-        recordViolation('window_blur');
-    }
-});
+    window.addEventListener('blur', function () {
+        if (!document.hidden) {
+            maybeRecordViolation('window_blur');
+        }
+    });
+
+    window.addEventListener('pagehide', function () {
+        maybeRecordViolation('pagehide');
+    });
+
+    window.addEventListener('focus', function () {
+        lastViolationPingAt = 0;
+    });
+
+    window.addEventListener('beforeunload', function () {
+        maybeRecordViolation('beforeunload');
+    });
+}
 
 setInterval(function () {
     if (isPaused) return;
