@@ -668,7 +668,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         {% if pause_lock_enabled %}
         <button class="tt-btn-sm" type="button" id="pauseToggleBtn">Pause Test</button>
         {% endif %}
-        <button class="tt-btn-sm" onclick="toggleFullscreen()">⛶ Full Screen</button>
+        <button class="tt-btn-sm" type="button" id="topFullscreenBtn">⛶ Full Screen</button>
     </div>
 </div>
 
@@ -976,6 +976,7 @@ var submittedByTimer = false;
 var formEl = document.getElementById('test-form');
 var countdownEl = document.getElementById('countdown');
 var pauseToggleBtn = document.getElementById('pauseToggleBtn');
+var topFullscreenBtn = document.getElementById('topFullscreenBtn');
 var securityLockScreen = document.getElementById('securityLockScreen');
 var securityLockTitle = document.getElementById('securityLockTitle');
 var securityLockText = document.getElementById('securityLockText');
@@ -1230,6 +1231,16 @@ function requestFullScreenMode() {
     return document.documentElement.requestFullscreen();
 }
 
+function enterFullscreenFromUserAction() {
+    securityLockScreen.classList.remove('open');
+    return requestFullScreenMode().then(function () {
+        normalScreenAuthorized = false;
+        refreshLockState();
+    }).catch(function () {
+        refreshLockState();
+    });
+}
+
 function syncPausePayload(payload) {
     if (typeof payload.remaining_seconds === 'number') {
         remainingSeconds = payload.remaining_seconds;
@@ -1329,10 +1340,7 @@ document.getElementById('submitModal').addEventListener('click', function (e) { 
 /* ── fullscreen ── */
 window.toggleFullscreen = function () {
     if (!document.fullscreenElement) {
-        requestFullScreenMode().then(function () {
-            normalScreenAuthorized = false;
-            refreshLockState();
-        }).catch(function () {
+        enterFullscreenFromUserAction().catch(function () {
             if (fullscreenLockEnabled) refreshLockState();
         });
     } else if (!fullscreenLockEnabled) {
@@ -1359,18 +1367,20 @@ if (pauseToggleBtn) {
     });
 }
 
+if (topFullscreenBtn) {
+    topFullscreenBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.toggleFullscreen();
+    });
+}
+
 securityPrimaryBtn.addEventListener('click', function () {
     if (securityLockScreen.dataset.mode === 'pause') {
         openPasswordModal('resume');
         return;
     }
 
-    requestFullScreenMode().then(function () {
-        normalScreenAuthorized = false;
-        refreshLockState();
-    }).catch(function () {
-        refreshLockState();
-    });
+    enterFullscreenFromUserAction();
 });
 
 securitySecondaryBtn.addEventListener('click', function () {
@@ -1442,12 +1452,7 @@ refreshLockState();
 
 if (fullscreenLockEnabled && !document.fullscreenElement) {
     setTimeout(function () {
-        requestFullScreenMode().then(function () {
-            normalScreenAuthorized = false;
-            refreshLockState();
-        }).catch(function () {
-            refreshLockState();
-        });
+        enterFullscreenFromUserAction();
     }, 150);
 }
 
