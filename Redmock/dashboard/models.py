@@ -2,6 +2,7 @@ import json
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.contrib.auth.hashers import check_password
 
 
 class Company(models.Model):
@@ -10,6 +11,9 @@ class Company(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
+    full_screen_lock = models.BooleanField(default=False)
+    pause_lock = models.BooleanField(default=False)
+    exam_control_password = models.CharField(max_length=128, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -19,6 +23,11 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+    def check_exam_control_password(self, raw_password):
+        if not self.exam_control_password:
+            return False
+        return check_password(raw_password, self.exam_control_password)
 
 
 class TestSubject(models.Model):

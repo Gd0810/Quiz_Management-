@@ -1,9 +1,45 @@
 from django import forms
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 
 from quiz.models import Candidate, CandidateTestAttempt
 
-from .models import Quiz, SubTitle, TestSubject
+from .models import Company, Quiz, SubTitle, TestSubject
+
+
+class CompanySecurityForm(forms.ModelForm):
+    exam_control_password = forms.CharField(
+        label='Exam control password',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        help_text='Leave blank to keep the current exam control password.',
+    )
+    exam_control_password_confirm = forms.CharField(
+        label='Confirm exam control password',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+    )
+
+    class Meta:
+        model = Company
+        fields = ['full_screen_lock', 'pause_lock', 'exam_control_password']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('exam_control_password', '').strip()
+        confirm = cleaned_data.get('exam_control_password_confirm', '').strip()
+
+        if password or confirm:
+            if password != confirm:
+                raise ValidationError('Exam control password and confirm password must match.')
+            cleaned_data['exam_control_password'] = make_password(password)
+        else:
+            cleaned_data['exam_control_password'] = self.instance.exam_control_password
+
+        if (cleaned_data.get('full_screen_lock') or cleaned_data.get('pause_lock')) and not cleaned_data.get('exam_control_password'):
+            raise ValidationError('Set an exam control password before enabling fullscreen lock or pause lock.')
+
+        return cleaned_data
 
 
 class TestSubjectForm(forms.ModelForm):

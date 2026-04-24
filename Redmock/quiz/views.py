@@ -2,8 +2,10 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from dashboard.models import Quiz, SubTitle, TestSubject
 from dashboard.views import company_login_required
@@ -418,6 +420,14 @@ def _candidate_form_context(request, company, form=None):
     }
 
 
+def _attempt_payload(attempt):
+    return {
+        'remaining_seconds': attempt.remaining_seconds(),
+        'is_paused': attempt.is_paused,
+        'current_pause_seconds': attempt.current_pause_seconds(),
+    }
+
+
 @company_login_required
 def start_test(request):
     return render(
@@ -570,6 +580,9 @@ def take_test(request, attempt_id):
         pk=attempt_id,
         company=request.company,
     )
+    if attempt.is_submitted:
+        return redirect('quiz:result', attempt_id=attempt.id)
+
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
     questions = list(
@@ -601,6 +614,10 @@ def take_test(request, attempt_id):
         )
 
     if request.method == 'POST':
+        if attempt.is_paused:
+            messages.error(request, 'Resume the paused test before submitting answers.')
+            return redirect('quiz:take', attempt_id=attempt.id)
+
         updated_answers = []
         correct_count = 0
         for row in answer_rows:
@@ -642,6 +659,12 @@ def take_test(request, attempt_id):
         'questions': ordered_questions,
         'question_sections': question_sections,
         'initial_answers': initial_answers,
+        'remaining_seconds': attempt.remaining_seconds(),
+        'full_screen_lock_enabled': attempt.company.full_screen_lock,
+        'pause_lock_enabled': attempt.company.pause_lock,
+        'attempt_is_paused': attempt.is_paused,
+        'current_pause_seconds': attempt.current_pause_seconds(),
+        'security_password_required': bool(attempt.company.exam_control_password),
         'end_time_iso': (
             attempt.started_at + timedelta(minutes=attempt.duration_minutes)
         ).isoformat()
@@ -649,6 +672,74 @@ def take_test(request, attempt_id):
         else '',
     }
     return render(request, 'quiz/take_test.html', context)
+
+
+@company_login_required
+@require_POST
+def pause_attempt(request, attempt_id):
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('company'),
+        pk=attempt_id,
+        company=request.company,
+    )
+    password = request.POST.get('password', '').strip()
+
+    if not request.company.pause_lock:
+        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this company.'}, status=400)
+    if attempt.is_submitted:
+        return JsonResponse({'ok': False, 'error': 'This test is already submitted.'}, status=400)
+    if not request.company.check_exam_control_password(password):
+        return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
+    if not attempt.is_paused:
+        attempt.is_paused = True
+        attempt.paused_at = timezone.now()
+        attempt.save(update_fields=['is_paused', 'paused_at'])
+
+    payload = _attempt_payload(attempt)
+    payload['ok'] = True
+    return JsonResponse(payload)
+
+
+@company_login_required
+@require_POST
+def resume_attempt(request, attempt_id):
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('company'),
+        pk=attempt_id,
+        company=request.company,
+    )
+    password = request.POST.get('password', '').strip()
+
+    if not request.company.pause_lock:
+        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this company.'}, status=400)
+    if not request.company.check_exam_control_password(password):
+        return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
+    if attempt.is_paused and attempt.paused_at:
+        attempt.total_paused_seconds += attempt.current_pause_seconds()
+        attempt.is_paused = False
+        attempt.paused_at = None
+        attempt.save(update_fields=['total_paused_seconds', 'is_paused', 'paused_at'])
+
+    payload = _attempt_payload(attempt)
+    payload['ok'] = True
+    return JsonResponse(payload)
+
+
+@company_login_required
+@require_POST
+def unlock_fullscreen(request, attempt_id):
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('company'),
+        pk=attempt_id,
+        company=request.company,
+    )
+    password = request.POST.get('password', '').strip()
+
+    if not request.company.full_screen_lock:
+        return JsonResponse({'ok': True})
+    if not request.company.check_exam_control_password(password):
+        return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
+    return JsonResponse({'ok': True})
 
 
 @company_login_required

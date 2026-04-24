@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', views.dashboard_login, name='login'),
     path('logout/', views.dashboard_logout, name='logout'),
     path('', views.dashboard_home, name='home'),
+    path('settings/security/', views.company_settings, name='company_settings'),
     path('subjects/', views.subject_list, name='subject_list'),
     path('subjects/create/', views.subject_create, name='subject_create'),
     path('subjects/<int:pk>/edit/', views.subject_update, name='subject_update'),

@@ -507,6 +507,135 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-modal-cancel:hover  { border-color:var(--c4); background:var(--c0); }
 .tt-modal-confirm { padding:.55rem 1.25rem; border-radius:.7rem; border:none; background:linear-gradient(135deg,#0f9488,#065f46); color:#fff; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer; }
 .tt-modal-confirm:hover { filter:brightness(1.07); }
+.tt-lock-screen {
+    position:fixed;
+    top:calc(var(--topbar-h) + var(--secbar-h));
+    bottom:var(--botbar-h);
+    left:0;
+    right:0;
+    z-index:320;
+    background:rgba(2,3,94,.72);
+    backdrop-filter:blur(6px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:1rem;
+}
+.tt-lock-screen.open { display:flex; }
+.tt-lock-card {
+    width:min(460px, calc(100vw - 2rem));
+    background:#fff;
+    border-radius:1.35rem;
+    box-shadow:0 24px 60px rgba(2,3,94,.28);
+    padding:1.5rem;
+}
+.tt-lock-title {
+    font-family:'Syne',sans-serif;
+    font-size:1.2rem;
+    font-weight:700;
+    color:var(--c8);
+    margin-bottom:.45rem;
+}
+.tt-lock-text {
+    font-size:.86rem;
+    line-height:1.65;
+    color:#475569;
+}
+.tt-lock-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    margin-top:1.2rem;
+}
+.tt-lock-btn {
+    border:none;
+    border-radius:.8rem;
+    padding:.7rem 1rem;
+    font-size:.84rem;
+    font-weight:700;
+    cursor:pointer;
+}
+.tt-lock-btn.primary {
+    background:linear-gradient(135deg,var(--c5),var(--c7));
+    color:#fff;
+}
+.tt-lock-btn.secondary {
+    background:#eef9fd;
+    color:var(--c7);
+    border:1px solid rgba(0,150,199,.18);
+}
+.tt-pass-modal {
+    position:fixed;
+    inset:0;
+    z-index:420;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(2,3,94,.48);
+    backdrop-filter:blur(4px);
+    padding:1rem;
+}
+.tt-pass-modal.open { display:flex; }
+.tt-pass-card {
+    width:min(420px, calc(100vw - 2rem));
+    background:#fff;
+    border-radius:1.2rem;
+    box-shadow:0 24px 60px rgba(2,3,94,.24);
+    padding:1.45rem;
+}
+.tt-pass-title {
+    font-family:'Syne',sans-serif;
+    font-size:1.1rem;
+    font-weight:700;
+    color:var(--c8);
+}
+.tt-pass-sub {
+    font-size:.82rem;
+    line-height:1.6;
+    color:#64748b;
+    margin:.45rem 0 1rem;
+}
+.tt-pass-input {
+    width:100%;
+    border:1.5px solid rgba(0,150,199,.18);
+    border-radius:.8rem;
+    padding:.8rem .95rem;
+    font-size:.92rem;
+    outline:none;
+}
+.tt-pass-input:focus {
+    border-color:var(--c5);
+    box-shadow:0 0 0 3px rgba(0,150,199,.12);
+}
+.tt-pass-error {
+    min-height:1.15rem;
+    margin-top:.55rem;
+    font-size:.76rem;
+    color:#dc2626;
+}
+.tt-pass-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:.6rem;
+    margin-top:1rem;
+}
+.tt-pass-btn {
+    border:none;
+    border-radius:.75rem;
+    padding:.65rem 1rem;
+    font-size:.82rem;
+    font-weight:700;
+    cursor:pointer;
+}
+.tt-pass-btn.cancel {
+    background:#f8fafc;
+    color:#475569;
+    border:1px solid #cbd5e1;
+}
+.tt-pass-btn.confirm {
+    background:linear-gradient(135deg,var(--c5),var(--c7));
+    color:#fff;
+}
 
 /* ══ RESPONSIVE ══ */
 @media (max-width:600px) {
@@ -536,6 +665,9 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         <span class="tt-timer-val" id="countdown">--:--:--</span>
     </div>
     <div class="tt-top-actions">
+        {% if pause_lock_enabled %}
+        <button class="tt-btn-sm" type="button" id="pauseToggleBtn">Pause Test</button>
+        {% endif %}
         <button class="tt-btn-sm" onclick="toggleFullscreen()">⛶ Full Screen</button>
     </div>
 </div>
@@ -801,15 +933,72 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     </div>
 </div>
 
+<div class="tt-lock-screen" id="securityLockScreen">
+    <div class="tt-lock-card">
+        <div class="tt-lock-title" id="securityLockTitle">Test Locked</div>
+        <div class="tt-lock-text" id="securityLockText"></div>
+        <div class="tt-lock-actions">
+            <button type="button" class="tt-lock-btn primary" id="securityPrimaryBtn">Continue</button>
+            <button type="button" class="tt-lock-btn secondary" id="securitySecondaryBtn">Unlock</button>
+        </div>
+    </div>
+</div>
+
+<div class="tt-pass-modal" id="passwordModal">
+    <div class="tt-pass-card">
+        <div class="tt-pass-title" id="passwordModalTitle">Security Check</div>
+        <div class="tt-pass-sub" id="passwordModalText">Enter the exam control password to continue.</div>
+        <input type="password" class="tt-pass-input" id="passwordInput" placeholder="Enter password">
+        <div class="tt-pass-error" id="passwordError"></div>
+        <div class="tt-pass-actions">
+            <button type="button" class="tt-pass-btn cancel" id="passwordCancelBtn">Cancel</button>
+            <button type="button" class="tt-pass-btn confirm" id="passwordConfirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
 "use strict";
 
 /* ── state ── */
-var TOTAL    = document.querySelectorAll('.tt-qblock[data-idx]').length;
-var states   = new Array(TOTAL).fill('not-visited');
-var curIdx   = 0;
-var drawerOpen = true;  /* sidebar open by default */
+var TOTAL = document.querySelectorAll('.tt-qblock[data-idx]').length;
+var states = new Array(TOTAL).fill('not-visited');
+var curIdx = 0;
+var drawerOpen = true;
+var isPaused = {{ attempt_is_paused|yesno:"true,false" }};
+var pauseLockEnabled = {{ pause_lock_enabled|yesno:"true,false" }};
+var fullscreenLockEnabled = {{ full_screen_lock_enabled|yesno:"true,false" }};
+var remainingSeconds = parseInt("{{ remaining_seconds|default:0 }}", 10) || 0;
+var normalScreenAuthorized = !fullscreenLockEnabled;
+var activePasswordAction = '';
+var submittedByTimer = false;
+var formEl = document.getElementById('test-form');
+var countdownEl = document.getElementById('countdown');
+var pauseToggleBtn = document.getElementById('pauseToggleBtn');
+var securityLockScreen = document.getElementById('securityLockScreen');
+var securityLockTitle = document.getElementById('securityLockTitle');
+var securityLockText = document.getElementById('securityLockText');
+var securityPrimaryBtn = document.getElementById('securityPrimaryBtn');
+var securitySecondaryBtn = document.getElementById('securitySecondaryBtn');
+var passwordModal = document.getElementById('passwordModal');
+var passwordModalTitle = document.getElementById('passwordModalTitle');
+var passwordModalText = document.getElementById('passwordModalText');
+var passwordInput = document.getElementById('passwordInput');
+var passwordError = document.getElementById('passwordError');
+var csrfToken = (formEl.querySelector('input[name="csrfmiddlewaretoken"]') || {}).value || '';
+var questionActionButtons = [
+    document.getElementById('btnMark'),
+    document.getElementById('btnClear'),
+    document.getElementById('btnPrev'),
+    document.getElementById('btnSave'),
+    document.getElementById('btnSubmit')
+].filter(Boolean);
+var actionUrls = {
+    pause: "{% url 'quiz:pause' attempt.id %}",
+    resume: "{% url 'quiz:resume' attempt.id %}",
+    fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.id %}"
+};
 
 /* init answered states from pre-checked radios */
 document.querySelectorAll('.tt-qblock').forEach(function (b, i) {
@@ -827,26 +1016,19 @@ if (nameEl && avatarEl) {
 }
 
 /* ── timer ── */
-var endTimeIso = "{{ end_time_iso }}";
-var countdownEl = document.getElementById('countdown');
-
-function fmtTime(ms) {
-    if (ms <= 0) return '00:00:00';
-    var s = Math.floor(ms / 1000);
-    var h = Math.floor(s / 3600); s %= 3600;
-    var m = Math.floor(s / 60);   s %= 60;
-    return pad(h) + ':' + pad(m) + ':' + pad(s);
-}
 function pad(n) { return String(n).padStart(2, '0'); }
 
-if (endTimeIso) {
-    var endTime = new Date(endTimeIso);
-    setInterval(function () {
-        var diff = endTime - new Date();
-        if (diff <= 0) { countdownEl.textContent = '00:00:00'; document.getElementById('test-form').submit(); return; }
-        countdownEl.textContent = fmtTime(diff);
-        countdownEl.classList.toggle('urgent', diff < 300000);
-    }, 1000);
+function formatSeconds(totalSeconds) {
+    if (totalSeconds <= 0) return '00:00:00';
+    var hours = Math.floor(totalSeconds / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+}
+
+function updateCountdown() {
+    countdownEl.textContent = formatSeconds(remainingSeconds);
+    countdownEl.classList.toggle('urgent', !isPaused && remainingSeconds <= 300);
 }
 
 /* ── per-question timer ── */
@@ -854,7 +1036,7 @@ var qTimers = new Array(TOTAL).fill(0);
 var qTick   = Date.now();
 setInterval(function () {
     var now = Date.now();
-    qTimers[curIdx] += now - qTick;
+    if (!isPaused) qTimers[curIdx] += now - qTick;
     qTick = now;
     var el = document.getElementById('qt-' + curIdx);
     if (el) {
@@ -865,7 +1047,7 @@ setInterval(function () {
 
 /* ── navigation ── */
 function showQuestion(idx, dir) {
-    if (idx < 0 || idx >= TOTAL) return;
+    if (idx < 0 || idx >= TOTAL || isInteractionLocked()) return;
 
     var oldBlock = document.getElementById('qblock-' + curIdx);
     var newBlock = document.getElementById('qblock-' + idx);
@@ -900,7 +1082,6 @@ function showQuestion(idx, dir) {
 
 window.goToQuestion = function (idx) {
     showQuestion(idx, idx > curIdx ? 1 : -1);
-    /* drawer stays open so user can keep navigating */
 };
 
 /* ── palette render ── */
@@ -935,6 +1116,7 @@ function updateProgress() {
 
 /* ── answer handler ── */
 window.onAnswer = function (idx) {
+    if (isInteractionLocked()) return;
     if (states[idx] !== 'marked') states[idx] = 'answered';
     renderPalette();
     updateProgress();
@@ -942,7 +1124,7 @@ window.onAnswer = function (idx) {
 
 /* also watch radio changes (handles pre-checked on load) */
 document.getElementById('test-form').addEventListener('change', function (e) {
-    if (e.target.type !== 'radio') return;
+    if (e.target.type !== 'radio' || isInteractionLocked()) return;
     var b = e.target.closest('.tt-qblock');
     if (b) {
         var i = parseInt(b.dataset.idx, 10);
@@ -957,8 +1139,130 @@ function hasSelectedAnswer(idx) {
     return !!(block && block.querySelector('input[type="radio"]:checked'));
 }
 
+function isInteractionLocked() {
+    return isPaused || (fullscreenLockEnabled && !document.fullscreenElement && !normalScreenAuthorized);
+}
+
+function setAnsweringLocked(locked) {
+    formEl.querySelectorAll('input[type="radio"]').forEach(function (input) {
+        input.disabled = locked;
+    });
+    questionActionButtons.forEach(function (button) {
+        button.disabled = locked;
+        button.style.opacity = locked ? '0.55' : '1';
+        button.style.cursor = locked ? 'not-allowed' : 'pointer';
+    });
+}
+
+function showPauseOverlay() {
+    securityLockScreen.dataset.mode = 'pause';
+    securityLockTitle.textContent = 'Test Paused';
+    securityLockText.textContent = 'This attempt is paused. Enter the exam control password to resume the timer and continue answering questions.';
+    securityPrimaryBtn.textContent = 'Resume Test';
+    securityPrimaryBtn.style.display = 'inline-flex';
+    securitySecondaryBtn.style.display = 'none';
+    securityLockScreen.classList.add('open');
+    setAnsweringLocked(true);
+}
+
+function showFullscreenOverlay() {
+    securityLockScreen.dataset.mode = 'fullscreen';
+    securityLockTitle.textContent = 'Fullscreen Lock Enabled';
+    securityLockText.textContent = 'This company requires fullscreen mode for the test. Return to fullscreen or enter the exam control password to continue in normal browser mode.';
+    securityPrimaryBtn.textContent = 'Go Full Screen';
+    securityPrimaryBtn.style.display = 'inline-flex';
+    securitySecondaryBtn.textContent = 'Unlock Normal Screen';
+    securitySecondaryBtn.style.display = 'inline-flex';
+    securityLockScreen.classList.add('open');
+    setAnsweringLocked(true);
+}
+
+function refreshLockState() {
+    if (isPaused) {
+        showPauseOverlay();
+        return;
+    }
+    if (fullscreenLockEnabled && !document.fullscreenElement && !normalScreenAuthorized) {
+        showFullscreenOverlay();
+        return;
+    }
+    securityLockScreen.classList.remove('open');
+    setAnsweringLocked(false);
+}
+
+function updatePauseButton() {
+    if (pauseToggleBtn) {
+        pauseToggleBtn.textContent = isPaused ? 'Resume Test' : 'Pause Test';
+    }
+}
+
+function openPasswordModal(action) {
+    activePasswordAction = action;
+    passwordInput.value = '';
+    passwordError.textContent = '';
+
+    if (action === 'pause') {
+        passwordModalTitle.textContent = 'Pause Test';
+        passwordModalText.textContent = 'Enter the exam control password to pause the timer for this attempt.';
+    } else if (action === 'resume') {
+        passwordModalTitle.textContent = 'Resume Test';
+        passwordModalText.textContent = 'Enter the exam control password to resume the timer and continue the exam.';
+    } else {
+        passwordModalTitle.textContent = 'Unlock Normal Screen';
+        passwordModalText.textContent = 'Enter the exam control password to continue outside fullscreen mode.';
+    }
+
+    passwordModal.classList.add('open');
+    setTimeout(function () {
+        passwordInput.focus();
+    }, 20);
+}
+
+function closePasswordModal() {
+    passwordModal.classList.remove('open');
+    passwordInput.value = '';
+    passwordError.textContent = '';
+    activePasswordAction = '';
+}
+
+function requestFullScreenMode() {
+    if (!document.documentElement.requestFullscreen) return Promise.reject();
+    return document.documentElement.requestFullscreen();
+}
+
+function syncPausePayload(payload) {
+    if (typeof payload.remaining_seconds === 'number') {
+        remainingSeconds = payload.remaining_seconds;
+    }
+    isPaused = !!payload.is_paused;
+    updateCountdown();
+    updatePauseButton();
+    refreshLockState();
+}
+
+function postSecurityAction(action) {
+    return fetch(actionUrls[action], {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-CSRFToken': csrfToken
+        },
+        body: new URLSearchParams({
+            password: passwordInput.value
+        })
+    }).then(function (response) {
+        return response.json().then(function (data) {
+            if (!response.ok || data.ok === false) {
+                throw new Error(data.error || 'Security check failed.');
+            }
+            return data;
+        });
+    });
+}
+
 /* ── bottom buttons ── */
 document.getElementById('btnSave').addEventListener('click', function () {
+    if (isInteractionLocked()) return;
     if (states[curIdx] !== 'marked') {
         states[curIdx] = hasSelectedAnswer(curIdx) ? 'answered' : 'not-answered';
     }
@@ -967,16 +1271,19 @@ document.getElementById('btnSave').addEventListener('click', function () {
 });
 
 document.getElementById('btnPrev').addEventListener('click', function () {
+    if (isInteractionLocked()) return;
     if (curIdx > 0) showQuestion(curIdx - 1, -1);
 });
 
 document.getElementById('btnMark').addEventListener('click', function () {
+    if (isInteractionLocked()) return;
     states[curIdx] = 'marked';
     renderPalette(); updateProgress();
     if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
 
 document.getElementById('btnClear').addEventListener('click', function () {
+    if (isInteractionLocked()) return;
     var b = document.getElementById('qblock-' + curIdx);
     if (b) b.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
     states[curIdx] = 'not-answered';
@@ -1007,6 +1314,7 @@ document.addEventListener('keydown', function (e) {
 
 /* ── submit modal ── */
 document.getElementById('btnSubmit').addEventListener('click', function () {
+    if (isInteractionLocked()) return;
     var answered = states.filter(function (s) { return s === 'answered'; }).length;
     var marked   = states.filter(function (s) { return s === 'marked'; }).length;
     document.getElementById('ms-answered').textContent   = answered;
@@ -1015,13 +1323,21 @@ document.getElementById('btnSubmit').addEventListener('click', function () {
     document.getElementById('submitModal').classList.add('open');
 });
 window.closeModal    = function () { document.getElementById('submitModal').classList.remove('open'); };
-window.confirmSubmit = function () { document.getElementById('test-form').submit(); };
+window.confirmSubmit = function () { if (!isInteractionLocked()) formEl.submit(); };
 document.getElementById('submitModal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
 /* ── fullscreen ── */
 window.toggleFullscreen = function () {
-    if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
-    else { document.exitFullscreen && document.exitFullscreen(); }
+    if (!document.fullscreenElement) {
+        requestFullScreenMode().then(function () {
+            normalScreenAuthorized = false;
+            refreshLockState();
+        }).catch(function () {
+            if (fullscreenLockEnabled) refreshLockState();
+        });
+    } else if (!fullscreenLockEnabled) {
+        document.exitFullscreen && document.exitFullscreen();
+    }
 };
 
 /* ── sidebar tab clicks ── */
@@ -1037,9 +1353,103 @@ document.querySelectorAll('.tt-stab').forEach(function (btn) {
 });
 
 /* ── init ── */
+if (pauseToggleBtn) {
+    pauseToggleBtn.addEventListener('click', function () {
+        openPasswordModal(isPaused ? 'resume' : 'pause');
+    });
+}
+
+securityPrimaryBtn.addEventListener('click', function () {
+    if (securityLockScreen.dataset.mode === 'pause') {
+        openPasswordModal('resume');
+        return;
+    }
+
+    requestFullScreenMode().then(function () {
+        normalScreenAuthorized = false;
+        refreshLockState();
+    }).catch(function () {
+        refreshLockState();
+    });
+});
+
+securitySecondaryBtn.addEventListener('click', function () {
+    openPasswordModal('fullscreen');
+});
+
+document.getElementById('passwordCancelBtn').addEventListener('click', closePasswordModal);
+
+passwordModal.addEventListener('click', function (e) {
+    if (e.target === this) closePasswordModal();
+});
+
+passwordInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('passwordConfirmBtn').click();
+    }
+});
+
+document.getElementById('passwordConfirmBtn').addEventListener('click', function () {
+    if (!activePasswordAction) return;
+    passwordError.textContent = '';
+
+    postSecurityAction(activePasswordAction)
+        .then(function (data) {
+            if (activePasswordAction === 'fullscreen') {
+                normalScreenAuthorized = true;
+                closePasswordModal();
+                refreshLockState();
+                return;
+            }
+
+            syncPausePayload(data);
+            closePasswordModal();
+        })
+        .catch(function (error) {
+            passwordError.textContent = error.message || 'Unable to verify password.';
+        });
+});
+
+document.addEventListener('fullscreenchange', function () {
+    if (document.fullscreenElement) {
+        normalScreenAuthorized = false;
+    }
+    refreshLockState();
+});
+
+setInterval(function () {
+    if (isPaused) return;
+    if (remainingSeconds <= 0) {
+        if (!submittedByTimer) {
+            submittedByTimer = true;
+            countdownEl.textContent = '00:00:00';
+            formEl.submit();
+        }
+        return;
+    }
+
+    remainingSeconds -= 1;
+    updateCountdown();
+}, 1000);
+
+updateCountdown();
 renderPalette();
 updateProgress();
 syncSectionTabs();
+updatePauseButton();
+refreshLockState();
+
+if (fullscreenLockEnabled && !document.fullscreenElement) {
+    setTimeout(function () {
+        requestFullScreenMode().then(function () {
+            normalScreenAuthorized = false;
+            refreshLockState();
+        }).catch(function () {
+            refreshLockState();
+        });
+    }, 150);
+}
 
 }());
 </script>

@@ -7,7 +7,14 @@ from functools import wraps
 
 from quiz.models import Candidate, CandidateTestAttempt
 
-from .forms import CandidateForm, CandidateTestAttemptForm, QuizForm, SubTitleForm, TestSubjectForm
+from .forms import (
+    CandidateForm,
+    CandidateTestAttemptForm,
+    CompanySecurityForm,
+    QuizForm,
+    SubTitleForm,
+    TestSubjectForm,
+)
 from .models import Company, Quiz, SubTitle, TestSubject
 
 
@@ -92,6 +99,22 @@ def dashboard_home(request):
         'company': company,
     }
     return render(request, 'dashboard/home.html', context)
+
+
+@company_login_required
+def company_settings(request):
+    form = CompanySecurityForm(request.POST or None, instance=request.company)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Exam security settings updated successfully.')
+        return redirect('dashboard:company_settings')
+
+    return render_crud_form(
+        request,
+        form=form,
+        title='Exam Security Settings',
+        cancel_url='dashboard:home',
+    )
 
 
 def render_crud_list(request, *, queryset, title, create_url, edit_url_name, delete_url_name, fields):

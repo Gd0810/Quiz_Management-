@@ -13,17 +13,23 @@ class SubTitleInline(admin.TabularInline):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'is_active', 'created_at')
+    list_display = ('name', 'email', 'is_active', 'full_screen_lock', 'pause_lock', 'created_at')
     search_fields = ('name', 'email')
     list_filter = ('is_active', 'created_at')
 
     def save_model(self, request, obj, form, change):
         password = form.cleaned_data.get('password')
+        exam_control_password = form.cleaned_data.get('exam_control_password')
         if password:
             try:
                 identify_hasher(password)
             except Exception:
                 obj.password = make_password(password)
+        if exam_control_password:
+            try:
+                identify_hasher(exam_control_password)
+            except Exception:
+                obj.exam_control_password = make_password(exam_control_password)
         super().save_model(request, obj, form, change)
 
 

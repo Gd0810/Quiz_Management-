@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from dashboard.models import Company
 
@@ -39,6 +40,9 @@ class CandidateTestAttempt(models.Model):
     started_at = models.DateTimeField(blank=True, null=True)
     submitted_at = models.DateTimeField(blank=True, null=True)
     is_submitted = models.BooleanField(default=False)
+    is_paused = models.BooleanField(default=False)
+    paused_at = models.DateTimeField(blank=True, null=True)
+    total_paused_seconds = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -46,3 +50,20 @@ class CandidateTestAttempt(models.Model):
 
     def __str__(self):
         return f'{self.candidate.name} - {self.company.name} ({self.session_type})'
+
+    def current_pause_seconds(self, now=None):
+        if not self.is_paused or not self.paused_at:
+            return 0
+        now = now or timezone.now()
+        return max(int((now - self.paused_at).total_seconds()), 0)
+
+    def remaining_seconds(self, now=None):
+        if not self.started_at:
+            return 0
+        now = now or timezone.now()
+        elapsed_seconds = int((now - self.started_at).total_seconds())
+        consumed_seconds = max(
+            elapsed_seconds - self.total_paused_seconds - self.current_pause_seconds(now),
+            0,
+        )
+        return max((self.duration_minutes * 60) - consumed_seconds, 0)
