@@ -81,6 +81,34 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 }
 .tt-drawer.open .tt-drawer-tab svg { transform:rotate(180deg); }
 
+ .rb-logo {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -.03em;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        position: relative;
+        z-index: 1;
+    }
+    .rb-logo .icon-bg {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--c4), var(--c6));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0, 180, 216, 0.3);
+        transition: all 0.3s ease;
+    }
+    .rb-logo .icon-bg:hover {
+        background: rgba(0, 180, 216, 0.25);
+        transform: scale(1.05);
+    }
+
 /* ══ SECTION BAR ══ */
 .tt-secbar {
     position:fixed; top:var(--topbar-h); left:0; right:0; z-index:190;
@@ -495,8 +523,12 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 {# ══ TOP BAR ══ #}
 <div class="tt-top">
     <div class="tt-brand">
-        <span class="tt-brand-dot"></span>
-        <span class="tt-brand-name">Redmock</span>
+        <div class="rb-logo">
+            <span class="icon-bg">
+                <iconify-icon icon="mdi:company" width="30" height="30"></iconify-icon>
+            </span>
+            {{ request.company.name|default:"Company"|title }}
+        </div>
     </div>
     <span class="tt-title">{{ attempt.candidate.name }} — {{ attempt.level|title }}</span>
     <div class="tt-timer-wrap">
