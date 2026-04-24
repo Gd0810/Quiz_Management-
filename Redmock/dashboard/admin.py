@@ -13,7 +13,16 @@ class SubTitleInline(admin.TabularInline):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'is_active', 'full_screen_lock', 'pause_lock', 'created_at')
+    list_display = (
+        'name',
+        'email',
+        'is_active',
+        'full_screen_lock',
+        'pause_lock',
+        'tab_switch_guard_enabled',
+        'max_violation_warnings',
+        'created_at',
+    )
     search_fields = ('name', 'email')
     list_filter = ('is_active', 'created_at')
 

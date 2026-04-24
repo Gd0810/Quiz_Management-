@@ -14,5 +14,6 @@ urlpatterns = [
     path('attempt/<int:attempt_id>/pause/', views.pause_attempt, name='pause'),
     path('attempt/<int:attempt_id>/resume/', views.resume_attempt, name='resume'),
     path('attempt/<int:attempt_id>/unlock-fullscreen/', views.unlock_fullscreen, name='unlock_fullscreen'),
+    path('attempt/<int:attempt_id>/record-violation/', views.record_violation, name='record_violation'),
     path('attempt/<int:attempt_id>/result/', views.test_result, name='result'),
 ]

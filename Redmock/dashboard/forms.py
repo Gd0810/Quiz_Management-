@@ -22,7 +22,13 @@ class CompanySecurityForm(forms.ModelForm):
 
     class Meta:
         model = Company
-        fields = ['full_screen_lock', 'pause_lock', 'exam_control_password']
+        fields = [
+            'full_screen_lock',
+            'pause_lock',
+            'tab_switch_guard_enabled',
+            'max_violation_warnings',
+            'exam_control_password',
+        ]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -38,6 +44,9 @@ class CompanySecurityForm(forms.ModelForm):
 
         if (cleaned_data.get('full_screen_lock') or cleaned_data.get('pause_lock')) and not cleaned_data.get('exam_control_password'):
             raise ValidationError('Set an exam control password before enabling fullscreen lock or pause lock.')
+
+        if cleaned_data.get('tab_switch_guard_enabled') and cleaned_data.get('max_violation_warnings', 0) <= 0:
+            raise ValidationError('Maximum violation warnings must be greater than zero when tab switch guard is enabled.')
 
         return cleaned_data
 

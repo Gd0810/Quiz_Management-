@@ -969,10 +969,14 @@ var drawerOpen = true;
 var isPaused = {{ attempt_is_paused|yesno:"true,false" }};
 var pauseLockEnabled = {{ pause_lock_enabled|yesno:"true,false" }};
 var fullscreenLockEnabled = {{ full_screen_lock_enabled|yesno:"true,false" }};
+var tabSwitchGuardEnabled = {{ tab_switch_guard_enabled|yesno:"true,false" }};
+var maxViolationWarnings = parseInt("{{ max_violation_warnings|default:0 }}", 10) || 0;
+var warningCount = parseInt("{{ warning_count|default:0 }}", 10) || 0;
 var remainingSeconds = parseInt("{{ remaining_seconds|default:0 }}", 10) || 0;
 var normalScreenAuthorized = !fullscreenLockEnabled;
 var activePasswordAction = '';
 var submittedByTimer = false;
+var lastViolationPingAt = 0;
 var formEl = document.getElementById('test-form');
 var countdownEl = document.getElementById('countdown');
 var pauseToggleBtn = document.getElementById('pauseToggleBtn');
@@ -998,7 +1002,8 @@ var questionActionButtons = [
 var actionUrls = {
     pause: "{% url 'quiz:pause' attempt.id %}",
     resume: "{% url 'quiz:resume' attempt.id %}",
-    fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.id %}"
+    fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.id %}",
+    violation: "{% url 'quiz:record_violation' attempt.id %}"
 };
 
 /* init answered states from pre-checked radios */
@@ -1271,6 +1276,55 @@ function postSecurityAction(action) {
     });
 }
 
+function currentAnswerParams() {
+    var params = new URLSearchParams();
+    formEl.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
+        params.append(input.name, input.value);
+    });
+    return params;
+}
+
+function recordViolation(violationType) {
+    if (!tabSwitchGuardEnabled || isPaused || submittedByTimer) return;
+    var now = Date.now();
+    if (now - lastViolationPingAt < 1200) return;
+    lastViolationPingAt = now;
+
+    var body = currentAnswerParams();
+    body.append('violation_type', violationType);
+
+    fetch(actionUrls.violation, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-CSRFToken': csrfToken
+        },
+        body: body
+    })
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            if (!data || data.ok === false) return;
+            if (typeof data.warning_count === 'number') {
+                warningCount = data.warning_count;
+            }
+            if (data.auto_submitted && data.redirect_url) {
+                submittedByTimer = true;
+                window.location.href = data.redirect_url;
+                return;
+            }
+            if (typeof data.warning_limit === 'number') {
+                window.alert(
+                    'Warning ' + warningCount + ' of ' + data.warning_limit + ': tab switching or leaving the test window is not allowed.'
+                );
+            }
+        })
+        .catch(function () {
+            return null;
+        });
+}
+
 /* ── bottom buttons ── */
 document.getElementById('btnSave').addEventListener('click', function () {
     if (isInteractionLocked()) return;
@@ -1426,6 +1480,18 @@ document.addEventListener('fullscreenchange', function () {
         normalScreenAuthorized = false;
     }
     refreshLockState();
+});
+
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        recordViolation('tab_hidden');
+    }
+});
+
+window.addEventListener('blur', function () {
+    if (!document.hidden) {
+        recordViolation('window_blur');
+    }
 });
 
 setInterval(function () {

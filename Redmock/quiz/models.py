@@ -43,6 +43,10 @@ class CandidateTestAttempt(models.Model):
     is_paused = models.BooleanField(default=False)
     paused_at = models.DateTimeField(blank=True, null=True)
     total_paused_seconds = models.PositiveIntegerField(default=0)
+    tab_switch_count = models.PositiveIntegerField(default=0)
+    warning_count = models.PositiveIntegerField(default=0)
+    last_violation_at = models.DateTimeField(blank=True, null=True)
+    violation_log_json = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

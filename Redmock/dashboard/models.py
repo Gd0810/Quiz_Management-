@@ -13,6 +13,8 @@ class Company(models.Model):
     is_active = models.BooleanField(default=True)
     full_screen_lock = models.BooleanField(default=False)
     pause_lock = models.BooleanField(default=False)
+    tab_switch_guard_enabled = models.BooleanField(default=False)
+    max_violation_warnings = models.PositiveIntegerField(default=3)
     exam_control_password = models.CharField(max_length=128, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

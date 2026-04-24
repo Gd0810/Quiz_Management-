@@ -425,7 +425,56 @@ def _attempt_payload(attempt):
         'remaining_seconds': attempt.remaining_seconds(),
         'is_paused': attempt.is_paused,
         'current_pause_seconds': attempt.current_pause_seconds(),
+        'warning_count': attempt.warning_count,
+        'tab_switch_count': attempt.tab_switch_count,
     }
+
+
+def _answers_from_request(request, answer_rows):
+    return [
+        {
+            'question_id': row['question_id'],
+            'selected_answer': request.POST.get(f"question_{row['question_id']}", ''),
+        }
+        for row in answer_rows
+    ]
+
+
+def _finalize_attempt(attempt, *, question_map, updated_answers, extra_update_fields=None):
+    correct_count = 0
+    for row in updated_answers:
+        question = question_map.get(row['question_id'])
+        if question and row.get('selected_answer') == question.correct_answer:
+            correct_count += 1
+
+    total_questions = len(updated_answers)
+    wrong_count = max(total_questions - correct_count, 0)
+    percentage = Decimal('0.00')
+    if total_questions:
+        percentage = (Decimal(correct_count) / Decimal(total_questions)) * Decimal('100')
+
+    attempt.answers_json = updated_answers
+    attempt.correct_count = correct_count
+    attempt.wrong_count = wrong_count
+    attempt.percentage = percentage.quantize(Decimal('0.01'))
+    attempt.submitted_at = timezone.now()
+    attempt.is_submitted = True
+    attempt.is_paused = False
+    attempt.paused_at = None
+
+    update_fields = [
+        'answers_json',
+        'correct_count',
+        'wrong_count',
+        'percentage',
+        'submitted_at',
+        'is_submitted',
+        'is_paused',
+        'paused_at',
+    ]
+    if extra_update_fields:
+        update_fields.extend(extra_update_fields)
+    attempt.save(update_fields=list(dict.fromkeys(update_fields)))
 
 
 @company_login_required
@@ -618,37 +667,11 @@ def take_test(request, attempt_id):
             messages.error(request, 'Resume the paused test before submitting answers.')
             return redirect('quiz:take', attempt_id=attempt.id)
 
-        updated_answers = []
-        correct_count = 0
-        for row in answer_rows:
-            question_id = row['question_id']
-            selected_answer = request.POST.get(f'question_{question_id}', '')
-            question = question_map.get(question_id)
-            if question and selected_answer == question.correct_answer:
-                correct_count += 1
-            updated_answers.append({'question_id': question_id, 'selected_answer': selected_answer})
-
-        total_questions = len(updated_answers)
-        wrong_count = max(total_questions - correct_count, 0)
-        percentage = Decimal('0.00')
-        if total_questions:
-            percentage = (Decimal(correct_count) / Decimal(total_questions)) * Decimal('100')
-
-        attempt.answers_json = updated_answers
-        attempt.correct_count = correct_count
-        attempt.wrong_count = wrong_count
-        attempt.percentage = percentage.quantize(Decimal('0.01'))
-        attempt.submitted_at = timezone.now()
-        attempt.is_submitted = True
-        attempt.save(
-            update_fields=[
-                'answers_json',
-                'correct_count',
-                'wrong_count',
-                'percentage',
-                'submitted_at',
-                'is_submitted',
-            ]
+        updated_answers = _answers_from_request(request, answer_rows)
+        _finalize_attempt(
+            attempt,
+            question_map=question_map,
+            updated_answers=updated_answers,
         )
         messages.success(request, 'Test submitted successfully.')
         return redirect('quiz:result', attempt_id=attempt.id)
@@ -662,9 +685,12 @@ def take_test(request, attempt_id):
         'remaining_seconds': attempt.remaining_seconds(),
         'full_screen_lock_enabled': attempt.company.full_screen_lock,
         'pause_lock_enabled': attempt.company.pause_lock,
+        'tab_switch_guard_enabled': attempt.company.tab_switch_guard_enabled,
+        'max_violation_warnings': attempt.company.max_violation_warnings,
         'attempt_is_paused': attempt.is_paused,
         'current_pause_seconds': attempt.current_pause_seconds(),
         'security_password_required': bool(attempt.company.exam_control_password),
+        'warning_count': attempt.warning_count,
         'end_time_iso': (
             attempt.started_at + timedelta(minutes=attempt.duration_minutes)
         ).isoformat()
@@ -740,6 +766,87 @@ def unlock_fullscreen(request, attempt_id):
     if not request.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
     return JsonResponse({'ok': True})
+
+
+@company_login_required
+@require_POST
+def record_violation(request, attempt_id):
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('company'),
+        pk=attempt_id,
+        company=request.company,
+    )
+
+    if attempt.is_submitted:
+        return JsonResponse({'ok': True, 'already_submitted': True})
+
+    if not request.company.tab_switch_guard_enabled:
+        return JsonResponse({'ok': True, 'guard_enabled': False, 'warning_count': attempt.warning_count})
+
+    violation_type = (request.POST.get('violation_type') or 'focus_lost').strip()[:50]
+    answers = _answers_from_request(request, attempt.answers_json or [])
+    violation_log = list(attempt.violation_log_json or [])
+    now = timezone.now()
+    violation_log.append(
+        {
+            'type': violation_type,
+            'at': now.isoformat(),
+        }
+    )
+
+    attempt.tab_switch_count += 1
+    attempt.warning_count += 1
+    attempt.last_violation_at = now
+    attempt.violation_log_json = violation_log
+
+    warning_limit = max(request.company.max_violation_warnings, 1)
+    if attempt.warning_count >= warning_limit:
+        question_ids = [row['question_id'] for row in answers]
+        question_map = {
+            question.id: question
+            for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company)
+        }
+        _finalize_attempt(
+            attempt,
+            question_map=question_map,
+            updated_answers=answers,
+            extra_update_fields=[
+                'tab_switch_count',
+                'warning_count',
+                'last_violation_at',
+                'violation_log_json',
+            ],
+        )
+        return JsonResponse(
+            {
+                'ok': True,
+                'auto_submitted': True,
+                'warning_count': attempt.warning_count,
+                'redirect_url': request.build_absolute_uri(
+                    redirect('quiz:result', attempt_id=attempt.id).url
+                ),
+            }
+        )
+
+    attempt.answers_json = answers
+    attempt.save(
+        update_fields=[
+            'answers_json',
+            'tab_switch_count',
+            'warning_count',
+            'last_violation_at',
+            'violation_log_json',
+        ]
+    )
+    return JsonResponse(
+        {
+            'ok': True,
+            'auto_submitted': False,
+            'warning_count': attempt.warning_count,
+            'tab_switch_count': attempt.tab_switch_count,
+            'warning_limit': warning_limit,
+        }
+    )
 
 
 @company_login_required

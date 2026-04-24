@@ -17,6 +17,8 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'session_type',
         'level',
         'question_count',
+        'tab_switch_count',
+        'warning_count',
         'correct_count',
         'wrong_count',
         'percentage',
