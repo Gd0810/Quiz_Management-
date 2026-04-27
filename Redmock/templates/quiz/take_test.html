@@ -646,6 +646,12 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 
 /* ══ RESPONSIVE ══ */
 @media (max-width:600px) {
+    .tt-top {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 0.85rem;
+    }
+    .tt-top-actions { display: none; }
     .tt-title { display:none; }
     .tt-btn-sm { display:none; }
     .tt-botbar { padding:0 .625rem; gap:.35rem; }
@@ -653,6 +659,10 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     .tt-bot-btn--review span.label { display:none; }
     .tt-qarea { padding:1rem .75rem; }
     :root { --drawer-w:260px; }
+    .tt-timer-wrap { padding: 0.25rem 0.65rem; gap: 0.4rem; }
+    .tt-timer-val { font-size: 0.95rem; }
+    .tt-secbar { padding: 0 0.75rem; }
+    .tt-sec-tab { padding: 0.35rem 0.9rem; font-size: 0.74rem; }
 }
 </style>
 
