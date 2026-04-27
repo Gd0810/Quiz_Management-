@@ -664,6 +664,19 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     .tt-timer-val { font-size: 0.95rem; }
     .tt-secbar { padding: 0 0.75rem; }
     .tt-sec-tab { padding: 0.35rem 0.9rem; font-size: 0.74rem; }
+
+    .tt-drawer {
+        position: absolute; /* Overlay instead of pushing */
+        top: 0; /* Align with the top of tt-body */
+        bottom: 0; /* Align with the bottom of tt-body */
+        right: 0;
+        left: auto; /* Ensure it's positioned from the right */
+        z-index: 10; /* Ensure it overlays the question area */
+        transform: translateX(100%); /* Initially hidden off-screen */
+        transition: transform .3s cubic-bezier(.4,0,.2,1); /* Transition for sliding */
+    }
+    .tt-drawer.open { transform: translateX(0); } /* Slide in */
+    .tt-drawer.closed { transform: translateX(100%); } /* Slide out */
 }
 </style>
 
