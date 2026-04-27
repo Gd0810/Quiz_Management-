@@ -34,7 +34,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-brand-name { font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:800; color:#fff; letter-spacing:-.03em; }
 .tt-title {
     font-size:.8rem; font-weight:500; color:var(--c1);
-    padding-left:.875rem; border-left:1px solid rgba(144,224,239,.2);
+    padding-left:.875rem; border-left:1.5px solid rgba(255,255,255,0.25);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; flex:1;
 }
 .tt-timer-wrap {
@@ -94,6 +94,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         gap: .75rem;
         position: relative;
         z-index: 1;
+        margin-right:10px;
     }
     .rb-logo .icon-bg {
         width: 32px;
@@ -672,12 +673,12 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
         <div class="tt-brand">
             <div class="rb-logo">
                 <span class="icon-bg">
-                    <iconify-icon icon="mdi:company" width="22" height="22"></iconify-icon>
+                    <iconify-icon icon="mdi:company" width="20" height="20"></iconify-icon>
                 </span>
                 {{ request.company.name|default:"Company"|title }}
             </div>
         </div>
-        <span class="tt-title">{{ attempt.candidate.name }} — {{ attempt.level|title }}</span>
+        <span class="tt-title">{{ attempt.candidate.name|title }} <span style="opacity:0.4; margin:0 5px;">|</span> {{ attempt.candidate.designation_tech|title }}</span>
     </div>
 
     <div class="tt-timer-wrap">
