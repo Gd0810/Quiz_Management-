@@ -311,6 +311,14 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     }
 }
 
+@media (min-width: 1200px) {
+    .tt-qblock--standard {
+        max-width:none;
+        padding-left:12%;
+        padding-right:12%;
+    }
+}
+
 /* options */
 .tt-options { display:flex; flex-direction:column; gap:.55rem; }
 .tt-option {
@@ -788,7 +796,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     <form method="post" id="test-form" style="width:100%;max-width:1120px;display:contents;">
         {% csrf_token %}
         {% for question in questions %}
-        <div class="tt-qblock{% if forloop.first %} active{% endif %}"
+        <div class="tt-qblock{% if not question.question_image %} tt-qblock--standard{% endif %}{% if forloop.first %} active{% endif %}"
              id="qblock-{{ forloop.counter0 }}"
              data-qid="{{ question.id }}"
              data-idx="{{ forloop.counter0 }}">
