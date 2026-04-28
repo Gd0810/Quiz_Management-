@@ -743,10 +743,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
                     <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
                 </div>
                 <div class="tt-qmeta">
-                    <span class="tt-mark-pill pos">+{{ attempt.positive_mark|default:"1" }}</span>
-                    <span class="tt-mark-pill neg">-{{ attempt.negative_mark|default:"0.5" }}</span>
                     <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">00:00</span>
-                    <button type="button" class="tt-report-btn">⚑ Report</button>
                 </div>
             </div>
 
