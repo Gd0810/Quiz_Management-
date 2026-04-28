@@ -848,7 +848,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
                     <div class="tt-qheader">
                         <div>
                             <div class="tt-qnum">Question No. {{ forloop.counter }}</div>
-                            <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
+                            <div class="tt-qnum-sub">{{ question.test_subject.subject }} / {% if question.sub_title %}{{ question.sub_title.title }}{% else %}General{% endif %}</div>
                         </div>
                         <div class="tt-qmeta">
                             <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">This question took time: 00:00</span>
@@ -914,7 +914,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
             <div class="tt-qheader">
                 <div>
                     <div class="tt-qnum">Question No. {{ forloop.counter }}</div>
-                    <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
+                    <div class="tt-qnum-sub">{{ question.test_subject.subject }} / {% if question.sub_title %}{{ question.sub_title.title }}{% else %}General{% endif %}</div>
                 </div>
                 <div class="tt-qmeta">
                     <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">This question took time: 00:00</span>
