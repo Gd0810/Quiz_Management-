@@ -212,7 +212,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     display:none;
     flex-direction:column;
     gap:1rem;
-    width:100%; max-width:780px;
+    width:100%; max-width:1120px;
     animation:q-in .28s cubic-bezier(.34,1.2,.64,1) both;
 }
 .tt-qblock.active { display:flex; }
@@ -253,6 +253,63 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-qcard { background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem; padding:1.1rem 1.25rem; }
 .tt-qlabel { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c5); margin-bottom:.625rem; }
 .tt-qtext { font-size:.9875rem; font-weight:500; line-height:1.65; color:#1e293b; margin-bottom:1.1rem; }
+.tt-qsplit {
+    display:grid;
+    grid-template-columns:minmax(300px, 360px) minmax(0, 1fr);
+    gap:1rem;
+    align-items:start;
+}
+.tt-qside {
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+}
+.tt-qimage-card {
+    background:#fff;
+    border:1.5px solid rgba(0,180,216,.15);
+    border-radius:.875rem;
+    padding:1rem;
+}
+.tt-qimage-frame {
+    width:100%;
+    height:320px;
+    border-radius:.75rem;
+    border:1px solid rgba(0,180,216,.14);
+    background:linear-gradient(180deg, #fafdff 0%, #eef9fd 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+}
+.tt-qimage-frame img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+}
+
+@media (max-width: 992px) {
+    .tt-qsplit {
+        grid-template-columns:1fr;
+    }
+
+    .tt-qimage-frame {
+        height:280px;
+    }
+}
+
+@media (max-width: 640px) {
+    .tt-qheader,
+    .tt-qcard,
+    .tt-comprehension,
+    .tt-qimage-card {
+        padding:.9rem 1rem;
+    }
+
+    .tt-qimage-frame {
+        height:220px;
+    }
+}
 
 /* options */
 .tt-options { display:flex; flex-direction:column; gap:.55rem; }
@@ -728,7 +785,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 {# ══ MAIN BODY: question area + sidebar ══ #}
 <div class="tt-body">
 <div class="tt-qarea" id="qarea">
-    <form method="post" id="test-form" style="width:100%;max-width:780px;display:contents;">
+    <form method="post" id="test-form" style="width:100%;max-width:1120px;display:contents;">
         {% csrf_token %}
         {% for question in questions %}
         <div class="tt-qblock{% if forloop.first %} active{% endif %}"
@@ -736,6 +793,74 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
              data-qid="{{ question.id }}"
              data-idx="{{ forloop.counter0 }}">
 
+            {% if question.question_image %}
+            <div class="tt-qsplit">
+                <div class="tt-qside">
+                    <div class="tt-qheader">
+                        <div>
+                            <div class="tt-qnum">Question No. {{ forloop.counter }}</div>
+                            <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
+                        </div>
+                        <div class="tt-qmeta">
+                            <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">This question took time: 00:00</span>
+                        </div>
+                    </div>
+
+                    {% if question.question_paragraph %}
+                    <div class="tt-comprehension">
+                        <div class="tt-comp-label">Question Details</div>
+                        <div class="tt-comp-text">{{ question.question_paragraph }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="tt-qimage-card">
+                        <div class="tt-comp-label">Question Image</div>
+                        <div class="tt-qimage-frame">
+                            <img src="{{ question.question_image.url }}" alt="Question {{ forloop.counter }} image">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tt-qcard">
+                    <div class="tt-qlabel">Question</div>
+                    <div class="tt-qtext">{{ question.question }}</div>
+                    <div class="tt-options">
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_1"
+                                {% if initial_answers|get_item:question.id == 'option_1' %}checked{% endif %}
+                                onchange="onAnswer({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">A</span>
+                            <span class="tt-option-text">{{ question.option_1 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_2"
+                                {% if initial_answers|get_item:question.id == 'option_2' %}checked{% endif %}
+                                onchange="onAnswer({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">B</span>
+                            <span class="tt-option-text">{{ question.option_2 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_3"
+                                {% if initial_answers|get_item:question.id == 'option_3' %}checked{% endif %}
+                                onchange="onAnswer({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">C</span>
+                            <span class="tt-option-text">{{ question.option_3 }}</span>
+                        </label>
+                        <label class="tt-option">
+                            <input type="radio" name="question_{{ question.id }}" value="option_4"
+                                {% if initial_answers|get_item:question.id == 'option_4' %}checked{% endif %}
+                                onchange="onAnswer({{ forloop.counter0 }})">
+                            <div class="tt-option-bubble"></div>
+                            <span class="tt-option-key">D</span>
+                            <span class="tt-option-text">{{ question.option_4 }}</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% else %}
             {# header #}
             <div class="tt-qheader">
                 <div>
@@ -794,6 +919,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
                     </label>
                 </div>
             </div>
+            {% endif %}
 
         </div>
         {% empty %}
