@@ -259,8 +259,9 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 /* question header */
 .tt-qheader {
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.625rem;
-    background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
+    background:rgba(255,255,255,.88); border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
     padding:.625rem 1.1rem;
+    backdrop-filter:blur(1.5px);
 }
 .tt-qnum { font-family:'Syne',sans-serif; font-size:.9375rem; font-weight:700; color:var(--c8); }
 .tt-qnum-sub { font-size:.75rem; color:var(--c5); font-weight:500; margin-top:.1rem; }
@@ -273,14 +274,15 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 
 /* comprehension */
 .tt-comprehension {
-    background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
+    background:rgba(255,255,255,.88); border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem;
     padding:1.1rem 1.25rem;
+    backdrop-filter:blur(1.5px);
 }
 .tt-comp-label { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c5); margin-bottom:.5rem; }
 .tt-comp-text { font-size:.875rem; line-height:1.7; color:#334155; }
 
 /* question card */
-.tt-qcard { background:#fff; border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem; padding:1.1rem 1.25rem; }
+.tt-qcard { background:rgba(255,255,255,.86); border:1.5px solid rgba(0,180,216,.15); border-radius:.875rem; padding:1.1rem 1.25rem; backdrop-filter:blur(1.5px); }
 .tt-qlabel { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--c5); margin-bottom:.625rem; }
 .tt-qtext { font-size:.9875rem; font-weight:500; line-height:1.65; color:#1e293b; margin-bottom:1.1rem; }
 .tt-qsplit {
@@ -295,10 +297,11 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
     gap:1rem;
 }
 .tt-qimage-card {
-    background:#fff;
+    background:rgba(255,255,255,.88);
     border:1.5px solid rgba(0,180,216,.15);
     border-radius:.875rem;
     padding:1rem;
+    backdrop-filter:blur(1.5px);
 }
 .tt-qimage-frame {
     width:100%;
@@ -489,7 +492,18 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-palette-scroll::-webkit-scrollbar-thumb { background:var(--c2); border-radius:2px; }
 .tt-palette-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.375rem; }
 .tt-drawer-panel { display:none; flex:1; min-height:0; }
-.tt-drawer-panel.active { display:block; }
+.tt-drawer-panel.active {
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+}
+.tt-palette-scroll {
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding-right:.55rem;
+}
 .tt-pnum {
     aspect-ratio:1; border-radius:999px;
     display:flex; align-items:center; justify-content:center;
@@ -515,6 +529,8 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 .tt-stab:not(:last-child) { border-right:1px solid rgba(0,180,216,.15); }
 .tt-instructions {
     height:100%;
+    flex:1;
+    min-height:0;
     overflow-y:auto;
     padding:1rem .95rem 1.1rem;
     background:linear-gradient(180deg, #fbfeff 0%, #f4fbfd 100%);
