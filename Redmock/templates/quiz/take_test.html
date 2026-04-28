@@ -743,14 +743,14 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
                     <div class="tt-qnum-sub">{{ question.test_subject.subject }}{% if question.sub_title %} / {{ question.sub_title.title }}{% endif %}</div>
                 </div>
                 <div class="tt-qmeta">
-                    <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">00:00</span>
+                    <span class="tt-time-badge" id="qt-{{ forloop.counter0 }}">This question took time: 00:00</span>
                 </div>
             </div>
 
             {# comprehension #}
             {% if question.question_paragraph %}
             <div class="tt-comprehension">
-                <div class="tt-comp-label">Comprehension</div>
+                <div class="tt-comp-label">Question Details</div>
                 <div class="tt-comp-text">{{ question.question_paragraph }}</div>
             </div>
             {% endif %}
@@ -1081,7 +1081,7 @@ setInterval(function () {
     var el = document.getElementById('qt-' + curIdx);
     if (el) {
         var s = Math.floor(qTimers[curIdx] / 1000);
-        el.textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+        el.textContent = 'This question took time: ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
     }
 }, 1000);
 
