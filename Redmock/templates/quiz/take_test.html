@@ -1297,13 +1297,102 @@ var actionUrls = {
     fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.id %}",
     violation: "{% url 'quiz:record_violation' attempt.id %}"
 };
+var attemptStorageKey = 'redmock:take-test:attempt:{{ attempt.id }}';
+var storedAttemptState = readStoredAttemptState();
+
+function canUseLocalStorage() {
+    try {
+        var key = '__redmock_storage_test__';
+        window.localStorage.setItem(key, key);
+        window.localStorage.removeItem(key);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function readStoredAttemptState() {
+    if (!canUseLocalStorage()) return null;
+    try {
+        var raw = window.localStorage.getItem(attemptStorageKey);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function getSelectedAnswers() {
+    var answers = {};
+    formEl.querySelectorAll('input[type="radio"]:checked').forEach(function (input) {
+        answers[input.name] = input.value;
+    });
+    return answers;
+}
+
+function restoreStoredAnswers() {
+    if (!storedAttemptState || !storedAttemptState.answers) return;
+    Object.keys(storedAttemptState.answers).forEach(function (name) {
+        var value = storedAttemptState.answers[name];
+        formEl.querySelectorAll('input[type="radio"]').forEach(function (input) {
+            if (input.name === name && input.value === value) input.checked = true;
+        });
+    });
+}
+
+function isValidQuestionState(state) {
+    return ['answered', 'marked', 'not-answered', 'not-visited'].indexOf(state) !== -1;
+}
+
+function restoreStoredPaletteState() {
+    if (!storedAttemptState || !Array.isArray(storedAttemptState.states)) return;
+    if (storedAttemptState.states.length !== TOTAL) return;
+
+    storedAttemptState.states.forEach(function (state, i) {
+        if (isValidQuestionState(state)) states[i] = state;
+    });
+}
+
+function saveAttemptState() {
+    if (!canUseLocalStorage()) return;
+    try {
+        window.localStorage.setItem(attemptStorageKey, JSON.stringify({
+            states: states,
+            curIdx: curIdx,
+            answers: getSelectedAnswers()
+        }));
+    } catch (error) {
+        return;
+    }
+}
+
+function clearAttemptState() {
+    if (!canUseLocalStorage()) return;
+    try {
+        window.localStorage.removeItem(attemptStorageKey);
+    } catch (error) {
+        return;
+    }
+}
+
+restoreStoredAnswers();
+restoreStoredPaletteState();
 
 /* init answered states from pre-checked radios */
 document.querySelectorAll('.tt-qblock').forEach(function (b, i) {
-    if (b.querySelector('input[type="radio"]:checked')) states[i] = 'answered';
+    if (b.querySelector('input[type="radio"]:checked') && states[i] !== 'marked') states[i] = 'answered';
 });
-/* current question starts as not-answered (visited) */
-if (states[0] !== 'answered') states[0] = 'not-answered';
+
+if (storedAttemptState && Number.isInteger(storedAttemptState.curIdx)) {
+    curIdx = Math.min(Math.max(storedAttemptState.curIdx, 0), Math.max(TOTAL - 1, 0));
+}
+
+document.querySelectorAll('.tt-qblock').forEach(function (b) { b.classList.remove('active'); });
+var initialBlock = document.getElementById('qblock-' + curIdx);
+if (initialBlock) initialBlock.classList.add('active');
+
+/* a fresh attempt opens on question 1, so only then it becomes visited */
+if (!storedAttemptState && states[0] !== 'answered') states[0] = 'not-answered';
+if (states[curIdx] === 'not-visited') states[curIdx] = 'not-answered';
 
 /* ── avatar ── */
 var nameEl = document.querySelector('.tt-cand-name');
@@ -1388,6 +1477,7 @@ function renderPalette() {
         var el = document.getElementById('pnum-' + i);
         if (el) el.className = 'tt-pnum ' + states[i] + (i === curIdx ? ' current' : '');
     }
+    saveAttemptState();
 }
 
 function syncSectionTabs() {
@@ -1685,7 +1775,12 @@ document.getElementById('btnSubmit').addEventListener('click', function () {
     document.getElementById('submitModal').classList.add('open');
 });
 window.closeModal    = function () { document.getElementById('submitModal').classList.remove('open'); };
-window.confirmSubmit = function () { if (!isInteractionLocked()) formEl.submit(); };
+window.confirmSubmit = function () {
+    if (!isInteractionLocked()) {
+        clearAttemptState();
+        formEl.submit();
+    }
+};
 document.getElementById('submitModal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
 /* ── fullscreen ── */
@@ -1801,8 +1896,13 @@ if (tabSwitchGuardEnabled) {
     });
 
     window.addEventListener('beforeunload', function () {
+        saveAttemptState();
         maybeRecordViolation('beforeunload');
     });
+}
+
+if (!tabSwitchGuardEnabled) {
+    window.addEventListener('beforeunload', saveAttemptState);
 }
 
 setInterval(function () {
@@ -1811,6 +1911,7 @@ setInterval(function () {
         if (!submittedByTimer) {
             submittedByTimer = true;
             countdownEl.textContent = '00:00:00';
+            clearAttemptState();
             formEl.submit();
         }
         return;
