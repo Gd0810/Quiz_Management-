@@ -1358,7 +1358,8 @@ function saveAttemptState() {
         window.localStorage.setItem(attemptStorageKey, JSON.stringify({
             states: states,
             curIdx: curIdx,
-            answers: getSelectedAnswers()
+            answers: getSelectedAnswers(),
+            qTimers: qTimers
         }));
     } catch (error) {
         return;
@@ -1420,6 +1421,12 @@ function updateCountdown() {
 
 /* ── per-question timer ── */
 var qTimers = new Array(TOTAL).fill(0);
+if (storedAttemptState && Array.isArray(storedAttemptState.qTimers) && storedAttemptState.qTimers.length === TOTAL) {
+    storedAttemptState.qTimers.forEach(function (time, i) {
+        var parsedTime = parseInt(time, 10);
+        qTimers[i] = isNaN(parsedTime) || parsedTime < 0 ? 0 : parsedTime;
+    });
+}
 var qTick   = Date.now();
 setInterval(function () {
     var now = Date.now();
@@ -1430,7 +1437,18 @@ setInterval(function () {
         var s = Math.floor(qTimers[curIdx] / 1000);
         el.textContent = 'This question took time: ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
     }
+    saveAttemptState();
 }, 1000);
+
+function renderQuestionTimers() {
+    for (var i = 0; i < TOTAL; i++) {
+        var el = document.getElementById('qt-' + i);
+        if (el) {
+            var s = Math.floor(qTimers[i] / 1000);
+            el.textContent = 'This question took time: ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+        }
+    }
+}
 
 /* ── navigation ── */
 function showQuestion(idx, dir) {
@@ -1922,6 +1940,7 @@ setInterval(function () {
 }, 1000);
 
 updateCountdown();
+renderQuestionTimers();
 renderPalette();
 updateProgress();
 syncSectionTabs();
