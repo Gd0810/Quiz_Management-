@@ -523,6 +523,13 @@ def _attempt_payload(attempt):
     }
 
 
+def _public_attempt_or_404(attempt_slug):
+    return get_object_or_404(
+        CandidateTestAttempt.objects.select_related('candidate', 'company'),
+        public_slug=attempt_slug,
+    )
+
+
 def _answers_from_request(request, answer_rows):
     return [
         {
@@ -767,23 +774,18 @@ def begin_test(request):
     )
     request.session.pop(PENDING_TEST_SETUP_SESSION_KEY, None)
     request.session.pop(PENDING_SECURITY_SETUP_SESSION_KEY, None)
-    return redirect('quiz:take', attempt_id=attempt.id)
+    return redirect('quiz:take', attempt_slug=attempt.public_slug)
 
 
-@company_login_required
-def take_test(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('candidate', 'company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def take_test(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
     if attempt.is_submitted:
-        return redirect('quiz:result', attempt_id=attempt.id)
+        return redirect('quiz:result', attempt_slug=attempt.public_slug)
 
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
     questions = list(
-        Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company).select_related(
+        Quiz.objects.filter(id__in=question_ids, test_subject__company=attempt.company).select_related(
             'test_subject', 'sub_title'
         )
     )
@@ -813,7 +815,7 @@ def take_test(request, attempt_id):
     if request.method == 'POST':
         if attempt.is_paused:
             messages.error(request, 'Resume the paused test before submitting answers.')
-            return redirect('quiz:take', attempt_id=attempt.id)
+            return redirect('quiz:take', attempt_slug=attempt.public_slug)
 
         updated_answers = _answers_from_request(request, answer_rows)
         _finalize_attempt(
@@ -822,7 +824,7 @@ def take_test(request, attempt_id):
             updated_answers=updated_answers,
         )
         messages.success(request, 'Test submitted successfully.')
-        return redirect('quiz:result', attempt_id=attempt.id)
+        return redirect('quiz:result', attempt_slug=attempt.public_slug)
 
     initial_answers = {row['question_id']: row.get('selected_answer', '') for row in answer_rows}
     context = {
@@ -848,21 +850,16 @@ def take_test(request, attempt_id):
     return render(request, 'quiz/take_test.html', context)
 
 
-@company_login_required
 @require_POST
-def pause_attempt(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def pause_attempt(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
     password = request.POST.get('password', '').strip()
 
     if not attempt.pause_lock_enabled:
         return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this test.'}, status=400)
     if attempt.is_submitted:
         return JsonResponse({'ok': False, 'error': 'This test is already submitted.'}, status=400)
-    if not request.company.check_exam_control_password(password):
+    if not attempt.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
     if not attempt.is_paused:
         attempt.is_paused = True
@@ -874,19 +871,14 @@ def pause_attempt(request, attempt_id):
     return JsonResponse(payload)
 
 
-@company_login_required
 @require_POST
-def resume_attempt(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def resume_attempt(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
     password = request.POST.get('password', '').strip()
 
     if not attempt.pause_lock_enabled:
         return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this test.'}, status=400)
-    if not request.company.check_exam_control_password(password):
+    if not attempt.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
     if attempt.is_paused and attempt.paused_at:
         attempt.total_paused_seconds += attempt.current_pause_seconds()
@@ -899,31 +891,21 @@ def resume_attempt(request, attempt_id):
     return JsonResponse(payload)
 
 
-@company_login_required
 @require_POST
-def unlock_fullscreen(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def unlock_fullscreen(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
     password = request.POST.get('password', '').strip()
 
     if not attempt.full_screen_lock_enabled:
         return JsonResponse({'ok': True})
-    if not request.company.check_exam_control_password(password):
+    if not attempt.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
     return JsonResponse({'ok': True})
 
 
-@company_login_required
 @require_POST
-def record_violation(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def record_violation(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
 
     if attempt.is_submitted:
         return JsonResponse({'ok': True, 'already_submitted': True})
@@ -952,7 +934,7 @@ def record_violation(request, attempt_id):
         question_ids = [row['question_id'] for row in answers]
         question_map = {
             question.id: question
-            for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company)
+            for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=attempt.company)
         }
         _finalize_attempt(
             attempt,
@@ -971,7 +953,7 @@ def record_violation(request, attempt_id):
                 'auto_submitted': True,
                 'warning_count': attempt.warning_count,
                 'redirect_url': request.build_absolute_uri(
-                    redirect('quiz:result', attempt_id=attempt.id).url
+                    redirect('quiz:result', attempt_slug=attempt.public_slug).url
                 ),
             }
         )
@@ -997,18 +979,13 @@ def record_violation(request, attempt_id):
     )
 
 
-@company_login_required
-def test_result(request, attempt_id):
-    attempt = get_object_or_404(
-        CandidateTestAttempt.objects.select_related('candidate', 'company'),
-        pk=attempt_id,
-        company=request.company,
-    )
+def test_result(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
     question_map = {
         question.id: question
-        for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=request.company)
+        for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=attempt.company)
     }
     results = []
     for row in answer_rows:

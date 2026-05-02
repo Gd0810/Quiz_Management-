@@ -1301,12 +1301,12 @@ var questionActionButtons = [
     document.getElementById('btnSubmit')
 ].filter(Boolean);
 var actionUrls = {
-    pause: "{% url 'quiz:pause' attempt.id %}",
-    resume: "{% url 'quiz:resume' attempt.id %}",
-    fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.id %}",
-    violation: "{% url 'quiz:record_violation' attempt.id %}"
+    pause: "{% url 'quiz:pause' attempt.public_slug %}",
+    resume: "{% url 'quiz:resume' attempt.public_slug %}",
+    fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.public_slug %}",
+    violation: "{% url 'quiz:record_violation' attempt.public_slug %}"
 };
-var attemptStorageKey = 'redmock:take-test:attempt:{{ attempt.id }}';
+var attemptStorageKey = 'redmock:take-test:attempt:{{ attempt.public_slug }}';
 var storedAttemptState = readStoredAttemptState();
 
 function canUseLocalStorage() {

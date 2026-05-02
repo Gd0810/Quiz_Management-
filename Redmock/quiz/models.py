@@ -1,4 +1,7 @@
+import secrets
+
 from django.db import models
+from django.utils.text import slugify
 from django.utils import timezone
 
 from dashboard.models import Company
@@ -27,6 +30,7 @@ class CandidateTestAttempt(models.Model):
 
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='attempts')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='attempts')
+    public_slug = models.CharField(max_length=190, unique=True, blank=True, db_index=True)
     session_type = models.CharField(max_length=10, choices=SESSION_CHOICES)
     level = models.CharField(max_length=20)
     question_count = models.PositiveIntegerField()
@@ -58,6 +62,19 @@ class CandidateTestAttempt(models.Model):
 
     def __str__(self):
         return f'{self.candidate.name} - {self.company.name} ({self.session_type})'
+
+    def build_public_slug(self):
+        name_slug = slugify(self.candidate.name) or 'candidate'
+        name_slug = name_slug[:80].strip('-') or 'candidate'
+        return f'{name_slug}-{secrets.token_urlsafe(12).replace("_", "").replace("-", "")[:16].lower()}'
+
+    def save(self, *args, **kwargs):
+        if not self.public_slug:
+            slug = self.build_public_slug()
+            while CandidateTestAttempt.objects.filter(public_slug=slug).exists():
+                slug = self.build_public_slug()
+            self.public_slug = slug
+        super().save(*args, **kwargs)
 
     def current_pause_seconds(self, now=None):
         if not self.is_paused or not self.paused_at:

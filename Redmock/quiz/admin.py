@@ -14,6 +14,7 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
     list_display = (
         'candidate',
         'company',
+        'public_slug',
         'session_type',
         'level',
         'question_count',
@@ -38,4 +39,4 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'is_submitted',
         'company',
     )
-    search_fields = ('candidate__name', 'candidate__email', 'company__name')
+    search_fields = ('candidate__name', 'candidate__email', 'company__name', 'public_slug')
