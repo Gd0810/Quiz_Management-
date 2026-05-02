@@ -481,11 +481,34 @@ def _candidate_form_context(request, company, form=None):
         key = (allocation['subject_name'], allocation['level'], svg_by_name.get(allocation['subject_name'], ''))
         summary.setdefault(key, []).append(allocation)
 
+    security = pending_setup.get('security') or {}
+    security_summary_rows = []
+    if company.allow_full_screen_lock and company.full_screen_lock:
+        security_summary_rows.append({
+            'label': 'Fullscreen Lock',
+            'value': 'On' if _parse_bool(security.get('full_screen_lock_enabled')) else 'Off',
+        })
+    if company.allow_pause_lock and company.pause_lock:
+        security_summary_rows.append({
+            'label': 'Pause Lock',
+            'value': 'On' if _parse_bool(security.get('pause_lock_enabled')) else 'Off',
+        })
+    if company.allow_tab_switch_guard and company.tab_switch_guard_enabled:
+        security_summary_rows.append({
+            'label': 'Tab Switch Guard',
+            'value': (
+                f'{security.get("max_violation_warnings", company.max_violation_warnings or 3)} warnings'
+                if _parse_bool(security.get('tab_switch_guard_enabled'))
+                else 'Off'
+            ),
+        })
+
     return {
         'step': 'candidate',
         'candidate_form': form,
         'pending_setup': pending_setup,
         'summary': summary,
+        'security_summary_rows': security_summary_rows,
         'company': company,
     }
 

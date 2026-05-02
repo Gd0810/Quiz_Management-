@@ -643,27 +643,6 @@
             </div>
         </div>
 
-        <div class="bp-summary-tile">
-            <div class="bp-summary-tile-accent">
-                <iconify-icon icon="mdi:shield-lock" width="36" height="36"></iconify-icon>
-            </div>
-            <div class="bp-summary-tile-body">
-                <p class="bp-label" style="margin-bottom:.75rem;">Security Rules</p>
-                <div class="bp-summary-row">
-                    <span>Fullscreen Lock</span>
-                    <span class="bp-summary-badge">{% if pending_setup.security.full_screen_lock_enabled %}On{% else %}Off{% endif %}</span>
-                </div>
-                <div class="bp-summary-row">
-                    <span>Pause Lock</span>
-                    <span class="bp-summary-badge">{% if pending_setup.security.pause_lock_enabled %}On{% else %}Off{% endif %}</span>
-                </div>
-                <div class="bp-summary-row">
-                    <span>Tab Switch Guard</span>
-                    <span class="bp-summary-badge">{% if pending_setup.security.tab_switch_guard_enabled %}{{ pending_setup.security.max_violation_warnings }} warnings{% else %}Off{% endif %}</span>
-                </div>
-            </div>
-        </div>
-
         {% for key, rows in summary.items %}
             <div class="bp-summary-tile">
                 {# Left accent strip with subject SVG #}
@@ -686,6 +665,23 @@
                 </div>
             </div>
         {% endfor %}
+
+        {% if security_summary_rows %}
+            <div class="bp-summary-tile">
+                <div class="bp-summary-tile-accent">
+                    <iconify-icon icon="mdi:shield-lock" width="36" height="36"></iconify-icon>
+                </div>
+                <div class="bp-summary-tile-body">
+                    <p class="bp-label" style="margin-bottom:.75rem;">Security Rules</p>
+                    {% for row in security_summary_rows %}
+                        <div class="bp-summary-row">
+                            <span>{{ row.label }}</span>
+                            <span class="bp-summary-badge">{{ row.value }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
 
         <div style="margin-top:1.25rem;">
             <button
