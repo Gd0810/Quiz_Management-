@@ -20,9 +20,13 @@ class CompanyAdmin(admin.ModelAdmin):
         'allow_full_screen_lock',
         'allow_pause_lock',
         'allow_tab_switch_guard',
+        'allow_copy_paste_block',
+        'allow_right_click_disable',
         'full_screen_lock',
         'pause_lock',
         'tab_switch_guard_enabled',
+        'copy_paste_block_enabled',
+        'right_click_disable_enabled',
         'max_violation_warnings',
         'created_at',
     )
@@ -32,6 +36,8 @@ class CompanyAdmin(admin.ModelAdmin):
         'allow_full_screen_lock',
         'allow_pause_lock',
         'allow_tab_switch_guard',
+        'allow_copy_paste_block',
+        'allow_right_click_disable',
         'created_at',
     )
     fieldsets = (
@@ -54,6 +60,8 @@ class CompanyAdmin(admin.ModelAdmin):
                     'allow_full_screen_lock',
                     'allow_pause_lock',
                     'allow_tab_switch_guard',
+                    'allow_copy_paste_block',
+                    'allow_right_click_disable',
                     'exam_control_password',
                 )
             },
@@ -65,6 +73,8 @@ class CompanyAdmin(admin.ModelAdmin):
                     'full_screen_lock',
                     'pause_lock',
                     'tab_switch_guard_enabled',
+                    'copy_paste_block_enabled',
+                    'right_click_disable_enabled',
                     'max_violation_warnings',
                 )
             },
@@ -80,6 +90,10 @@ class CompanyAdmin(admin.ModelAdmin):
             obj.pause_lock = False
         if not obj.allow_tab_switch_guard:
             obj.tab_switch_guard_enabled = False
+        if not obj.allow_copy_paste_block:
+            obj.copy_paste_block_enabled = False
+        if not obj.allow_right_click_disable:
+            obj.right_click_disable_enabled = False
         if password:
             try:
                 identify_hasher(password)

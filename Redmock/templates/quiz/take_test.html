@@ -1268,6 +1268,8 @@ var isPaused = {{ attempt_is_paused|yesno:"true,false" }};
 var pauseLockEnabled = {{ pause_lock_enabled|yesno:"true,false" }};
 var fullscreenLockEnabled = {{ full_screen_lock_enabled|yesno:"true,false" }};
 var tabSwitchGuardEnabled = {{ tab_switch_guard_enabled|yesno:"true,false" }};
+var copyPasteBlockEnabled = {{ copy_paste_block_enabled|yesno:"true,false" }};
+var rightClickDisableEnabled = {{ right_click_disable_enabled|yesno:"true,false" }};
 var maxViolationWarnings = parseInt("{{ max_violation_warnings|default:0 }}", 10) || 0;
 var warningCount = parseInt("{{ warning_count|default:0 }}", 10) || 0;
 var remainingSeconds = parseInt("{{ remaining_seconds|default:0 }}", 10) || 0;
@@ -1278,6 +1280,7 @@ var lastViolationPingAt = 0;
 var violationExitActive = false;
 var violationRearmTimer = null;
 var violationAlertOpen = false;
+var lastBrowserProtectionAlertAt = 0;
 var formEl = document.getElementById('test-form');
 var countdownEl = document.getElementById('countdown');
 var pauseToggleBtn = document.getElementById('pauseToggleBtn');
@@ -1757,6 +1760,44 @@ function rearmViolationGuard() {
 }
 
 /* ── bottom buttons ── */
+function isSecurityPasswordTarget(target) {
+    return !!(target && target.closest && target.closest('#passwordModal'));
+}
+
+function showBrowserProtectionNotice(message) {
+    var now = Date.now();
+    if (now - lastBrowserProtectionAlertAt < 1800) return;
+    lastBrowserProtectionAlertAt = now;
+    window.alert(message);
+}
+
+if (copyPasteBlockEnabled) {
+    ['copy', 'cut', 'paste'].forEach(function (eventName) {
+        document.addEventListener(eventName, function (e) {
+            if (isSecurityPasswordTarget(e.target)) return;
+            e.preventDefault();
+            showBrowserProtectionNotice('Copy and paste are disabled for this test.');
+        });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        var key = (e.key || '').toLowerCase();
+        if (!e.ctrlKey && !e.metaKey) return;
+        if (['c', 'x', 'v'].indexOf(key) === -1) return;
+        if (isSecurityPasswordTarget(e.target)) return;
+        e.preventDefault();
+        showBrowserProtectionNotice('Copy and paste are disabled for this test.');
+    });
+}
+
+if (rightClickDisableEnabled) {
+    document.addEventListener('contextmenu', function (e) {
+        if (isSecurityPasswordTarget(e.target)) return;
+        e.preventDefault();
+        showBrowserProtectionNotice('Right click is disabled for this test.');
+    });
+}
+
 document.getElementById('btnSave').addEventListener('click', function () {
     if (isInteractionLocked()) return;
     if (states[curIdx] !== 'marked') {

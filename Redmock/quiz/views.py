@@ -47,6 +47,8 @@ def _build_security_state(company, data=None):
     builder_fullscreen_available = company.allow_full_screen_lock and company.full_screen_lock
     builder_pause_available = company.allow_pause_lock and company.pause_lock
     builder_tab_guard_available = company.allow_tab_switch_guard and company.tab_switch_guard_enabled
+    builder_copy_paste_available = company.allow_copy_paste_block and company.copy_paste_block_enabled
+    builder_right_click_available = company.allow_right_click_disable and company.right_click_disable_enabled
     state = {
         'full_screen_lock_enabled': (
             _parse_bool(data.get('full_screen_lock_enabled')) if has_data else builder_fullscreen_available
@@ -57,6 +59,12 @@ def _build_security_state(company, data=None):
         'tab_switch_guard_enabled': (
             _parse_bool(data.get('tab_switch_guard_enabled')) if has_data else builder_tab_guard_available
         ),
+        'copy_paste_block_enabled': (
+            _parse_bool(data.get('copy_paste_block_enabled')) if has_data else builder_copy_paste_available
+        ),
+        'right_click_disable_enabled': (
+            _parse_bool(data.get('right_click_disable_enabled')) if has_data else builder_right_click_available
+        ),
         'max_violation_warnings': _parse_positive_int(
             data.get('max_violation_warnings') if has_data else company.max_violation_warnings,
             company.max_violation_warnings or 3,
@@ -64,6 +72,8 @@ def _build_security_state(company, data=None):
         'allow_full_screen_lock': builder_fullscreen_available,
         'allow_pause_lock': builder_pause_available,
         'allow_tab_switch_guard': builder_tab_guard_available,
+        'allow_copy_paste_block': builder_copy_paste_available,
+        'allow_right_click_disable': builder_right_click_available,
         'errors': [],
     }
     if not builder_fullscreen_available:
@@ -72,6 +82,10 @@ def _build_security_state(company, data=None):
         state['pause_lock_enabled'] = False
     if not builder_tab_guard_available:
         state['tab_switch_guard_enabled'] = False
+    if not builder_copy_paste_available:
+        state['copy_paste_block_enabled'] = False
+    if not builder_right_click_available:
+        state['right_click_disable_enabled'] = False
     return state
 
 
@@ -436,6 +450,8 @@ def _serialize_setup(state, question_ids, security_state):
             'full_screen_lock_enabled': security_state['full_screen_lock_enabled'],
             'pause_lock_enabled': security_state['pause_lock_enabled'],
             'tab_switch_guard_enabled': security_state['tab_switch_guard_enabled'],
+            'copy_paste_block_enabled': security_state['copy_paste_block_enabled'],
+            'right_click_disable_enabled': security_state['right_click_disable_enabled'],
             'max_violation_warnings': security_state['max_violation_warnings'],
         },
         'selected_subjects': state['selected_subject_ids'],
@@ -501,6 +517,16 @@ def _candidate_form_context(request, company, form=None):
                 if _parse_bool(security.get('tab_switch_guard_enabled'))
                 else 'Off'
             ),
+        })
+    if company.allow_copy_paste_block and company.copy_paste_block_enabled:
+        security_summary_rows.append({
+            'label': 'Copy / Paste Block',
+            'value': 'On' if _parse_bool(security.get('copy_paste_block_enabled')) else 'Off',
+        })
+    if company.allow_right_click_disable and company.right_click_disable_enabled:
+        security_summary_rows.append({
+            'label': 'Right Click Disable',
+            'value': 'On' if _parse_bool(security.get('right_click_disable_enabled')) else 'Off',
         })
 
     return {
@@ -603,6 +629,8 @@ def security_next(request):
         'full_screen_lock_enabled': state['full_screen_lock_enabled'],
         'pause_lock_enabled': state['pause_lock_enabled'],
         'tab_switch_guard_enabled': state['tab_switch_guard_enabled'],
+        'copy_paste_block_enabled': state['copy_paste_block_enabled'],
+        'right_click_disable_enabled': state['right_click_disable_enabled'],
         'max_violation_warnings': state['max_violation_warnings'],
     }
     request.session.modified = True
@@ -766,6 +794,12 @@ def begin_test(request):
         tab_switch_guard_enabled=_parse_bool(
             security.get('tab_switch_guard_enabled', request.company.tab_switch_guard_enabled)
         ) and request.company.allow_tab_switch_guard and request.company.tab_switch_guard_enabled,
+        copy_paste_block_enabled=_parse_bool(
+            security.get('copy_paste_block_enabled', request.company.copy_paste_block_enabled)
+        ) and request.company.allow_copy_paste_block and request.company.copy_paste_block_enabled,
+        right_click_disable_enabled=_parse_bool(
+            security.get('right_click_disable_enabled', request.company.right_click_disable_enabled)
+        ) and request.company.allow_right_click_disable and request.company.right_click_disable_enabled,
         max_violation_warnings=_parse_positive_int(
             security.get('max_violation_warnings', request.company.max_violation_warnings),
             request.company.max_violation_warnings or 3,
@@ -836,6 +870,8 @@ def take_test(request, attempt_slug):
         'full_screen_lock_enabled': attempt.full_screen_lock_enabled,
         'pause_lock_enabled': attempt.pause_lock_enabled,
         'tab_switch_guard_enabled': attempt.tab_switch_guard_enabled,
+        'copy_paste_block_enabled': attempt.copy_paste_block_enabled,
+        'right_click_disable_enabled': attempt.right_click_disable_enabled,
         'max_violation_warnings': attempt.max_violation_warnings,
         'attempt_is_paused': attempt.is_paused,
         'current_pause_seconds': attempt.current_pause_seconds(),

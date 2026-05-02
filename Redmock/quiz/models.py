@@ -50,6 +50,8 @@ class CandidateTestAttempt(models.Model):
     full_screen_lock_enabled = models.BooleanField(default=False)
     pause_lock_enabled = models.BooleanField(default=False)
     tab_switch_guard_enabled = models.BooleanField(default=False)
+    copy_paste_block_enabled = models.BooleanField(default=False)
+    right_click_disable_enabled = models.BooleanField(default=False)
     max_violation_warnings = models.PositiveIntegerField(default=3)
     tab_switch_count = models.PositiveIntegerField(default=0)
     warning_count = models.PositiveIntegerField(default=0)

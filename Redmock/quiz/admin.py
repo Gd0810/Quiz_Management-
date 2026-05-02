@@ -21,6 +21,8 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'full_screen_lock_enabled',
         'pause_lock_enabled',
         'tab_switch_guard_enabled',
+        'copy_paste_block_enabled',
+        'right_click_disable_enabled',
         'max_violation_warnings',
         'tab_switch_count',
         'warning_count',
@@ -36,6 +38,8 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'full_screen_lock_enabled',
         'pause_lock_enabled',
         'tab_switch_guard_enabled',
+        'copy_paste_block_enabled',
+        'right_click_disable_enabled',
         'is_submitted',
         'company',
     )

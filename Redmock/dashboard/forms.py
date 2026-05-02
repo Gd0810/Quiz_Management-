@@ -26,6 +26,8 @@ class CompanySecurityForm(forms.ModelForm):
             'full_screen_lock',
             'pause_lock',
             'tab_switch_guard_enabled',
+            'copy_paste_block_enabled',
+            'right_click_disable_enabled',
             'max_violation_warnings',
             'exam_control_password',
         ]
@@ -36,6 +38,8 @@ class CompanySecurityForm(forms.ModelForm):
             'full_screen_lock': self.instance.allow_full_screen_lock,
             'pause_lock': self.instance.allow_pause_lock,
             'tab_switch_guard_enabled': self.instance.allow_tab_switch_guard,
+            'copy_paste_block_enabled': self.instance.allow_copy_paste_block,
+            'right_click_disable_enabled': self.instance.allow_right_click_disable,
         }
         for field_name, is_allowed in gated_fields.items():
             if is_allowed:
@@ -64,6 +68,10 @@ class CompanySecurityForm(forms.ModelForm):
         if not self.instance.allow_tab_switch_guard:
             cleaned_data['tab_switch_guard_enabled'] = False
             cleaned_data['max_violation_warnings'] = self.instance.max_violation_warnings
+        if not self.instance.allow_copy_paste_block:
+            cleaned_data['copy_paste_block_enabled'] = False
+        if not self.instance.allow_right_click_disable:
+            cleaned_data['right_click_disable_enabled'] = False
 
         if (cleaned_data.get('full_screen_lock') or cleaned_data.get('pause_lock')) and not cleaned_data.get('exam_control_password'):
             raise ValidationError('Set an exam control password before enabling fullscreen lock or pause lock.')
@@ -81,6 +89,10 @@ class CompanySecurityForm(forms.ModelForm):
             instance.pause_lock = False
         if not instance.allow_tab_switch_guard:
             instance.tab_switch_guard_enabled = False
+        if not instance.allow_copy_paste_block:
+            instance.copy_paste_block_enabled = False
+        if not instance.allow_right_click_disable:
+            instance.right_click_disable_enabled = False
         if commit:
             instance.save()
             self.save_m2m()
@@ -176,6 +188,8 @@ class CandidateTestAttemptForm(forms.ModelForm):
             'full_screen_lock_enabled',
             'pause_lock_enabled',
             'tab_switch_guard_enabled',
+            'copy_paste_block_enabled',
+            'right_click_disable_enabled',
             'max_violation_warnings',
         ]
         widgets = {
