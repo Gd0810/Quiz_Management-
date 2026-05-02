@@ -1269,6 +1269,9 @@ var normalScreenAuthorized = !fullscreenLockEnabled;
 var activePasswordAction = '';
 var submittedByTimer = false;
 var lastViolationPingAt = 0;
+var violationExitActive = false;
+var violationRearmTimer = null;
+var violationAlertOpen = false;
 var formEl = document.getElementById('test-form');
 var countdownEl = document.getElementById('countdown');
 var pauseToggleBtn = document.getElementById('pauseToggleBtn');
@@ -1686,9 +1689,11 @@ function currentAnswerParams() {
 
 function recordViolation(violationType) {
     if (!tabSwitchGuardEnabled || isPaused || submittedByTimer) return;
+    if (violationExitActive || violationAlertOpen) return;
     var now = Date.now();
     if (now - lastViolationPingAt < 1200) return;
     lastViolationPingAt = now;
+    violationExitActive = true;
 
     var body = currentAnswerParams();
     body.append('violation_type', violationType);
@@ -1715,9 +1720,12 @@ function recordViolation(violationType) {
                 return;
             }
             if (typeof data.warning_limit === 'number') {
+                violationAlertOpen = true;
                 window.alert(
                     'Warning ' + warningCount + ' of ' + data.warning_limit + ': tab switching or leaving the test window is not allowed.'
                 );
+                violationAlertOpen = false;
+                rearmViolationGuard();
             }
         })
         .catch(function () {
@@ -1728,6 +1736,18 @@ function recordViolation(violationType) {
 function maybeRecordViolation(violationType) {
     if (!tabSwitchGuardEnabled) return;
     recordViolation(violationType);
+}
+
+function rearmViolationGuard() {
+    if (violationRearmTimer) {
+        clearTimeout(violationRearmTimer);
+    }
+    violationRearmTimer = setTimeout(function () {
+        if (!document.hidden && document.hasFocus() && !violationAlertOpen) {
+            violationExitActive = false;
+            lastViolationPingAt = 0;
+        }
+    }, 800);
 }
 
 /* ── bottom buttons ── */
@@ -1896,6 +1916,8 @@ if (tabSwitchGuardEnabled) {
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
             maybeRecordViolation('visibility_hidden');
+        } else {
+            rearmViolationGuard();
         }
     });
 
@@ -1910,7 +1932,7 @@ if (tabSwitchGuardEnabled) {
     });
 
     window.addEventListener('focus', function () {
-        lastViolationPingAt = 0;
+        rearmViolationGuard();
     });
 
     window.addEventListener('beforeunload', function () {
