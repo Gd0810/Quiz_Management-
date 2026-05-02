@@ -30,6 +30,21 @@ class CompanySecurityForm(forms.ModelForm):
             'exam_control_password',
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        gated_fields = {
+            'full_screen_lock': self.instance.allow_full_screen_lock,
+            'pause_lock': self.instance.allow_pause_lock,
+            'tab_switch_guard_enabled': self.instance.allow_tab_switch_guard,
+        }
+        for field_name, is_allowed in gated_fields.items():
+            if is_allowed:
+                continue
+            self.fields.pop(field_name, None)
+
+        if not self.instance.allow_tab_switch_guard:
+            self.fields.pop('max_violation_warnings', None)
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('exam_control_password', '').strip()
@@ -42,6 +57,14 @@ class CompanySecurityForm(forms.ModelForm):
         else:
             cleaned_data['exam_control_password'] = self.instance.exam_control_password
 
+        if not self.instance.allow_full_screen_lock:
+            cleaned_data['full_screen_lock'] = False
+        if not self.instance.allow_pause_lock:
+            cleaned_data['pause_lock'] = False
+        if not self.instance.allow_tab_switch_guard:
+            cleaned_data['tab_switch_guard_enabled'] = False
+            cleaned_data['max_violation_warnings'] = self.instance.max_violation_warnings
+
         if (cleaned_data.get('full_screen_lock') or cleaned_data.get('pause_lock')) and not cleaned_data.get('exam_control_password'):
             raise ValidationError('Set an exam control password before enabling fullscreen lock or pause lock.')
 
@@ -49,6 +72,19 @@ class CompanySecurityForm(forms.ModelForm):
             raise ValidationError('Maximum violation warnings must be greater than zero when tab switch guard is enabled.')
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if not instance.allow_full_screen_lock:
+            instance.full_screen_lock = False
+        if not instance.allow_pause_lock:
+            instance.pause_lock = False
+        if not instance.allow_tab_switch_guard:
+            instance.tab_switch_guard_enabled = False
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class TestSubjectForm(forms.ModelForm):

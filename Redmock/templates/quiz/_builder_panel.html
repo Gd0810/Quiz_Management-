@@ -546,6 +546,7 @@
         </div>
 
         <div class="bp-security-grid">
+            {% if security_state.allow_full_screen_lock %}
             <label class="bp-switch-wrap bp-security-card">
                 <div>
                     <div class="bp-switch-text">Fullscreen Lock</div>
@@ -556,7 +557,9 @@
                     <span class="bp-switch-track"></span>
                 </div>
             </label>
+            {% endif %}
 
+            {% if security_state.allow_pause_lock %}
             <label class="bp-switch-wrap bp-security-card">
                 <div>
                     <div class="bp-switch-text">Pause Lock</div>
@@ -567,7 +570,9 @@
                     <span class="bp-switch-track"></span>
                 </div>
             </label>
+            {% endif %}
 
+            {% if security_state.allow_tab_switch_guard %}
             <label class="bp-switch-wrap bp-security-card">
                 <div>
                     <div class="bp-switch-text">Tab Switch Guard</div>
@@ -586,7 +591,15 @@
                     <input id="id_max_violation_warnings" type="number" min="1" name="max_violation_warnings" value="{{ security_state.max_violation_warnings }}" class="bp-input">
                 </div>
             </div>
+            {% endif %}
         </div>
+
+        {% if not security_state.allow_full_screen_lock and not security_state.allow_pause_lock and not security_state.allow_tab_switch_guard %}
+            <div class="bp-info-bar" style="margin-top:1.25rem;margin-bottom:0;">
+                <span>No security features are available for this company yet.</span>
+                <span>Continue with a standard test.</span>
+            </div>
+        {% endif %}
     </div>
 
     <div style="display:flex;justify-content:flex-end;padding-bottom:.5rem;">

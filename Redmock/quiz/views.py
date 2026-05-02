@@ -44,22 +44,34 @@ def _parse_bool(raw_value):
 def _build_security_state(company, data=None):
     data = data or {}
     has_data = bool(data)
+    builder_fullscreen_available = company.allow_full_screen_lock and company.full_screen_lock
+    builder_pause_available = company.allow_pause_lock and company.pause_lock
+    builder_tab_guard_available = company.allow_tab_switch_guard and company.tab_switch_guard_enabled
     state = {
         'full_screen_lock_enabled': (
-            _parse_bool(data.get('full_screen_lock_enabled')) if has_data else company.full_screen_lock
+            _parse_bool(data.get('full_screen_lock_enabled')) if has_data else builder_fullscreen_available
         ),
         'pause_lock_enabled': (
-            _parse_bool(data.get('pause_lock_enabled')) if has_data else company.pause_lock
+            _parse_bool(data.get('pause_lock_enabled')) if has_data else builder_pause_available
         ),
         'tab_switch_guard_enabled': (
-            _parse_bool(data.get('tab_switch_guard_enabled')) if has_data else company.tab_switch_guard_enabled
+            _parse_bool(data.get('tab_switch_guard_enabled')) if has_data else builder_tab_guard_available
         ),
         'max_violation_warnings': _parse_positive_int(
             data.get('max_violation_warnings') if has_data else company.max_violation_warnings,
             company.max_violation_warnings or 3,
         ) or 3,
+        'allow_full_screen_lock': builder_fullscreen_available,
+        'allow_pause_lock': builder_pause_available,
+        'allow_tab_switch_guard': builder_tab_guard_available,
         'errors': [],
     }
+    if not builder_fullscreen_available:
+        state['full_screen_lock_enabled'] = False
+    if not builder_pause_available:
+        state['pause_lock_enabled'] = False
+    if not builder_tab_guard_available:
+        state['tab_switch_guard_enabled'] = False
     return state
 
 
@@ -717,13 +729,13 @@ def begin_test(request):
         answers_json=answers_json,
         full_screen_lock_enabled=_parse_bool(
             security.get('full_screen_lock_enabled', request.company.full_screen_lock)
-        ),
+        ) and request.company.allow_full_screen_lock and request.company.full_screen_lock,
         pause_lock_enabled=_parse_bool(
             security.get('pause_lock_enabled', request.company.pause_lock)
-        ),
+        ) and request.company.allow_pause_lock and request.company.pause_lock,
         tab_switch_guard_enabled=_parse_bool(
             security.get('tab_switch_guard_enabled', request.company.tab_switch_guard_enabled)
-        ),
+        ) and request.company.allow_tab_switch_guard and request.company.tab_switch_guard_enabled,
         max_violation_warnings=_parse_positive_int(
             security.get('max_violation_warnings', request.company.max_violation_warnings),
             request.company.max_violation_warnings or 3,

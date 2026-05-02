@@ -17,6 +17,9 @@ class CompanyAdmin(admin.ModelAdmin):
         'name',
         'email',
         'is_active',
+        'allow_full_screen_lock',
+        'allow_pause_lock',
+        'allow_tab_switch_guard',
         'full_screen_lock',
         'pause_lock',
         'tab_switch_guard_enabled',
@@ -24,11 +27,59 @@ class CompanyAdmin(admin.ModelAdmin):
         'created_at',
     )
     search_fields = ('name', 'email')
-    list_filter = ('is_active', 'created_at')
+    list_filter = (
+        'is_active',
+        'allow_full_screen_lock',
+        'allow_pause_lock',
+        'allow_tab_switch_guard',
+        'created_at',
+    )
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'name',
+                    'image',
+                    'email',
+                    'password',
+                    'is_active',
+                )
+            },
+        ),
+        (
+            'Security Feature Access',
+            {
+                'fields': (
+                    'allow_full_screen_lock',
+                    'allow_pause_lock',
+                    'allow_tab_switch_guard',
+                    'exam_control_password',
+                )
+            },
+        ),
+        (
+            'Company Dashboard Defaults',
+            {
+                'fields': (
+                    'full_screen_lock',
+                    'pause_lock',
+                    'tab_switch_guard_enabled',
+                    'max_violation_warnings',
+                )
+            },
+        ),
+    )
 
     def save_model(self, request, obj, form, change):
         password = form.cleaned_data.get('password')
         exam_control_password = form.cleaned_data.get('exam_control_password')
+        if not obj.allow_full_screen_lock:
+            obj.full_screen_lock = False
+        if not obj.allow_pause_lock:
+            obj.pause_lock = False
+        if not obj.allow_tab_switch_guard:
+            obj.tab_switch_guard_enabled = False
         if password:
             try:
                 identify_hasher(password)
