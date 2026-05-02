@@ -6,6 +6,8 @@ app_name = 'quiz'
 
 urlpatterns = [
     path('start/', views.start_test, name='start'),
+    path('security-next/', views.security_next, name='security_next'),
+    path('security-back/', views.security_back, name='security_back'),
     path('setup-builder/', views.setup_builder, name='setup_builder'),
     path('setup-next/', views.setup_next, name='setup_next'),
     path('setup-back/', views.setup_back, name='setup_back'),

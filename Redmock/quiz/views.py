@@ -14,6 +14,7 @@ from .forms import CandidateDetailsForm
 from .models import Candidate, CandidateTestAttempt
 
 PENDING_TEST_SETUP_SESSION_KEY = 'pending_test_setup'
+PENDING_SECURITY_SETUP_SESSION_KEY = 'pending_security_setup'
 
 
 def _is_htmx(request):
@@ -30,6 +31,57 @@ def _parse_positive_int(raw_value, default=0):
     except (TypeError, ValueError):
         return default
     return max(value, 0)
+
+
+def _parse_bool(raw_value):
+    if isinstance(raw_value, bool):
+        return raw_value
+    if raw_value is None:
+        return False
+    return str(raw_value).lower() in {'1', 'true', 'on', 'yes'}
+
+
+def _build_security_state(company, data=None):
+    data = data or {}
+    has_data = bool(data)
+    state = {
+        'full_screen_lock_enabled': (
+            _parse_bool(data.get('full_screen_lock_enabled')) if has_data else company.full_screen_lock
+        ),
+        'pause_lock_enabled': (
+            _parse_bool(data.get('pause_lock_enabled')) if has_data else company.pause_lock
+        ),
+        'tab_switch_guard_enabled': (
+            _parse_bool(data.get('tab_switch_guard_enabled')) if has_data else company.tab_switch_guard_enabled
+        ),
+        'max_violation_warnings': _parse_positive_int(
+            data.get('max_violation_warnings') if has_data else company.max_violation_warnings,
+            company.max_violation_warnings or 3,
+        ) or 3,
+        'errors': [],
+    }
+    return state
+
+
+def _validate_security_state(state, company):
+    if (
+        state['full_screen_lock_enabled'] or state['pause_lock_enabled']
+    ) and not company.exam_control_password:
+        state['errors'].append(
+            'Set an exam control password in dashboard security before enabling fullscreen or pause lock.'
+        )
+    if state['tab_switch_guard_enabled'] and state['max_violation_warnings'] <= 0:
+        state['errors'].append('Max violation warnings must be greater than zero.')
+    return not state['errors']
+
+
+def _security_state_from_session(request, company):
+    saved = request.session.get(PENDING_SECURITY_SETUP_SESSION_KEY)
+    if not saved:
+        return _build_security_state(company)
+    state = _build_security_state(company, saved)
+    state['errors'] = []
+    return state
 
 
 def _split_evenly(total, count):
@@ -362,12 +414,18 @@ def _select_question_ids(company, allocations):
     return question_ids
 
 
-def _serialize_setup(state, question_ids):
+def _serialize_setup(state, question_ids, security_state):
     return {
         'session_type': state['session_type'],
         'custom_mode': state['custom_mode'],
         'duration_minutes': state['duration_minutes'],
         'question_count': state['question_count'],
+        'security': {
+            'full_screen_lock_enabled': security_state['full_screen_lock_enabled'],
+            'pause_lock_enabled': security_state['pause_lock_enabled'],
+            'tab_switch_guard_enabled': security_state['tab_switch_guard_enabled'],
+            'max_violation_warnings': security_state['max_violation_warnings'],
+        },
         'selected_subjects': state['selected_subject_ids'],
         'selected_sub_titles': [
             allocation['subtitle'].id
@@ -483,9 +541,48 @@ def start_test(request):
         request,
         'quiz/start_test.html',
         {
+            'step': 'security',
+            'security_state': _security_state_from_session(request, request.company),
+        },
+    )
+
+
+@company_login_required
+def security_next(request):
+    state = _build_security_state(request.company, request.POST)
+    if not _validate_security_state(state, request.company):
+        return render(
+            request,
+            'quiz/_builder_panel.html',
+            {'step': 'security', 'security_state': state},
+        )
+
+    request.session[PENDING_SECURITY_SETUP_SESSION_KEY] = {
+        'full_screen_lock_enabled': state['full_screen_lock_enabled'],
+        'pause_lock_enabled': state['pause_lock_enabled'],
+        'tab_switch_guard_enabled': state['tab_switch_guard_enabled'],
+        'max_violation_warnings': state['max_violation_warnings'],
+    }
+    request.session.modified = True
+    return render(
+        request,
+        'quiz/_builder_panel.html',
+        {
             'step': 'setup',
             'setup_state': _build_setup_state(request, request.company),
             'level_choices': _level_choices(),
+        },
+    )
+
+
+@company_login_required
+def security_back(request):
+    return render(
+        request,
+        'quiz/_builder_panel.html',
+        {
+            'step': 'security',
+            'security_state': _security_state_from_session(request, request.company),
         },
     )
 
@@ -503,6 +600,7 @@ def setup_builder(request):
 @company_login_required
 def setup_next(request):
     state = _build_setup_state(request, request.company)
+    security_state = _security_state_from_session(request, request.company)
     if not _validate_setup_state(state):
         return render(
             request,
@@ -520,7 +618,7 @@ def setup_next(request):
             {'step': 'setup', 'setup_state': state, 'level_choices': _level_choices()},
         )
 
-    request.session[PENDING_TEST_SETUP_SESSION_KEY] = _serialize_setup(state, question_ids)
+    request.session[PENDING_TEST_SETUP_SESSION_KEY] = _serialize_setup(state, question_ids, security_state)
     request.session.modified = True
     return render(
         request,
@@ -606,6 +704,7 @@ def begin_test(request):
     candidate.save(update_fields=['name', 'designation_tech'])
 
     answers_json = [{'question_id': question_id, 'selected_answer': ''} for question_id in pending_setup['question_ids']]
+    security = pending_setup.get('security') or {}
     attempt = CandidateTestAttempt.objects.create(
         candidate=candidate,
         company=request.company,
@@ -616,9 +715,23 @@ def begin_test(request):
         selected_subjects=pending_setup['selected_subjects'],
         selected_sub_titles=pending_setup['selected_sub_titles'],
         answers_json=answers_json,
+        full_screen_lock_enabled=_parse_bool(
+            security.get('full_screen_lock_enabled', request.company.full_screen_lock)
+        ),
+        pause_lock_enabled=_parse_bool(
+            security.get('pause_lock_enabled', request.company.pause_lock)
+        ),
+        tab_switch_guard_enabled=_parse_bool(
+            security.get('tab_switch_guard_enabled', request.company.tab_switch_guard_enabled)
+        ),
+        max_violation_warnings=_parse_positive_int(
+            security.get('max_violation_warnings', request.company.max_violation_warnings),
+            request.company.max_violation_warnings or 3,
+        ) or 3,
         started_at=timezone.now(),
     )
     request.session.pop(PENDING_TEST_SETUP_SESSION_KEY, None)
+    request.session.pop(PENDING_SECURITY_SETUP_SESSION_KEY, None)
     return redirect('quiz:take', attempt_id=attempt.id)
 
 
@@ -683,10 +796,10 @@ def take_test(request, attempt_id):
         'question_sections': question_sections,
         'initial_answers': initial_answers,
         'remaining_seconds': attempt.remaining_seconds(),
-        'full_screen_lock_enabled': attempt.company.full_screen_lock,
-        'pause_lock_enabled': attempt.company.pause_lock,
-        'tab_switch_guard_enabled': attempt.company.tab_switch_guard_enabled,
-        'max_violation_warnings': attempt.company.max_violation_warnings,
+        'full_screen_lock_enabled': attempt.full_screen_lock_enabled,
+        'pause_lock_enabled': attempt.pause_lock_enabled,
+        'tab_switch_guard_enabled': attempt.tab_switch_guard_enabled,
+        'max_violation_warnings': attempt.max_violation_warnings,
         'attempt_is_paused': attempt.is_paused,
         'current_pause_seconds': attempt.current_pause_seconds(),
         'security_password_required': bool(attempt.company.exam_control_password),
@@ -710,8 +823,8 @@ def pause_attempt(request, attempt_id):
     )
     password = request.POST.get('password', '').strip()
 
-    if not request.company.pause_lock:
-        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this company.'}, status=400)
+    if not attempt.pause_lock_enabled:
+        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this test.'}, status=400)
     if attempt.is_submitted:
         return JsonResponse({'ok': False, 'error': 'This test is already submitted.'}, status=400)
     if not request.company.check_exam_control_password(password):
@@ -736,8 +849,8 @@ def resume_attempt(request, attempt_id):
     )
     password = request.POST.get('password', '').strip()
 
-    if not request.company.pause_lock:
-        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this company.'}, status=400)
+    if not attempt.pause_lock_enabled:
+        return JsonResponse({'ok': False, 'error': 'Pause lock is disabled for this test.'}, status=400)
     if not request.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
     if attempt.is_paused and attempt.paused_at:
@@ -761,7 +874,7 @@ def unlock_fullscreen(request, attempt_id):
     )
     password = request.POST.get('password', '').strip()
 
-    if not request.company.full_screen_lock:
+    if not attempt.full_screen_lock_enabled:
         return JsonResponse({'ok': True})
     if not request.company.check_exam_control_password(password):
         return JsonResponse({'ok': False, 'error': 'Invalid exam control password.'}, status=400)
@@ -780,7 +893,7 @@ def record_violation(request, attempt_id):
     if attempt.is_submitted:
         return JsonResponse({'ok': True, 'already_submitted': True})
 
-    if not request.company.tab_switch_guard_enabled:
+    if not attempt.tab_switch_guard_enabled:
         return JsonResponse({'ok': True, 'guard_enabled': False, 'warning_count': attempt.warning_count})
 
     violation_type = (request.POST.get('violation_type') or 'focus_lost').strip()[:50]
@@ -799,7 +912,7 @@ def record_violation(request, attempt_id):
     attempt.last_violation_at = now
     attempt.violation_log_json = violation_log
 
-    warning_limit = max(request.company.max_violation_warnings, 1)
+    warning_limit = max(attempt.max_violation_warnings, 1)
     if attempt.warning_count >= warning_limit:
         question_ids = [row['question_id'] for row in answers]
         question_map = {

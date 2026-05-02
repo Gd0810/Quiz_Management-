@@ -233,21 +233,28 @@
             <div class="rb-step">
                 <div id="rb-step-num-1" class="rb-step-num rb-step-num--active">1</div>
                 <div>
-                    <p id="rb-step-label-1" class="rb-step-label">Session Setup</p>
-                    <p class="rb-step-desc">Type, duration and subjects</p>
+                    <p id="rb-step-label-1" class="rb-step-label">Security Setup</p>
+                    <p class="rb-step-desc">Rules for this test</p>
                 </div>
             </div>
             <div class="rb-step">
                 <div id="rb-step-num-2" class="rb-step-num rb-step-num--idle">2</div>
                 <div>
-                    <p id="rb-step-label-2" class="rb-step-label rb-step-label--idle">Candidate Info</p>
-                    <p class="rb-step-desc">Name and details</p>
+                    <p id="rb-step-label-2" class="rb-step-label rb-step-label--idle">Session Setup</p>
+                    <p class="rb-step-desc">Type, duration and subjects</p>
                 </div>
             </div>
             <div class="rb-step">
                 <div id="rb-step-num-3" class="rb-step-num rb-step-num--idle">3</div>
                 <div>
-                    <p id="rb-step-label-3" class="rb-step-label rb-step-label--idle">Begin Test</p>
+                    <p id="rb-step-label-3" class="rb-step-label rb-step-label--idle">Candidate Info</p>
+                    <p class="rb-step-desc">Name and details</p>
+                </div>
+            </div>
+            <div class="rb-step">
+                <div id="rb-step-num-4" class="rb-step-num rb-step-num--idle">4</div>
+                <div>
+                    <p id="rb-step-label-4" class="rb-step-label rb-step-label--idle">Begin Test</p>
                     <p class="rb-step-desc">Timed session starts</p>
                 </div>
             </div>
@@ -296,12 +303,19 @@
 
         if (currentStep === "candidate") {
             setStepState(1, "done");
+            setStepState(2, "done");
+            setStepState(3, "active");
+            setStepState(4, "idle");
+        } else if (currentStep === "setup") {
+            setStepState(1, "done");
             setStepState(2, "active");
             setStepState(3, "idle");
+            setStepState(4, "idle");
         } else {
             setStepState(1, "active");
             setStepState(2, "idle");
             setStepState(3, "idle");
+            setStepState(4, "idle");
         }
     }
 

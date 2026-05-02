@@ -436,6 +436,14 @@
 .bp-candidate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 @media (max-width: 800px) { .bp-candidate-grid { grid-template-columns: 1fr; } }
 
+.bp-security-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.bp-security-card { min-height: 100%; }
+@media (max-width: 800px) { .bp-security-grid { grid-template-columns: 1fr; } }
+
 .bp-form-field input,
 .bp-form-field select,
 .bp-form-field textarea {
@@ -498,6 +506,7 @@
     .bp-field-grid { grid-template-columns: 1fr; }
     .bp-alloc-grid { grid-template-columns: 1fr; }
     .bp-subject-grid { grid-template-columns: 1fr; }
+    .bp-security-grid { grid-template-columns: 1fr; }
     .bp-info-bar { flex-direction: column; align-items: flex-start; gap: .35rem; }
 }
 </style>
@@ -506,7 +515,86 @@
 <div data-current-step="{{ step }}" hidden></div>
 <div id="htmx-spinner" class="bp-progress"></div>
 
-{% if step == 'candidate' %}
+{% if step == 'security' %}
+{# STEP 1: SECURITY SETUP #}
+
+{% if security_state.errors %}
+    <div class="bp-toast-seed">
+        {% for e in security_state.errors %}
+            <span class="toast-data" data-toast-level="error" data-toast-title="Security Error">{{ e }}</span>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form
+    id="security-form"
+    method="post"
+    hx-post="{% url 'quiz:security_next' %}"
+    hx-target="#builder-panel"
+    hx-swap="outerHTML"
+    style="display:flex;flex-direction:column;gap:1.75rem;"
+>
+    {% csrf_token %}
+
+    <div class="bp-tile">
+        <div class="bp-section">
+            <div class="bp-section-icon"><iconify-icon icon="mdi:shield-lock" width="26" height="26"></iconify-icon></div>
+            <div>
+                <div class="bp-section-title">Security Setup</div>
+                <div class="bp-section-sub">Choose rules for this test attempt</div>
+            </div>
+        </div>
+
+        <div class="bp-security-grid">
+            <label class="bp-switch-wrap bp-security-card">
+                <div>
+                    <div class="bp-switch-text">Fullscreen Lock</div>
+                    <div class="bp-switch-desc">Require the candidate to stay in fullscreen mode</div>
+                </div>
+                <div class="bp-switch">
+                    <input type="checkbox" name="full_screen_lock_enabled" value="1" {% if security_state.full_screen_lock_enabled %}checked{% endif %}>
+                    <span class="bp-switch-track"></span>
+                </div>
+            </label>
+
+            <label class="bp-switch-wrap bp-security-card">
+                <div>
+                    <div class="bp-switch-text">Pause Lock</div>
+                    <div class="bp-switch-desc">Require password confirmation to pause or resume</div>
+                </div>
+                <div class="bp-switch">
+                    <input type="checkbox" name="pause_lock_enabled" value="1" {% if security_state.pause_lock_enabled %}checked{% endif %}>
+                    <span class="bp-switch-track"></span>
+                </div>
+            </label>
+
+            <label class="bp-switch-wrap bp-security-card">
+                <div>
+                    <div class="bp-switch-text">Tab Switch Guard</div>
+                    <div class="bp-switch-desc">Warn when the test page loses focus</div>
+                </div>
+                <div class="bp-switch">
+                    <input id="id_tab_switch_guard_enabled" type="checkbox" name="tab_switch_guard_enabled" value="1" {% if security_state.tab_switch_guard_enabled %}checked{% endif %}>
+                    <span class="bp-switch-track"></span>
+                </div>
+            </label>
+
+            <div class="bp-field">
+                <label class="bp-label" for="id_max_violation_warnings">Max Violation Warnings</label>
+                <div class="bp-input-wrap">
+                    <iconify-icon icon="mdi:alert-decagram" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                    <input id="id_max_violation_warnings" type="number" min="1" name="max_violation_warnings" value="{{ security_state.max_violation_warnings }}" class="bp-input">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;padding-bottom:.5rem;">
+        <button type="submit" class="bp-btn-primary">Next: Session Setup &rarr;</button>
+    </div>
+</form>
+
+{% elif step == 'candidate' %}
 {# ── STEP 2: CANDIDATE FORM ── #}
 
 {% if candidate_form.non_field_errors %}
@@ -539,6 +627,27 @@
             <div class="bp-stat">
                 <div class="bp-stat-label">Duration</div>
                 <div class="bp-stat-value">{{ pending_setup.duration_minutes }}<small style="font-size:.9rem">m</small></div>
+            </div>
+        </div>
+
+        <div class="bp-summary-tile">
+            <div class="bp-summary-tile-accent">
+                <iconify-icon icon="mdi:shield-lock" width="36" height="36"></iconify-icon>
+            </div>
+            <div class="bp-summary-tile-body">
+                <p class="bp-label" style="margin-bottom:.75rem;">Security Rules</p>
+                <div class="bp-summary-row">
+                    <span>Fullscreen Lock</span>
+                    <span class="bp-summary-badge">{% if pending_setup.security.full_screen_lock_enabled %}On{% else %}Off{% endif %}</span>
+                </div>
+                <div class="bp-summary-row">
+                    <span>Pause Lock</span>
+                    <span class="bp-summary-badge">{% if pending_setup.security.pause_lock_enabled %}On{% else %}Off{% endif %}</span>
+                </div>
+                <div class="bp-summary-row">
+                    <span>Tab Switch Guard</span>
+                    <span class="bp-summary-badge">{% if pending_setup.security.tab_switch_guard_enabled %}{{ pending_setup.security.max_violation_warnings }} warnings{% else %}Off{% endif %}</span>
+                </div>
             </div>
         </div>
 
@@ -923,7 +1032,15 @@
         </div>
     {% endif %}
 
-    <div style="display:flex;justify-content:flex-end;padding-bottom:.5rem;">
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-bottom:.5rem;">
+        <button
+            type="button"
+            hx-post="{% url 'quiz:security_back' %}"
+            hx-include="[name=csrfmiddlewaretoken]"
+            hx-target="#builder-panel"
+            hx-swap="outerHTML"
+            class="bp-btn-ghost"
+        >&larr; Back to Security</button>
         <button
             type="button"
             hx-post="{% url 'quiz:setup_next' %}"
@@ -1112,6 +1229,20 @@
         });
     }
 
+    function setupSecurityControls() {
+        var guard = document.getElementById("id_tab_switch_guard_enabled");
+        var warnings = document.getElementById("id_max_violation_warnings");
+        if (!guard || !warnings) return;
+
+        function sync() {
+            warnings.disabled = !guard.checked;
+            warnings.closest(".bp-field").style.opacity = guard.checked ? "1" : ".55";
+        }
+
+        guard.addEventListener("change", sync);
+        sync();
+    }
+
     document.addEventListener("htmx:beforeRequest", function () { setProgressBar(true);  });
     document.addEventListener("htmx:afterRequest",  function () { setProgressBar(false); });
     document.addEventListener("htmx:responseError", function () { setProgressBar(false); });
@@ -1121,6 +1252,7 @@
             refreshCustomTotal();
             setupAccordionBehavior();
             setupFilterButtons();
+            setupSecurityControls();
             setProgressBar(false);
             /* drainToastData is called by toaster.html's own htmx:afterSettle listener */
         }
@@ -1129,6 +1261,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         setupAccordionBehavior();
         setupFilterButtons();
+        setupSecurityControls();
 
         var placeholders = {
             candidate_name:   'Enter your full name',

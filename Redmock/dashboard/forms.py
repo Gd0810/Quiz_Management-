@@ -137,6 +137,10 @@ class CandidateTestAttemptForm(forms.ModelForm):
             'started_at',
             'submitted_at',
             'is_submitted',
+            'full_screen_lock_enabled',
+            'pause_lock_enabled',
+            'tab_switch_guard_enabled',
+            'max_violation_warnings',
         ]
         widgets = {
             'started_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),

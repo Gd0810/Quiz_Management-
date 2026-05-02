@@ -17,6 +17,10 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'session_type',
         'level',
         'question_count',
+        'full_screen_lock_enabled',
+        'pause_lock_enabled',
+        'tab_switch_guard_enabled',
+        'max_violation_warnings',
         'tab_switch_count',
         'warning_count',
         'correct_count',
@@ -25,5 +29,13 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'is_submitted',
         'created_at',
     )
-    list_filter = ('session_type', 'level', 'is_submitted', 'company')
+    list_filter = (
+        'session_type',
+        'level',
+        'full_screen_lock_enabled',
+        'pause_lock_enabled',
+        'tab_switch_guard_enabled',
+        'is_submitted',
+        'company',
+    )
     search_fields = ('candidate__name', 'candidate__email', 'company__name')
