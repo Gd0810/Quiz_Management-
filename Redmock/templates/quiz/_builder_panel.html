@@ -134,6 +134,18 @@
 .bp-switch-wrap:hover { border-color: var(--c4); background: #edfafe; }
 .bp-switch-text { font-size: .875rem; font-weight: 600; color: var(--c7); }
 .bp-switch-desc { font-size: .75rem; color: var(--c5); margin-top: .1rem; }
+.bp-switch-copy {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+}
+.bp-switch-copy-icon {
+    flex: 0 0 auto;
+    color: var(--c7);
+    line-height: 1;
+    display: inline-flex;
+    margin-top: .08rem;
+}
 .bp-switch { position: relative; width: 2.75rem; height: 1.5rem; flex-shrink: 0; }
 .bp-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .bp-switch-track {
@@ -548,9 +560,14 @@
         <div class="bp-security-grid">
             {% if security_state.allow_full_screen_lock %}
             <label class="bp-switch-wrap bp-security-card">
-                <div>
-                    <div class="bp-switch-text">Fullscreen Lock</div>
-                    <div class="bp-switch-desc">Require the candidate to stay in fullscreen mode</div>
+                <div class="bp-switch-copy">
+                    <span class="bp-switch-copy-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 50 50"><path fill="currentColor" d="M2 15.758V2h14.299l5.262 4h-8.769L22 15.758L16.299 21L7 12.251v8.769zM33.752 2H48v13.809l-4 5.261v-8.768L33.997 21.51l-5.364-5.456L37.259 7H28.49zM48 33.752V48H33.701l-5.262-4h8.769L28 33.997l5.701-5.364L43 37.259V28.49zM16.248 48H2V33.701l4-5.262v8.769L16.003 28l5.364 5.701L12.741 43h8.769z"/></svg>
+                    </span>
+                    <div>
+                        <div class="bp-switch-text">Fullscreen Lock</div>
+                        <div class="bp-switch-desc">Require the candidate to stay in fullscreen mode</div>
+                    </div>
                 </div>
                 <div class="bp-switch">
                     <input type="checkbox" name="full_screen_lock_enabled" value="1" {% if security_state.full_screen_lock_enabled %}checked{% endif %}>
@@ -561,9 +578,14 @@
 
             {% if security_state.allow_pause_lock %}
             <label class="bp-switch-wrap bp-security-card">
-                <div>
-                    <div class="bp-switch-text">Pause Lock</div>
-                    <div class="bp-switch-desc">Require password confirmation to pause or resume</div>
+                <div class="bp-switch-copy">
+                    <span class="bp-switch-copy-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16"><path fill="currentColor" d="M4.5 7a4.5 4.5 0 1 1 0 9a4.5 4.5 0 0 1 0-9M3 9a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0v-4A.5.5 0 0 0 3 9m3 0a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0v-4A.5.5 0 0 0 6 9m3-9a7 7 0 0 1 .404 13.987c.38-.747.596-1.591.596-2.487c0-1.33-.472-2.549-1.258-3.5H11.5a.5.5 0 0 0 0-1H9V3.5a.5.5 0 0 0-1 0v3.757A5.48 5.48 0 0 0 4.5 6a5.5 5.5 0 0 0-2.488.595A7 7 0 0 1 9 0"/></svg>
+                    </span>
+                    <div>
+                        <div class="bp-switch-text">Pause Lock</div>
+                        <div class="bp-switch-desc">Require password confirmation to pause or resume</div>
+                    </div>
                 </div>
                 <div class="bp-switch">
                     <input type="checkbox" name="pause_lock_enabled" value="1" {% if security_state.pause_lock_enabled %}checked{% endif %}>
