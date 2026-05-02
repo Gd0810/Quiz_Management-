@@ -624,10 +624,15 @@
             {% endif %}
 
             {% if security_state.allow_tab_switch_guard %}
-            <label class="bp-switch-wrap bp-security-card">
+            <label class="bp-switch-wrap bp-switch-wrap-icon bp-security-card">
+                <div class="bp-switch-copy">
+                    <span class="bp-switch-copy-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m11.9 13.5l2.1-2.1l2.1 2.1l1.4-1.4l-2.1-2.1l2.1-2.1l-1.4-1.4L14 8.6l-2.1-2.1l-1.4 1.4l2.1 2.1l-2.1 2.1zM6 18V2h16v16zm-4 4V6h2v14h14v2z"/></svg>
+                    </span>
                 <div>
                     <div class="bp-switch-text">Tab Switch Guard</div>
                     <div class="bp-switch-desc">Warn when the test page loses focus</div>
+                </div>
                 </div>
                 <div class="bp-switch">
                     <input id="id_tab_switch_guard_enabled" type="checkbox" name="tab_switch_guard_enabled" value="1" {% if security_state.tab_switch_guard_enabled %}checked{% endif %}>
