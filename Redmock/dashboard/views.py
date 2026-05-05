@@ -10,6 +10,7 @@ from quiz.models import Candidate, CandidateTestAttempt
 from .forms import (
     CandidateForm,
     CandidateTestAttemptForm,
+    CompanyInstructionsForm,
     CompanySecurityForm,
     QuizForm,
     SubTitleForm,
@@ -99,6 +100,22 @@ def dashboard_home(request):
         'company': company,
     }
     return render(request, 'dashboard/home.html', context)
+
+
+@company_login_required
+def company_instructions(request):
+    form = CompanyInstructionsForm(request.POST or None, instance=request.company)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Test instructions updated successfully.')
+        return redirect('dashboard:company_instructions')
+
+    return render_crud_form(
+        request,
+        form=form,
+        title='Test Instructions',
+        cancel_url='dashboard:home',
+    )
 
 
 @company_login_required

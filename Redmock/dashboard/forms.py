@@ -23,7 +23,6 @@ class CompanySecurityForm(forms.ModelForm):
     class Meta:
         model = Company
         fields = [
-            'test_instructions',
             'full_screen_lock',
             'pause_lock',
             'tab_switch_guard_enabled',
@@ -32,9 +31,6 @@ class CompanySecurityForm(forms.ModelForm):
             'max_violation_warnings',
             'exam_control_password',
         ]
-        widgets = {
-            'test_instructions': forms.Textarea(attrs={'rows': 8}),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,6 +97,18 @@ class CompanySecurityForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+
+class CompanyInstructionsForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = ['test_instructions']
+        labels = {
+            'test_instructions': 'Online test instructions',
+        }
+        widgets = {
+            'test_instructions': forms.Textarea(attrs={'rows': 10}),
+        }
 
 
 class TestSubjectForm(forms.ModelForm):
