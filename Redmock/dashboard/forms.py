@@ -107,7 +107,12 @@ class CompanyInstructionsForm(forms.ModelForm):
             'test_instructions': 'Online test instructions',
         }
         widgets = {
-            'test_instructions': forms.Textarea(attrs={'rows': 10}),
+            'test_instructions': forms.Textarea(
+                attrs={
+                    'rows': 10,
+                    'data-tinymce': 'true',
+                }
+            ),
         }
 
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ title }} | Redmock{% endblock %}
 
@@ -40,4 +41,32 @@
         </div>
     </form>
 </section>
+
+{% if use_tinymce %}
+    <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!document.querySelector('textarea[data-tinymce="true"]') || !window.tinymce) return;
+
+        tinymce.init({
+            selector: 'textarea[data-tinymce="true"]',
+            base_url: "{% static 'tinymce' %}",
+            suffix: '.min',
+            height: 420,
+            license_key: 'gpl',
+            menubar: false,
+            branding: false,
+            promotion: false,
+            plugins: 'advlist lists link table code preview fullscreen wordcount',
+            toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link table | alignleft aligncenter alignright | code preview fullscreen',
+            content_style: 'body { font-family: Poppins, sans-serif; font-size: 14px; line-height: 1.7; color: #1e293b; }',
+            setup: function (editor) {
+                editor.on('change keyup', function () {
+                    editor.save();
+                });
+            }
+        });
+    });
+    </script>
+{% endif %}
 {% endblock %}

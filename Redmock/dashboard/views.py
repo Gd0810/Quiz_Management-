@@ -115,6 +115,7 @@ def company_instructions(request):
         form=form,
         title='Test Instructions',
         cancel_url='dashboard:home',
+        use_tinymce=True,
     )
 
 
@@ -146,11 +147,11 @@ def render_crud_list(request, *, queryset, title, create_url, edit_url_name, del
     return render(request, 'dashboard/crud_list.html', context)
 
 
-def render_crud_form(request, *, form, title, cancel_url):
+def render_crud_form(request, *, form, title, cancel_url, use_tinymce=False):
     return render(
         request,
         'dashboard/crud_form.html',
-        {'form': form, 'title': title, 'cancel_url': cancel_url},
+        {'form': form, 'title': title, 'cancel_url': cancel_url, 'use_tinymce': use_tinymce},
     )
 
 
