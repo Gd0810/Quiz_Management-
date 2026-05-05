@@ -50,6 +50,7 @@ class CompanyAdmin(admin.ModelAdmin):
                     'email',
                     'password',
                     'is_active',
+                    'test_instructions',
                 )
             },
         ),

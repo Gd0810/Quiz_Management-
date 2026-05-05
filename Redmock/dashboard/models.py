@@ -5,12 +5,26 @@ from django.db import models
 from django.contrib.auth.hashers import check_password
 
 
+DEFAULT_TEST_INSTRUCTIONS = """Read each question carefully before choosing an answer. Only one option can be selected for each question.
+Use Save & Next after choosing an option so you can move through the paper in order.
+Questions shown in red are visited but not answered. Questions shown in blue are answered. Purple means marked for review.
+You can jump to any question using the question palette on the right side at any time during the exam.
+Do not refresh the browser, close the tab, or use the back button while the test is running.
+The test will submit automatically when the timer reaches zero, so review unanswered questions before time ends.
+Use the final Submit button only when you are sure you have completed the test."""
+
+
 class Company(models.Model):
     name = models.CharField(max_length=150)
     image = models.ImageField(upload_to='company/', blank=True, null=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
+    test_instructions = models.TextField(
+        default=DEFAULT_TEST_INSTRUCTIONS,
+        blank=True,
+        help_text='Instructions shown to candidates in the online test instructions drawer.',
+    )
     allow_full_screen_lock = models.BooleanField(default=False)
     allow_pause_lock = models.BooleanField(default=False)
     allow_tab_switch_guard = models.BooleanField(default=False)

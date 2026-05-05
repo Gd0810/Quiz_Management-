@@ -1146,32 +1146,8 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
             <div class="tt-inst-sub">Read these rules before submitting your exam. Your timer will continue while you review this panel.</div>
             <div class="tt-inst-list">
                 <div class="tt-inst-item">
-                    <div class="tt-inst-badge">1</div>
-                    <div class="tt-inst-text">Read each question carefully before choosing an answer. Only one option can be selected for each question.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">2</div>
-                    <div class="tt-inst-text">Use <strong>Save &amp; Next</strong> after choosing an option so you can move through the paper in order.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">3</div>
-                    <div class="tt-inst-text">Questions shown in red are visited but not answered. Questions shown in blue are answered. Purple means marked for review.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">4</div>
-                    <div class="tt-inst-text">You can jump to any question using the question palette on the right side at any time during the exam.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">5</div>
-                    <div class="tt-inst-text">Do not refresh the browser, close the tab, or use the back button while the test is running.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">6</div>
-                    <div class="tt-inst-text">The test will submit automatically when the timer reaches zero, so review unanswered questions before time ends.</div>
-                </div>
-                <div class="tt-inst-item">
-                    <div class="tt-inst-badge">7</div>
-                    <div class="tt-inst-text">Use the final <strong>Submit</strong> button only when you are sure you have completed the test.</div>
+                    <div class="tt-inst-badge">i</div>
+                    <div class="tt-inst-text">{{ attempt.company.test_instructions|default:"No instructions have been added for this test."|linebreaksbr }}</div>
                 </div>
             </div>
         </div>
