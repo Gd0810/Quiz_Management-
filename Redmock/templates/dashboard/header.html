@@ -321,13 +321,7 @@
 
     <nav class="dashboard-sidebar-nav" aria-label="Dashboard navigation">
         <ul class="dashboard-nav-list dashboard-primary-nav">
-            <li class="dashboard-nav-item">
-                <a href="/" class="dashboard-nav-link">
-                    <span class="dashboard-nav-icon"><iconify-icon icon="mdi:home-outline"></iconify-icon></span>
-                    <span class="dashboard-nav-label">Home</span>
-                </a>
-                <span class="dashboard-nav-tooltip">Home</span>
-            </li>
+            
             {% if request.session.company_id %}
                 <li class="dashboard-nav-item">
                     <a href="/dashboard/" class="dashboard-nav-link">
