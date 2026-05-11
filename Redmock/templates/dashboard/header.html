@@ -1,25 +1,463 @@
-<header class="bg-slate-900 text-white shadow mb-6 rounded-2xl">
-    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-        <div>
-            <a href="/" class="text-2xl font-bold tracking-tight">Redmock</a>
-            <p class="text-sm text-slate-300">Mock test dashboard and candidate exam flow</p>
-        </div>
-        <nav class="flex flex-wrap gap-2 text-sm">
-            <a href="/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Home</a>
+<style>
+    .dashboard-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 50;
+        width: 270px;
+        height: calc(100vh - 32px);
+        margin: 16px;
+        border-radius: 16px;
+        background: #151a2d;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+        transition: width .4s ease, height .4s ease;
+    }
+
+    .dashboard-sidebar.collapsed {
+        width: 85px;
+    }
+
+    .dashboard-sidebar-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 25px 20px;
+    }
+
+    .dashboard-brand {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 12px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .dashboard-brand-mark {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        background: #fff;
+        color: #151a2d;
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .dashboard-brand-text {
+        overflow: hidden;
+        white-space: nowrap;
+        transition: opacity .3s ease;
+    }
+
+    .dashboard-brand-text strong {
+        display: block;
+        font-size: 1.05rem;
+        line-height: 1.2;
+    }
+
+    .dashboard-brand-text span {
+        display: block;
+        margin-top: 2px;
+        color: #cbd5e1;
+        font-size: .72rem;
+        line-height: 1.2;
+    }
+
+    .dashboard-toggler {
+        display: flex;
+        width: 35px;
+        height: 35px;
+        flex: 0 0 auto;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 8px;
+        background: #fff;
+        color: #151a2d;
+        transition: transform .4s ease, background .4s ease;
+    }
+
+    .dashboard-sidebar-toggler {
+        position: absolute;
+        right: 20px;
+    }
+
+    .dashboard-menu-toggler {
+        display: none;
+    }
+
+    .dashboard-toggler:hover {
+        background: #dde4fb;
+    }
+
+    .dashboard-toggler iconify-icon {
+        font-size: 1.6rem;
+        transition: transform .4s ease;
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-sidebar-toggler {
+        transform: translate(-4px, 65px);
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-sidebar-toggler iconify-icon {
+        transform: rotate(180deg);
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-brand-text,
+    .dashboard-sidebar.collapsed .dashboard-nav-label {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .dashboard-nav-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        padding: 0 15px;
+        list-style: none;
+        transform: translateY(15px);
+        transition: transform .4s ease;
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-primary-nav {
+        transform: translateY(65px);
+    }
+
+    .dashboard-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        overflow: hidden;
+        border-radius: 8px;
+        padding: 12px 15px;
+        color: #fff;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background .4s ease, color .4s ease, border-radius .4s ease;
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-nav-link {
+        border-radius: 12px;
+    }
+
+    .dashboard-nav-link:hover,
+    .dashboard-nav-link.is-accent {
+        background: #fff;
+        color: #151a2d;
+    }
+
+    .dashboard-nav-link.is-danger:hover {
+        background: #ffe4e6;
+        color: #9f1239;
+    }
+
+    .dashboard-nav-icon {
+        display: inline-flex;
+        width: 24px;
+        min-width: 24px;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .dashboard-nav-label {
+        transition: opacity .3s ease;
+    }
+
+    .dashboard-nav-item {
+        position: relative;
+    }
+
+    .dashboard-nav-tooltip {
+        position: absolute;
+        top: -10px;
+        left: calc(100% + 25px);
+        display: none;
+        opacity: 0;
+        pointer-events: none;
+        border-radius: 8px;
+        background: #fff;
+        padding: 6px 12px;
+        color: #151a2d;
+        white-space: nowrap;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, .1);
+        transition: 0s;
+    }
+
+    .dashboard-sidebar.collapsed .dashboard-nav-tooltip {
+        display: block;
+    }
+
+    .dashboard-nav-item:hover .dashboard-nav-tooltip {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(50%);
+        transition: all .4s ease;
+    }
+
+    .dashboard-secondary-nav {
+        position: absolute;
+        bottom: 30px;
+        width: 100%;
+    }
+
+    body.dashboard-layout main {
+        max-width: none;
+        padding-left: 310px;
+        transition: padding-left .4s ease, padding-top .4s ease;
+    }
+
+    body.dashboard-layout.dashboard-sidebar-collapsed main {
+        padding-left: 125px;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-sidebar {
+            width: calc(100% - 26px);
+            height: 56px;
+            max-height: calc(100vh - 26px);
+            margin: 13px;
+            overflow-y: hidden;
+            scrollbar-width: none;
+        }
+
+        .dashboard-sidebar.menu-active {
+            overflow-y: auto;
+        }
+
+        .dashboard-sidebar-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            border-radius: 16px;
+            background: #151a2d;
+            padding: 8px 10px;
+        }
+
+        .dashboard-brand-mark {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+
+        .dashboard-sidebar-toggler,
+        .dashboard-sidebar.collapsed .dashboard-nav-tooltip,
+        .dashboard-nav-item:hover .dashboard-nav-tooltip {
+            display: none;
+        }
+
+        .dashboard-menu-toggler {
+            display: flex;
+            width: 30px;
+            height: 30px;
+        }
+
+        .dashboard-sidebar.collapsed {
+            width: calc(100% - 26px);
+        }
+
+        .dashboard-sidebar.collapsed .dashboard-brand-text,
+        .dashboard-sidebar.collapsed .dashboard-nav-label {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dashboard-sidebar.collapsed .dashboard-primary-nav,
+        .dashboard-nav-list {
+            transform: translateY(0);
+        }
+
+        .dashboard-nav-list {
+            padding: 0 10px;
+        }
+
+        .dashboard-nav-link {
+            gap: 10px;
+            padding: 10px;
+            font-size: .94rem;
+        }
+
+        .dashboard-nav-icon {
+            font-size: 1.25rem;
+        }
+
+        .dashboard-secondary-nav {
+            position: relative;
+            bottom: 0;
+            margin: 40px 0 30px;
+        }
+
+        body.dashboard-layout main,
+        body.dashboard-layout.dashboard-sidebar-collapsed main {
+            padding-top: 76px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+</style>
+
+<aside class="dashboard-sidebar collapsed" data-dashboard-sidebar>
+    <header class="dashboard-sidebar-header">
+        <a href="/" class="dashboard-brand">
+            <span class="dashboard-brand-mark">R</span>
+            <span class="dashboard-brand-text">
+                <strong>Redmock</strong>
+                <span>Dashboard</span>
+            </span>
+        </a>
+        <button class="dashboard-toggler dashboard-sidebar-toggler" type="button" aria-label="Toggle sidebar">
+            <iconify-icon icon="mdi:chevron-left"></iconify-icon>
+        </button>
+        <button class="dashboard-toggler dashboard-menu-toggler" type="button" aria-label="Toggle menu">
+            <iconify-icon icon="mdi:menu"></iconify-icon>
+        </button>
+    </header>
+
+    <nav class="dashboard-sidebar-nav" aria-label="Dashboard navigation">
+        <ul class="dashboard-nav-list dashboard-primary-nav">
+            <li class="dashboard-nav-item">
+                <a href="/" class="dashboard-nav-link">
+                    <span class="dashboard-nav-icon"><iconify-icon icon="mdi:home-outline"></iconify-icon></span>
+                    <span class="dashboard-nav-label">Home</span>
+                </a>
+                <span class="dashboard-nav-tooltip">Home</span>
+            </li>
             {% if request.session.company_id %}
-                <a href="/dashboard/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Dashboard</a>
-                <a href="/dashboard/subjects/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Subjects</a>
-                <a href="/dashboard/subtitles/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Sub Titles</a>
-                <a href="/dashboard/quizzes/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Quizs</a>
-                <a href="/dashboard/candidates/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Candidates</a>
-                <a href="/dashboard/attempts/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Attempts</a>
-                <a href="/dashboard/settings/instructions/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Instructions</a>
-                <a href="/dashboard/settings/security/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Security</a>
-                <a href="/quiz/start/" class="rounded bg-emerald-600 px-3 py-2 hover:bg-emerald-500">Test Form</a>
-                <a href="/dashboard/logout/" class="rounded bg-rose-600 px-3 py-2 hover:bg-rose-500">Logout</a>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:view-dashboard-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Dashboard</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Dashboard</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/subjects/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Subjects</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Subjects</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/subtitles/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:format-title"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Sub Titles</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Sub Titles</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/quizzes/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Quizs</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Quizs</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/candidates/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Candidates</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Candidates</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/attempts/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:chart-line"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Attempts</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Attempts</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/settings/instructions/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:file-document-edit-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Instructions</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Instructions</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/settings/security/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:shield-check-outline"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Security</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Security</span>
+                </li>
+                <li class="dashboard-nav-item">
+                    <a href="/quiz/start/" class="dashboard-nav-link is-accent">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:form-select"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Test Form</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Test Form</span>
+                </li>
             {% else %}
-                <a href="/dashboard/login/" class="rounded bg-slate-800 px-3 py-2 hover:bg-slate-700">Dashboard Login</a>
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/login/" class="dashboard-nav-link">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:login"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Dashboard Login</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Dashboard Login</span>
+                </li>
             {% endif %}
-        </nav>
-    </div>
-</header>
+        </ul>
+
+        {% if request.session.company_id %}
+            <ul class="dashboard-nav-list dashboard-secondary-nav">
+                <li class="dashboard-nav-item">
+                    <a href="/dashboard/logout/" class="dashboard-nav-link is-danger">
+                        <span class="dashboard-nav-icon"><iconify-icon icon="mdi:logout"></iconify-icon></span>
+                        <span class="dashboard-nav-label">Logout</span>
+                    </a>
+                    <span class="dashboard-nav-tooltip">Logout</span>
+                </li>
+            </ul>
+        {% endif %}
+    </nav>
+</aside>
+
+<script>
+    (function () {
+        var sidebar = document.querySelector("[data-dashboard-sidebar]");
+        var sidebarToggler = document.querySelector(".dashboard-sidebar-toggler");
+        var menuToggler = document.querySelector(".dashboard-menu-toggler");
+        var body = document.body;
+        var collapsedSidebarHeight = "56px";
+        var fullSidebarHeight = "calc(100vh - 32px)";
+
+        if (!sidebar || !sidebarToggler || !menuToggler) {
+            return;
+        }
+
+        body.classList.add("dashboard-layout");
+        body.classList.toggle("dashboard-sidebar-collapsed", sidebar.classList.contains("collapsed"));
+
+        sidebarToggler.addEventListener("click", function () {
+            var isCollapsed = sidebar.classList.toggle("collapsed");
+            body.classList.toggle("dashboard-sidebar-collapsed", isCollapsed);
+        });
+
+        function toggleMenu(isMenuActive) {
+            sidebar.style.height = isMenuActive ? sidebar.scrollHeight + "px" : collapsedSidebarHeight;
+            menuToggler.querySelector("iconify-icon").setAttribute("icon", isMenuActive ? "mdi:close" : "mdi:menu");
+        }
+
+        menuToggler.addEventListener("click", function () {
+            toggleMenu(sidebar.classList.toggle("menu-active"));
+        });
+
+        window.addEventListener("resize", function () {
+            if (window.innerWidth >= 1024) {
+                sidebar.style.height = fullSidebarHeight;
+                sidebar.classList.remove("menu-active");
+                menuToggler.querySelector("iconify-icon").setAttribute("icon", "mdi:menu");
+            } else {
+                sidebar.classList.remove("collapsed");
+                body.classList.remove("dashboard-sidebar-collapsed");
+                sidebar.style.height = "auto";
+                toggleMenu(sidebar.classList.contains("menu-active"));
+            }
+        });
+    })();
+</script>
