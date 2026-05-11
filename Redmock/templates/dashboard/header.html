@@ -1,4 +1,17 @@
 <style>
+    :root {
+        --c0: #caf0f8;
+        --c1: #ade8f4;
+        --c2: #90e0ef;
+        --c3: #48cae4;
+        --c4: #00b4d8;
+        --c5: #0096c7;
+        --c6: #0077b6;
+        --c7: #023e8a;
+        --c8: #03045e;
+        --c9: #02033a;
+    }
+
     .dashboard-sidebar {
         position: fixed;
         top: 0;
@@ -8,8 +21,8 @@
         height: calc(100vh - 32px);
         margin: 16px;
         border-radius: 16px;
-        background: #151a2d;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+        background: linear-gradient(180deg, var(--c8), var(--c9));
+        box-shadow: 0 24px 60px rgba(2, 3, 58, .24);
         transition: width .4s ease, height .4s ease;
     }
 
@@ -42,8 +55,8 @@
         flex: 0 0 auto;
         place-items: center;
         border-radius: 50%;
-        background: #fff;
-        color: #151a2d;
+        background: var(--c0);
+        color: var(--c8);
         font-size: 1.25rem;
         font-weight: 800;
     }
@@ -63,7 +76,7 @@
     .dashboard-brand-text span {
         display: block;
         margin-top: 2px;
-        color: #cbd5e1;
+        color: var(--c1);
         font-size: .72rem;
         line-height: 1.2;
     }
@@ -78,8 +91,8 @@
         justify-content: center;
         border: 0;
         border-radius: 8px;
-        background: #fff;
-        color: #151a2d;
+        background: var(--c0);
+        color: var(--c8);
         transition: transform .4s ease, background .4s ease;
     }
 
@@ -93,7 +106,7 @@
     }
 
     .dashboard-toggler:hover {
-        background: #dde4fb;
+        background: var(--c1);
     }
 
     .dashboard-toggler iconify-icon {
@@ -149,13 +162,13 @@
 
     .dashboard-nav-link:hover,
     .dashboard-nav-link.is-accent {
-        background: #fff;
-        color: #151a2d;
+        background: var(--c0);
+        color: var(--c8);
     }
 
     .dashboard-nav-link.is-danger:hover {
-        background: #ffe4e6;
-        color: #9f1239;
+        background: #fff;
+        color: #be123c;
     }
 
     .dashboard-nav-icon {
@@ -182,11 +195,11 @@
         opacity: 0;
         pointer-events: none;
         border-radius: 8px;
-        background: #fff;
+        background: var(--c0);
         padding: 6px 12px;
-        color: #151a2d;
+        color: var(--c8);
         white-space: nowrap;
-        box-shadow: 0 5px 10px rgba(0, 0, 0, .1);
+        box-shadow: 0 5px 10px rgba(2, 3, 58, .16);
         transition: 0s;
     }
 
@@ -236,7 +249,7 @@
             top: 0;
             z-index: 20;
             border-radius: 16px;
-            background: #151a2d;
+            background: var(--c8);
             padding: 8px 10px;
         }
 
