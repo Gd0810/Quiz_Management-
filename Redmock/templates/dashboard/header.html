@@ -305,9 +305,9 @@
 <aside class="dashboard-sidebar collapsed" data-dashboard-sidebar>
     <header class="dashboard-sidebar-header">
         <a href="/" class="dashboard-brand">
-            <span class="dashboard-brand-mark">R</span>
+            <span class="dashboard-brand-mark">{{ request.company.name|default:"Company"|slice:":1"|upper }}</span>
             <span class="dashboard-brand-text">
-                <strong>Redmock</strong>
+                <strong>{{ request.company.name|default:"Company" }}</strong>
                 <span>Dashboard</span>
             </span>
         </a>
