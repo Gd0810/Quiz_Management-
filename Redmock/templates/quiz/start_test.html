@@ -3,7 +3,6 @@
 {% block title %}Test Builder | Redmock{% endblock %}
 
 {% block content %}
-<div id="dashboard-page-content">
 <style>
     :root {
         --c0: #caf0f8;
@@ -269,9 +268,7 @@
             </div>
         </div>
         <div class="rb-content">
-            <div id="builder-panel">
-                {% include "quiz/_builder_panel.html" %}
-            </div>
+            {% include "quiz/_builder_panel.html" %}
         </div>
     </main>
 </div>
@@ -328,5 +325,4 @@
     });
 }());
 </script>
-</div>
 {% endblock %}
