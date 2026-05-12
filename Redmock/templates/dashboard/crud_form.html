@@ -44,16 +44,18 @@
 </section>
 
 {% if use_tinymce %}
-    <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
     <script>
     (function () {
+        var tinyMceSrc = "{% static 'tinymce/tinymce.min.js' %}";
+        var tinyMceBaseUrl = "{% static 'tinymce' %}";
+
         function initDashboardTinyMce() {
             if (!document.querySelector('textarea[data-tinymce="true"]') || !window.tinymce) return;
 
             tinymce.remove('textarea[data-tinymce="true"]');
             tinymce.init({
                 selector: 'textarea[data-tinymce="true"]',
-                base_url: "{% static 'tinymce' %}",
+                base_url: tinyMceBaseUrl,
                 suffix: '.min',
                 height: 420,
                 license_key: 'gpl',
@@ -71,10 +73,33 @@
             });
         }
 
+        function loadTinyMce(callback) {
+            var existingScript;
+
+            if (window.tinymce) {
+                callback();
+                return;
+            }
+
+            existingScript = document.querySelector('script[data-dashboard-tinymce]');
+            if (existingScript) {
+                existingScript.addEventListener('load', callback, { once: true });
+                return;
+            }
+
+            existingScript = document.createElement('script');
+            existingScript.src = tinyMceSrc;
+            existingScript.dataset.dashboardTinymce = 'true';
+            existingScript.addEventListener('load', callback, { once: true });
+            document.head.appendChild(existingScript);
+        }
+
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initDashboardTinyMce);
+            document.addEventListener('DOMContentLoaded', function () {
+                loadTinyMce(initDashboardTinyMce);
+            });
         } else {
-            initDashboardTinyMce();
+            loadTinyMce(initDashboardTinyMce);
         }
     }());
     </script>
