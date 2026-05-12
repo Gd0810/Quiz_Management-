@@ -354,7 +354,12 @@
         </button>
     </header>
 
-    <nav class="dashboard-sidebar-nav" aria-label="Dashboard navigation">
+    <nav class="dashboard-sidebar-nav"
+        aria-label="Dashboard navigation"
+        hx-boost="true"
+        hx-target="#dashboard-page-content"
+        hx-select="#dashboard-page-content"
+        hx-push-url="true">
         <ul class="dashboard-nav-list dashboard-primary-nav">
             
             {% if request.session.company_id %}
@@ -487,6 +492,20 @@
                 bestLink.setAttribute("aria-current", "page");
             }
         }
+
+        document.body.addEventListener("htmx:afterSwap", function (event) {
+            if (event.detail.target && event.detail.target.id === "dashboard-page-content") {
+                syncActiveNav();
+                sidebar.classList.remove("menu-active");
+                menuToggler.querySelector("iconify-icon").setAttribute("icon", "mdi:menu");
+                if (window.innerWidth < 1024) {
+                    sidebar.style.height = collapsedSidebarHeight;
+                }
+            }
+        });
+
+        document.body.addEventListener("htmx:pushedIntoHistory", syncActiveNav);
+        document.body.addEventListener("htmx:historyRestore", syncActiveNav);
 
         body.classList.add("dashboard-layout");
         body.classList.toggle("dashboard-sidebar-collapsed", sidebar.classList.contains("collapsed"));
