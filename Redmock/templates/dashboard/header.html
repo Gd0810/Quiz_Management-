@@ -172,13 +172,20 @@
     }
 
     .dashboard-nav-link.is-accent {
+        overflow: visible;
         border: 1px solid rgba(202, 240, 248, .28);
+        background: linear-gradient(180deg, var(--c8), var(--c9));
         color: var(--c1);
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+            rgba(0, 0, 0, 0.3) 0px 30px 60px -30px,
+            rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
     }
 
     .dashboard-nav-link.is-accent:hover,
     .dashboard-nav-link.is-accent.is-active {
         border-color: var(--c0);
+        background: linear-gradient(180deg, var(--c8), var(--c9));
+        color: var(--c1);
     }
 
     .dashboard-nav-link.is-danger:hover {
