@@ -161,9 +161,24 @@
     }
 
     .dashboard-nav-link:hover,
-    .dashboard-nav-link.is-accent {
+    .dashboard-nav-link.is-active {
         background: var(--c0);
         color: var(--c8);
+    }
+
+    .dashboard-nav-link.is-active {
+        box-shadow: inset 4px 0 0 var(--c3);
+        font-weight: 700;
+    }
+
+    .dashboard-nav-link.is-accent {
+        border: 1px solid rgba(202, 240, 248, .28);
+        color: var(--c1);
+    }
+
+    .dashboard-nav-link.is-accent:hover,
+    .dashboard-nav-link.is-accent.is-active {
+        border-color: var(--c0);
     }
 
     .dashboard-nav-link.is-danger:hover {
@@ -337,63 +352,63 @@
             
             {% if request.session.company_id %}
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/" class="dashboard-nav-link">
+                    <a href="/dashboard/" class="dashboard-nav-link" data-dashboard-nav-link data-nav-exact>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:view-dashboard-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Dashboard</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Dashboard</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/subjects/" class="dashboard-nav-link">
+                    <a href="/dashboard/subjects/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Subjects</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Subjects</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/subtitles/" class="dashboard-nav-link">
+                    <a href="/dashboard/subtitles/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:format-title"></iconify-icon></span>
                         <span class="dashboard-nav-label">Sub Titles</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Sub Titles</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/quizzes/" class="dashboard-nav-link">
+                    <a href="/dashboard/quizzes/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Quizs</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Quizs</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/candidates/" class="dashboard-nav-link">
+                    <a href="/dashboard/candidates/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Candidates</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Candidates</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/attempts/" class="dashboard-nav-link">
+                    <a href="/dashboard/attempts/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:chart-line"></iconify-icon></span>
                         <span class="dashboard-nav-label">Attempts</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Attempts</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/settings/instructions/" class="dashboard-nav-link">
+                    <a href="/dashboard/settings/instructions/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:file-document-edit-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Instructions</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Instructions</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/settings/security/" class="dashboard-nav-link">
+                    <a href="/dashboard/settings/security/" class="dashboard-nav-link" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:shield-check-outline"></iconify-icon></span>
                         <span class="dashboard-nav-label">Security</span>
                     </a>
                     <span class="dashboard-nav-tooltip">Security</span>
                 </li>
                 <li class="dashboard-nav-item">
-                    <a href="/quiz/start/" class="dashboard-nav-link is-accent">
+                    <a href="/quiz/start/" class="dashboard-nav-link is-accent" data-dashboard-nav-link>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:form-select"></iconify-icon></span>
                         <span class="dashboard-nav-label">Test Form</span>
                     </a>
@@ -401,7 +416,7 @@
                 </li>
             {% else %}
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/login/" class="dashboard-nav-link">
+                    <a href="/dashboard/login/" class="dashboard-nav-link" data-dashboard-nav-link data-nav-exact>
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:login"></iconify-icon></span>
                         <span class="dashboard-nav-label">Dashboard Login</span>
                     </a>
@@ -437,8 +452,38 @@
             return;
         }
 
+        function normalizePath(path) {
+            return path.replace(/\/+$/, "") + "/";
+        }
+
+        function syncActiveNav() {
+            var currentPath = normalizePath(window.location.pathname);
+            var bestLink = null;
+            var bestLength = -1;
+
+            document.querySelectorAll("[data-dashboard-nav-link]").forEach(function (link) {
+                var linkPath = normalizePath(new URL(link.getAttribute("href"), window.location.origin).pathname);
+                var isExact = link.hasAttribute("data-nav-exact");
+                var isMatch = isExact ? currentPath === linkPath : currentPath.indexOf(linkPath) === 0;
+
+                link.classList.remove("is-active");
+                link.removeAttribute("aria-current");
+
+                if (isMatch && linkPath.length > bestLength) {
+                    bestLink = link;
+                    bestLength = linkPath.length;
+                }
+            });
+
+            if (bestLink) {
+                bestLink.classList.add("is-active");
+                bestLink.setAttribute("aria-current", "page");
+            }
+        }
+
         body.classList.add("dashboard-layout");
         body.classList.toggle("dashboard-sidebar-collapsed", sidebar.classList.contains("collapsed"));
+        syncActiveNav();
 
         sidebarToggler.addEventListener("click", function () {
             var isCollapsed = sidebar.classList.toggle("collapsed");
