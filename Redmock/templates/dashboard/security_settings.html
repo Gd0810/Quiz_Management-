@@ -7,12 +7,13 @@
 <div id="dashboard-page-content">
 <style>
     .security-shell {
-        max-width: 1040px;
+        max-width: 100%;
         margin: 0 auto;
         border-radius: 16px;
-        background: #ffffff;
+        background: #caf0f8;
         padding: 28px;
         box-shadow: 0 18px 50px rgba(2, 62, 138, .08);
+        
     }
 
     .security-heading {
@@ -143,13 +144,8 @@
         outline-offset: 3px;
     }
 
-    .security-inline-field {
-        grid-column: 2 / 4;
-        padding: 0 18px 15px 14px;
-    }
-
-    .security-inline-field label,
-    .security-field label {
+    .security-field label,
+    .security-standalone-field label {
         display: block;
         margin-bottom: 7px;
         color: #334155;
@@ -157,8 +153,8 @@
         font-weight: 700;
     }
 
-    .security-inline-field input,
-    .security-field input {
+    .security-field input,
+    .security-standalone-field input {
         width: 100%;
         border: 1px solid #bae6fd;
         border-radius: 9px;
@@ -168,10 +164,24 @@
         outline: 0;
     }
 
-    .security-inline-field input:focus,
-    .security-field input:focus {
+    .security-field input:focus,
+    .security-standalone-field input:focus {
         border-color: #0096c7;
         box-shadow: 0 0 0 3px rgba(0, 180, 216, .14);
+    }
+
+    .security-standalone-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .security-standalone-field {
+        border: 1px solid #7dddf0;
+        border-radius: 11px;
+        background: #ffffff;
+        padding: 16px;
     }
 
     .security-password-grid {
@@ -252,6 +262,7 @@
         }
 
         .security-grid,
+        .security-standalone-grid,
         .security-password-grid {
             grid-template-columns: 1fr;
         }
@@ -273,11 +284,6 @@
         .security-switch {
             grid-column: 2;
             margin: 0 14px 14px;
-        }
-
-        .security-inline-field {
-            grid-column: 1 / 3;
-            padding-left: 14px;
         }
     }
 </style>
@@ -342,15 +348,6 @@
                     </span>
                     <input class="security-switch-input" type="checkbox" name="{{ form.tab_switch_guard_enabled.html_name }}" id="{{ form.tab_switch_guard_enabled.id_for_label }}" {% if form.tab_switch_guard_enabled.value %}checked{% endif %}>
                     <span class="security-switch" aria-hidden="true"></span>
-                    {% if form.max_violation_warnings %}
-                        <span class="security-inline-field">
-                            <label for="{{ form.max_violation_warnings.id_for_label }}">{{ form.max_violation_warnings.label }}</label>
-                            {{ form.max_violation_warnings }}
-                            {% if form.max_violation_warnings.errors %}
-                                <span class="security-error">{{ form.max_violation_warnings.errors|join:", " }}</span>
-                            {% endif %}
-                        </span>
-                    {% endif %}
                 </label>
             {% endif %}
 
@@ -387,6 +384,18 @@
 
         {% if not form.full_screen_lock and not form.pause_lock and not form.tab_switch_guard_enabled and not form.copy_paste_block_enabled and not form.right_click_disable_enabled %}
             <div class="security-empty">No security features are available for this company yet.</div>
+        {% endif %}
+
+        {% if form.max_violation_warnings %}
+            <div class="security-standalone-grid">
+                <div class="security-standalone-field">
+                    <label for="{{ form.max_violation_warnings.id_for_label }}">{{ form.max_violation_warnings.label }}</label>
+                    {{ form.max_violation_warnings }}
+                    {% if form.max_violation_warnings.errors %}
+                        <p class="security-error">{{ form.max_violation_warnings.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
         {% endif %}
 
         <div class="security-password-grid">
