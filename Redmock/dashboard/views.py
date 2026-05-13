@@ -127,11 +127,10 @@ def company_settings(request):
         messages.success(request, 'Exam security settings updated successfully.')
         return redirect('dashboard:company_settings')
 
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Exam Security Settings',
-        cancel_url='dashboard:home',
+        'dashboard/security_settings.html',
+        {'form': form, 'title': 'Exam Security Settings', 'cancel_url': 'dashboard:home'},
     )
 
 
