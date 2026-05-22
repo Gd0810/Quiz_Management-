@@ -244,12 +244,19 @@
 
     body.dashboard-layout main {
         max-width: none;
+        padding-top: 0;
+        padding-bottom: 0;
         padding-left: 310px;
         transition: padding-left .4s ease, padding-top .4s ease;
     }
 
     body.dashboard-layout.dashboard-sidebar-collapsed main {
         padding-left: 125px;
+    }
+
+    body.dashboard-layout #dashboard-page-content {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }
 
     @media (max-width: 1024px) {
@@ -330,9 +337,13 @@
 
         body.dashboard-layout main,
         body.dashboard-layout.dashboard-sidebar-collapsed main {
-            padding-top: 76px;
+            padding-top: 0;
             padding-left: 1rem;
             padding-right: 1rem;
+        }
+
+        body.dashboard-layout #dashboard-page-content {
+            padding-top: 76px;
         }
     }
 </style>
