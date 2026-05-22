@@ -255,8 +255,10 @@
     }
 
     body.dashboard-layout #dashboard-page-content {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+        min-height: 100vh;
+        box-sizing: border-box;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 
     @media (max-width: 1024px) {
@@ -344,6 +346,7 @@
 
         body.dashboard-layout #dashboard-page-content {
             padding-top: 76px;
+            padding-bottom: 1rem;
         }
     }
 </style>
