@@ -806,12 +806,20 @@
                             <div class="bp-input-wrap">
                                 {% if field.name == 'candidate_name' %}
                                     <iconify-icon icon="fa-solid:user" width="20" height="20" class="bp-input-icon"></iconify-icon>
-                                {% elif field.name == 'candidate_email' %}
+                                {% elif field.name == 'candidate_email' or field.field.widget.input_type == 'email' or 'email' in field.name %}
                                     <iconify-icon icon="ic:round-email" width="22" height="22" class="bp-input-icon"></iconify-icon>
-                                {% elif field.name == 'designation_tech' %}
+                                {% elif field.field.widget.input_type == 'tel' or 'phone' in field.name or 'mobile' in field.name %}
+                                    <iconify-icon icon="mdi:phone" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% elif 'designation' in field.name or 'job' in field.name or 'role' in field.name %}
                                     <iconify-icon icon="boxicons:file-code-filled" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% elif field.field.widget.input_type == 'number' %}
+                                    <iconify-icon icon="mdi:numeric" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% elif field.field.widget.input_type == 'date' %}
+                                    <iconify-icon icon="mdi:calendar-month" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                {% elif field.field.widget.input_type == 'textarea' %}
+                                    <iconify-icon icon="mdi:text-box-outline" width="22" height="22" class="bp-input-icon"></iconify-icon>
                                 {% else %}
-                                    <iconify-icon icon="fa-solid:user" width="22" height="22" class="bp-input-icon"></iconify-icon>
+                                    <iconify-icon icon="mdi:form-textbox" width="22" height="22" class="bp-input-icon"></iconify-icon>
                                 {% endif %}
                                 {{ field }}
                             </div>

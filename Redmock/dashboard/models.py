@@ -59,18 +59,14 @@ class CandidateFormField(models.Model):
     FIELD_PHONE = 'phone'
     FIELD_NUMBER = 'number'
     FIELD_TEXTAREA = 'textarea'
-    FIELD_SELECT = 'select'
     FIELD_DATE = 'date'
-    FIELD_CHECKBOX = 'checkbox'
     FIELD_CHOICES = [
         (FIELD_TEXT, 'Text'),
         (FIELD_EMAIL, 'Email'),
         (FIELD_PHONE, 'Phone'),
         (FIELD_NUMBER, 'Number'),
         (FIELD_TEXTAREA, 'Textarea'),
-        (FIELD_SELECT, 'Select'),
         (FIELD_DATE, 'Date'),
-        (FIELD_CHECKBOX, 'Checkbox'),
     ]
     RESERVED_KEYS = {'name', 'email', 'candidate_name', 'candidate_email'}
 
@@ -97,12 +93,6 @@ class CandidateFormField(models.Model):
         super().clean()
         if self.field_key in self.RESERVED_KEYS:
             raise ValidationError({'field_key': 'Name and email are default fields. Use another field key.'})
-        if self.field_type == self.FIELD_SELECT:
-            if not isinstance(self.choices_json, list) or not [
-                str(choice).strip() for choice in self.choices_json if str(choice).strip()
-            ]:
-                raise ValidationError({'choices_json': 'Select fields need at least one choice.'})
-
 
 class TestSubject(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='subjects')

@@ -44,14 +44,8 @@ class CandidateDetailsForm(forms.Form):
             return forms.DecimalField(widget=forms.NumberInput(attrs=attrs), **kwargs)
         if form_field.field_type == CandidateFormField.FIELD_TEXTAREA:
             return forms.CharField(widget=forms.Textarea(attrs={**attrs, 'rows': 3}), **kwargs)
-        if form_field.field_type == CandidateFormField.FIELD_SELECT:
-            choices = [('', 'Select an option')]
-            choices.extend((choice, choice) for choice in form_field.choices_json if str(choice).strip())
-            return forms.ChoiceField(choices=choices, widget=forms.Select(attrs=attrs), **kwargs)
         if form_field.field_type == CandidateFormField.FIELD_DATE:
             return forms.DateField(widget=forms.DateInput(attrs={**attrs, 'type': 'date'}), **kwargs)
-        if form_field.field_type == CandidateFormField.FIELD_CHECKBOX:
-            return forms.BooleanField(**kwargs)
         return forms.CharField(max_length=150, widget=forms.TextInput(attrs=attrs), **kwargs)
 
     def custom_details(self):
