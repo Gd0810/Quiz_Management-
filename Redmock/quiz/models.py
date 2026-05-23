@@ -19,6 +19,21 @@ class Candidate(models.Model):
     def __str__(self):
         return f'{self.name} ({self.email})'
 
+    @property
+    def candidate_details_summary(self):
+        latest_attempt = self.attempts.order_by('-created_at').first()
+        if not latest_attempt:
+            return '-'
+        details = latest_attempt.candidate_details_json or {}
+        values = details.get('values') or {}
+        labels = details.get('labels') or {}
+        if not values:
+            return '-'
+        return ', '.join(
+            f'{labels.get(key, key)}: {value}'
+            for key, value in values.items()
+        )
+
 
 class CandidateTestAttempt(models.Model):
     SESSION_SINGLE = 'single'
@@ -37,6 +52,7 @@ class CandidateTestAttempt(models.Model):
     duration_minutes = models.PositiveIntegerField()
     selected_subjects = models.JSONField(default=list, blank=True)
     selected_sub_titles = models.JSONField(default=list, blank=True)
+    candidate_details_json = models.JSONField(default=dict, blank=True)
     answers_json = models.JSONField(default=list, blank=True)
     correct_count = models.PositiveIntegerField(default=0)
     wrong_count = models.PositiveIntegerField(default=0)

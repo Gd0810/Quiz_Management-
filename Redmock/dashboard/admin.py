@@ -3,12 +3,18 @@ from django.contrib.auth.hashers import identify_hasher, make_password
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 
-from .models import BulkQuestionUpload, Company, Quiz, SubTitle, TestSubject
+from .models import BulkQuestionUpload, CandidateFormField, Company, Quiz, SubTitle, TestSubject
 
 
 class SubTitleInline(admin.TabularInline):
     model = SubTitle
     extra = 1
+
+
+class CandidateFormFieldInline(admin.TabularInline):
+    model = CandidateFormField
+    extra = 1
+    fields = ('label', 'field_key', 'field_type', 'required', 'is_active', 'sort_order')
 
 
 @admin.register(Company)
@@ -81,6 +87,7 @@ class CompanyAdmin(admin.ModelAdmin):
             },
         ),
     )
+    inlines = [CandidateFormFieldInline]
 
     def save_model(self, request, obj, form, change):
         password = form.cleaned_data.get('password')
@@ -106,6 +113,13 @@ class CompanyAdmin(admin.ModelAdmin):
             except Exception:
                 obj.exam_control_password = make_password(exam_control_password)
         super().save_model(request, obj, form, change)
+
+
+@admin.register(CandidateFormField)
+class CandidateFormFieldAdmin(admin.ModelAdmin):
+    list_display = ('label', 'company', 'field_key', 'field_type', 'required', 'is_active', 'sort_order')
+    list_filter = ('company', 'field_type', 'required', 'is_active')
+    search_fields = ('label', 'field_key', 'company__name')
 
 
 @admin.register(TestSubject)

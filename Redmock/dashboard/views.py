@@ -9,6 +9,7 @@ from quiz.models import Candidate, CandidateTestAttempt
 
 from .forms import (
     CandidateForm,
+    CandidateFormFieldForm,
     CandidateTestAttemptForm,
     CompanyInstructionsForm,
     CompanySecurityForm,
@@ -16,7 +17,7 @@ from .forms import (
     SubTitleForm,
     TestSubjectForm,
 )
-from .models import Company, Quiz, SubTitle, TestSubject
+from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
 
 
 def get_logged_in_company(request):
@@ -131,6 +132,66 @@ def company_settings(request):
         request,
         'dashboard/security_settings.html',
         {'form': form, 'title': 'Exam Security Settings', 'cancel_url': 'dashboard:home'},
+    )
+
+
+@company_login_required
+def candidate_form_field_list(request):
+    queryset = CandidateFormField.objects.filter(company=request.company)
+    return render_crud_list(
+        request,
+        queryset=queryset,
+        title='Forms Control',
+        create_url='dashboard:candidate_form_field_create',
+        edit_url_name='dashboard:candidate_form_field_update',
+        delete_url_name='dashboard:candidate_form_field_delete',
+        fields=['label', 'field_key', 'field_type', 'required', 'is_active', 'sort_order'],
+    )
+
+
+@company_login_required
+def candidate_form_field_create(request):
+    form = CandidateFormFieldForm(request.POST or None, company=request.company)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Candidate form field created successfully.')
+        return redirect('dashboard:candidate_form_field_list')
+    return render_crud_form(
+        request,
+        form=form,
+        title='Create Candidate Form Field',
+        cancel_url='dashboard:candidate_form_field_list',
+    )
+
+
+@company_login_required
+def candidate_form_field_update(request, pk):
+    form_field = get_object_or_404(CandidateFormField, pk=pk, company=request.company)
+    form = CandidateFormFieldForm(request.POST or None, instance=form_field, company=request.company)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Candidate form field updated successfully.')
+        return redirect('dashboard:candidate_form_field_list')
+    return render_crud_form(
+        request,
+        form=form,
+        title='Edit Candidate Form Field',
+        cancel_url='dashboard:candidate_form_field_list',
+    )
+
+
+@company_login_required
+def candidate_form_field_delete(request, pk):
+    form_field = get_object_or_404(CandidateFormField, pk=pk, company=request.company)
+    if request.method == 'POST':
+        form_field.delete()
+        messages.success(request, 'Candidate form field deleted successfully.')
+        return redirect('dashboard:candidate_form_field_list')
+    return render_crud_delete(
+        request,
+        obj=form_field,
+        title='Delete Candidate Form Field',
+        cancel_url='dashboard:candidate_form_field_list',
     )
 
 
@@ -354,7 +415,7 @@ def candidate_list(request):
         create_url='dashboard:candidate_create',
         edit_url_name='dashboard:candidate_update',
         delete_url_name='dashboard:candidate_delete',
-        fields=['name', 'email', 'designation_tech', 'created_at'],
+        fields=['name', 'email', 'designation_tech', 'candidate_details_summary', 'created_at'],
     )
 
 
@@ -420,6 +481,7 @@ def attempt_list(request):
             'session_type',
             'level',
             'question_count',
+            'candidate_details_json',
             'percentage',
             'is_submitted',
         ],

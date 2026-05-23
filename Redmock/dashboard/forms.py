@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 from quiz.models import Candidate, CandidateTestAttempt
 
-from .models import Company, Quiz, SubTitle, TestSubject
+from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
 
 
 class CompanySecurityForm(forms.ModelForm):
@@ -171,6 +172,73 @@ class QuizForm(forms.ModelForm):
         }
 
 
+class CandidateFormFieldForm(forms.ModelForm):
+    choices_text = forms.CharField(
+        label='Choices',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 4}),
+        help_text='For select fields only. Enter one choice per line.',
+    )
+
+    def __init__(self, *args, company=None, **kwargs):
+        self.company = company
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['choices_text'].initial = '\n'.join(self.instance.choices_json or [])
+
+    def clean_field_key(self):
+        raw_key = self.cleaned_data.get('field_key') or self.cleaned_data.get('label', '')
+        field_key = slugify(raw_key).replace('-', '_')
+        if not field_key:
+            raise ValidationError('Field key is required.')
+        if field_key in CandidateFormField.RESERVED_KEYS:
+            raise ValidationError('Name and email are default fields. Use another field key.')
+
+        queryset = CandidateFormField.objects.filter(company=self.company, field_key=field_key)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError('This field key already exists for your company.')
+        return field_key
+
+    def clean(self):
+        cleaned_data = super().clean()
+        field_type = cleaned_data.get('field_type')
+        choices = [
+            choice.strip()
+            for choice in (cleaned_data.get('choices_text') or '').splitlines()
+            if choice.strip()
+        ]
+        cleaned_data['choices_json'] = choices
+        if field_type == CandidateFormField.FIELD_SELECT and not choices:
+            self.add_error('choices_text', 'Select fields need at least one choice.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.company = self.company
+        instance.choices_json = self.cleaned_data.get('choices_json', [])
+        if commit:
+            instance.full_clean()
+            instance.save()
+            self.save_m2m()
+        return instance
+
+    class Meta:
+        model = CandidateFormField
+        fields = [
+            'label',
+            'field_key',
+            'field_type',
+            'placeholder',
+            'help_text',
+            'choices_text',
+            'required',
+            'is_active',
+            'sort_order',
+        ]
+
+
 class CandidateForm(forms.ModelForm):
     class Meta:
         model = Candidate
@@ -195,6 +263,7 @@ class CandidateTestAttemptForm(forms.ModelForm):
             'duration_minutes',
             'selected_subjects',
             'selected_sub_titles',
+            'candidate_details_json',
             'answers_json',
             'correct_count',
             'wrong_count',

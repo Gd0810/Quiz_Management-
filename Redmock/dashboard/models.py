@@ -53,6 +53,57 @@ class Company(models.Model):
         return check_password(raw_password, self.exam_control_password)
 
 
+class CandidateFormField(models.Model):
+    FIELD_TEXT = 'text'
+    FIELD_EMAIL = 'email'
+    FIELD_PHONE = 'phone'
+    FIELD_NUMBER = 'number'
+    FIELD_TEXTAREA = 'textarea'
+    FIELD_SELECT = 'select'
+    FIELD_DATE = 'date'
+    FIELD_CHECKBOX = 'checkbox'
+    FIELD_CHOICES = [
+        (FIELD_TEXT, 'Text'),
+        (FIELD_EMAIL, 'Email'),
+        (FIELD_PHONE, 'Phone'),
+        (FIELD_NUMBER, 'Number'),
+        (FIELD_TEXTAREA, 'Textarea'),
+        (FIELD_SELECT, 'Select'),
+        (FIELD_DATE, 'Date'),
+        (FIELD_CHECKBOX, 'Checkbox'),
+    ]
+    RESERVED_KEYS = {'name', 'email', 'candidate_name', 'candidate_email'}
+
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='candidate_form_fields')
+    label = models.CharField(max_length=120)
+    field_key = models.SlugField(max_length=80)
+    field_type = models.CharField(max_length=20, choices=FIELD_CHOICES, default=FIELD_TEXT)
+    placeholder = models.CharField(max_length=150, blank=True)
+    help_text = models.CharField(max_length=255, blank=True)
+    choices_json = models.JSONField(default=list, blank=True)
+    required = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'label']
+        unique_together = ('company', 'field_key')
+
+    def __str__(self):
+        return f'{self.company.name} - {self.label}'
+
+    def clean(self):
+        super().clean()
+        if self.field_key in self.RESERVED_KEYS:
+            raise ValidationError({'field_key': 'Name and email are default fields. Use another field key.'})
+        if self.field_type == self.FIELD_SELECT:
+            if not isinstance(self.choices_json, list) or not [
+                str(choice).strip() for choice in self.choices_json if str(choice).strip()
+            ]:
+                raise ValidationError({'choices_json': 'Select fields need at least one choice.'})
+
+
 class TestSubject(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='subjects')
     subject = models.CharField(max_length=150)

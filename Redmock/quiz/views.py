@@ -483,7 +483,7 @@ def _candidate_form_context(request, company, form=None):
         return redirect('quiz:start')
 
     if form is None:
-        form = CandidateDetailsForm()
+        form = CandidateDetailsForm(company=company)
 
     # Build a name → svg lookup from live subjects
     from dashboard.models import TestSubject
@@ -754,7 +754,7 @@ def begin_test(request):
         messages.error(request, 'Test setup expired. Please configure the test again.')
         return redirect('quiz:start')
 
-    form = CandidateDetailsForm(request.POST or None)
+    form = CandidateDetailsForm(request.POST or None, company=request.company)
     if not form.is_valid():
         return render(
             request,
@@ -762,15 +762,24 @@ def begin_test(request):
             _candidate_form_context(request, request.company, form=form),
         )
 
+    candidate_details = form.custom_details()
+    custom_values = candidate_details.get('values', {})
+    designation_tech = (
+        custom_values.get('designation_tech')
+        or custom_values.get('designation')
+        or custom_values.get('job_title')
+        or ''
+    )
+
     candidate, _ = Candidate.objects.get_or_create(
         email=form.cleaned_data['candidate_email'],
         defaults={
             'name': form.cleaned_data['candidate_name'],
-            'designation_tech': form.cleaned_data['designation_tech'],
+            'designation_tech': str(designation_tech)[:150],
         },
     )
     candidate.name = form.cleaned_data['candidate_name']
-    candidate.designation_tech = form.cleaned_data['designation_tech']
+    candidate.designation_tech = str(designation_tech)[:150]
     candidate.save(update_fields=['name', 'designation_tech'])
 
     answers_json = [{'question_id': question_id, 'selected_answer': ''} for question_id in pending_setup['question_ids']]
@@ -784,6 +793,7 @@ def begin_test(request):
         duration_minutes=pending_setup['duration_minutes'],
         selected_subjects=pending_setup['selected_subjects'],
         selected_sub_titles=pending_setup['selected_sub_titles'],
+        candidate_details_json=candidate_details,
         answers_json=answers_json,
         full_screen_lock_enabled=_parse_bool(
             security.get('full_screen_lock_enabled', request.company.full_screen_lock)
