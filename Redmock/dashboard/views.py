@@ -1,3 +1,6 @@
+import json
+from collections import Counter
+
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from django.core.paginator import Paginator
@@ -218,12 +221,44 @@ def render_crud_delete(request, *, obj, title, cancel_url):
 @company_login_required
 def subject_list(request):
     queryset = TestSubject.objects.filter(company=request.company).prefetch_related('sub_titles')
+    all_subjects = list(queryset)
+    subject_by_id = {subject.id: subject for subject in all_subjects}
+    attempts = CandidateTestAttempt.objects.filter(company=request.company).values_list('selected_subjects', flat=True)
+    subject_attempt_counts = Counter()
+    for selected_subjects in attempts:
+        for subject_id in selected_subjects or []:
+            try:
+                subject_attempt_counts[int(subject_id)] += 1
+            except (TypeError, ValueError):
+                continue
+
+    chart_rows = [
+        {
+            'label': subject_by_id[subject_id].subject,
+            'count': count,
+        }
+        for subject_id, count in subject_attempt_counts.most_common()
+        if subject_id in subject_by_id
+    ][:7]
+    most_attempted = chart_rows[0]['label'] if chart_rows else 'No attempts yet'
+
     paginator = Paginator(queryset, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(
         request,
         'dashboard/subject_list.html',
-        {'title': 'Test Subjects', 'objects': page_obj.object_list, 'page_obj': page_obj},
+        {
+            'title': 'Test Subjects',
+            'objects': page_obj.object_list,
+            'page_obj': page_obj,
+            'subject_total': len(all_subjects),
+            'subtitle_total': SubTitle.objects.filter(test_subject__company=request.company).count(),
+            'subject_with_subtitles_total': sum(1 for subject in all_subjects if subject.sub_titles.all()),
+            'subject_attempt_total': sum(subject_attempt_counts.values()),
+            'most_attempted_subject': most_attempted,
+            'chart_labels_json': json.dumps([row['label'] for row in chart_rows]),
+            'chart_counts_json': json.dumps([row['count'] for row in chart_rows]),
+        },
     )
 
 

@@ -16,6 +16,20 @@
     .subject-btn.primary { border: 0; background: #03045e; color: #fff; }
     .subject-btn.secondary { background: #e0f2fe; color: #075985; }
     .subject-btn.danger { background: #fff1f2; color: #be123c; }
+    .subject-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+    .subject-stat-card { display: grid; grid-template-columns: 58px minmax(0, 1fr); min-height: 82px; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .subject-stat-icon { display: grid; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.5rem; }
+    .subject-stat-body { min-width: 0; padding: 14px; }
+    .subject-stat-label { margin: 0; color: #008fd1; font-size: .76rem; font-weight: 700; line-height: 1.25; }
+    .subject-stat-value { margin: 6px 0 0; color: #03045e; font-size: 1.45rem; font-weight: 800; line-height: 1; }
+    .subject-stat-value.text { overflow: hidden; font-size: 1rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .subject-chart-card { overflow: hidden; margin-bottom: 18px; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .subject-chart-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .subject-chart-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .subject-chart-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .subject-chart-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .subject-chart-body { height: 320px; padding: 18px; }
+    .subject-chart-empty { display: grid; height: 100%; place-items: center; border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; color: #0369a1; font-size: .9rem; }
     .subject-grid { display: grid; gap: 16px; }
     .subject-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 76px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
     .subject-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
@@ -35,9 +49,14 @@
     @media (max-width: 820px) {
         .subject-shell { padding: 20px; }
         .subject-heading { flex-direction: column; align-items: flex-start; }
+        .subject-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .subject-card { display: block; }
         .subject-card-icon { min-height: 58px; }
         .subject-actions { padding-top: 0; }
+    }
+    @media (max-width: 540px) {
+        .subject-stats { grid-template-columns: 1fr; }
+        .subject-chart-head { grid-template-columns: 52px minmax(0, 1fr); }
     }
 </style>
 
@@ -54,6 +73,54 @@
             <iconify-icon icon="mdi:plus"></iconify-icon>
             Create Subject
         </a>
+    </div>
+
+    <div class="subject-stats">
+        <div class="subject-stat-card">
+            <span class="subject-stat-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+            <div class="subject-stat-body">
+                <p class="subject-stat-label">Total Subjects</p>
+                <p class="subject-stat-value">{{ subject_total }}</p>
+            </div>
+        </div>
+        <div class="subject-stat-card">
+            <span class="subject-stat-icon"><iconify-icon icon="mdi:format-title"></iconify-icon></span>
+            <div class="subject-stat-body">
+                <p class="subject-stat-label">Total Sub Titles</p>
+                <p class="subject-stat-value">{{ subtitle_total }}</p>
+            </div>
+        </div>
+        <div class="subject-stat-card">
+            <span class="subject-stat-icon"><iconify-icon icon="mdi:playlist-check"></iconify-icon></span>
+            <div class="subject-stat-body">
+                <p class="subject-stat-label">With Sub Titles</p>
+                <p class="subject-stat-value">{{ subject_with_subtitles_total }}</p>
+            </div>
+        </div>
+        <div class="subject-stat-card">
+            <span class="subject-stat-icon"><iconify-icon icon="mdi:trophy-outline"></iconify-icon></span>
+            <div class="subject-stat-body">
+                <p class="subject-stat-label">Top Attempted</p>
+                <p class="subject-stat-value text" title="{{ most_attempted_subject }}">{{ most_attempted_subject }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="subject-chart-card">
+        <div class="subject-chart-head">
+            <span class="subject-chart-icon"><iconify-icon icon="mdi:chart-bar"></iconify-icon></span>
+            <div class="subject-card-body">
+                <p class="subject-chart-title">Top Subject Attempts</p>
+                <p class="subject-chart-text">Top 7 subjects by test attempts</p>
+            </div>
+        </div>
+        <div class="subject-chart-body">
+            {% if subject_attempt_total %}
+                <canvas id="subjectAttemptsChart"></canvas>
+            {% else %}
+                <div class="subject-chart-empty">No subject attempt data yet.</div>
+            {% endif %}
+        </div>
     </div>
 
     <div class="subject-grid">
@@ -125,5 +192,56 @@
         </div>
     {% endif %}
 </section>
+{% if subject_attempt_total %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    var canvas = document.getElementById('subjectAttemptsChart');
+    if (!canvas || !window.Chart) return;
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels_json|safe }},
+            datasets: [{
+                label: 'Attempts',
+                data: {{ chart_counts_json|safe }},
+                backgroundColor: '#0096c7',
+                borderColor: '#03045e',
+                borderWidth: 1,
+                borderRadius: 8,
+                maxBarThickness: 42
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#03045e',
+                    titleColor: '#caf0f8',
+                    bodyColor: '#ffffff',
+                    borderColor: '#90e0ef',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#023e8a', font: { weight: 700 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    precision: 0,
+                    grid: { color: '#ade8f4' },
+                    ticks: { color: '#0077b6', stepSize: 1 }
+                }
+            }
+        }
+    });
+}());
+</script>
+{% endif %}
 </div>
 {% endblock %}
