@@ -23,6 +23,9 @@
         border-radius: 16px;
         background: linear-gradient(180deg, var(--c8), var(--c9));
         box-shadow: 0 24px 60px rgba(2, 3, 58, .24);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         transition: width .4s ease, height .4s ease;
     }
 
@@ -36,7 +39,15 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        flex: 0 0 auto;
         padding: 25px 20px;
+    }
+
+    .dashboard-sidebar-nav {
+        display: flex;
+        min-height: 0;
+        flex: 1 1 auto;
+        flex-direction: column;
     }
 
     .dashboard-brand {
@@ -139,6 +150,29 @@
         transition: transform .4s ease;
     }
 
+    .dashboard-primary-nav {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 24px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(202, 240, 248, .55) transparent;
+    }
+
+    .dashboard-primary-nav::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .dashboard-primary-nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .dashboard-primary-nav::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(202, 240, 248, .55);
+    }
+
     .dashboard-sidebar.collapsed .dashboard-primary-nav {
         transform: translateY(65px);
     }
@@ -237,9 +271,10 @@
     }
 
     .dashboard-secondary-nav {
-        position: absolute;
-        bottom: 30px;
-        width: 100%;
+        flex: 0 0 auto;
+        margin: 10px 0 18px;
+        transform: none;
+        width: auto;
     }
 
     body.dashboard-layout main {
@@ -315,6 +350,11 @@
         .dashboard-sidebar.collapsed .dashboard-primary-nav,
         .dashboard-nav-list {
             transform: translateY(0);
+        }
+
+        .dashboard-primary-nav {
+            overflow-y: visible;
+            padding-bottom: 0;
         }
 
         .dashboard-nav-list {
