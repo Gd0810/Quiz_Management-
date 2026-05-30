@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
 from django.utils.text import slugify
 
 from quiz.models import Candidate, CandidateTestAttempt
@@ -123,15 +124,15 @@ class TestSubjectForm(forms.ModelForm):
         fields = ['subject']
 
 
-class SubTitleForm(forms.ModelForm):
-    def __init__(self, *args, company=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if company is not None:
-            self.fields['test_subject'].queryset = TestSubject.objects.filter(company=company)
-
-    class Meta:
-        model = SubTitle
-        fields = ['test_subject', 'title']
+SubTitleInlineFormSet = inlineformset_factory(
+    TestSubject,
+    SubTitle,
+    fields=('title',),
+    extra=3,
+    can_delete=True,
+    min_num=0,
+    validate_min=False,
+)
 
 
 class QuizForm(forms.ModelForm):

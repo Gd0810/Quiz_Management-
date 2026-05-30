@@ -14,7 +14,7 @@ from .forms import (
     CompanyInstructionsForm,
     CompanySecurityForm,
     QuizForm,
-    SubTitleForm,
+    SubTitleInlineFormSet,
     TestSubjectForm,
 )
 from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
@@ -136,14 +136,10 @@ def company_settings(request):
 @company_login_required
 def candidate_form_field_list(request):
     queryset = CandidateFormField.objects.filter(company=request.company)
-    return render_crud_list(
+    return render(
         request,
-        queryset=queryset,
-        title='Forms Control',
-        create_url='dashboard:candidate_form_field_create',
-        edit_url_name='dashboard:candidate_form_field_update',
-        delete_url_name='dashboard:candidate_form_field_delete',
-        fields=['label', 'field_key', 'field_type', 'required', 'is_active', 'sort_order'],
+        'dashboard/forms_control_list.html',
+        {'title': 'Forms Control', 'objects': queryset},
     )
 
 
@@ -154,11 +150,10 @@ def candidate_form_field_create(request):
         form.save()
         messages.success(request, 'Candidate form field created successfully.')
         return redirect('dashboard:candidate_form_field_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Create Candidate Form Field',
-        cancel_url='dashboard:candidate_form_field_list',
+        'dashboard/forms_control_form.html',
+        {'form': form, 'title': 'Create Candidate Form Field', 'cancel_url': 'dashboard:candidate_form_field_list'},
     )
 
 
@@ -170,11 +165,10 @@ def candidate_form_field_update(request, pk):
         form.save()
         messages.success(request, 'Candidate form field updated successfully.')
         return redirect('dashboard:candidate_form_field_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Edit Candidate Form Field',
-        cancel_url='dashboard:candidate_form_field_list',
+        'dashboard/forms_control_form.html',
+        {'form': form, 'title': 'Edit Candidate Form Field', 'cancel_url': 'dashboard:candidate_form_field_list'},
     )
 
 
@@ -185,11 +179,10 @@ def candidate_form_field_delete(request, pk):
         form_field.delete()
         messages.success(request, 'Candidate form field deleted successfully.')
         return redirect('dashboard:candidate_form_field_list')
-    return render_crud_delete(
+    return render(
         request,
-        obj=form_field,
-        title='Delete Candidate Form Field',
-        cancel_url='dashboard:candidate_form_field_list',
+        'dashboard/forms_control_delete.html',
+        {'object': form_field, 'title': 'Delete Candidate Form Field', 'cancel_url': 'dashboard:candidate_form_field_list'},
     )
 
 
@@ -223,32 +216,30 @@ def render_crud_delete(request, *, obj, title, cancel_url):
 
 @company_login_required
 def subject_list(request):
-    queryset = TestSubject.objects.filter(company=request.company).select_related('company')
-    return render_crud_list(
+    queryset = TestSubject.objects.filter(company=request.company).prefetch_related('sub_titles')
+    return render(
         request,
-        queryset=queryset,
-        title='Test Subjects',
-        create_url='dashboard:subject_create',
-        edit_url_name='dashboard:subject_update',
-        delete_url_name='dashboard:subject_delete',
-        fields=['company', 'subject', 'created_at'],
+        'dashboard/subject_list.html',
+        {'title': 'Test Subjects', 'objects': queryset},
     )
 
 
 @company_login_required
 def subject_create(request):
     form = TestSubjectForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
+    formset = SubTitleInlineFormSet(request.POST or None)
+    if request.method == 'POST' and form.is_valid() and formset.is_valid():
         subject = form.save(commit=False)
         subject.company = request.company
         subject.save()
+        formset.instance = subject
+        formset.save()
         messages.success(request, 'Test subject created successfully.')
         return redirect('dashboard:subject_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Create Test Subject',
-        cancel_url='dashboard:subject_list',
+        'dashboard/subject_form.html',
+        {'form': form, 'formset': formset, 'title': 'Create Test Subject', 'cancel_url': 'dashboard:subject_list'},
     )
 
 
@@ -256,15 +247,16 @@ def subject_create(request):
 def subject_update(request, pk):
     subject = get_object_or_404(TestSubject, pk=pk, company=request.company)
     form = TestSubjectForm(request.POST or None, instance=subject)
-    if request.method == 'POST' and form.is_valid():
+    formset = SubTitleInlineFormSet(request.POST or None, instance=subject)
+    if request.method == 'POST' and form.is_valid() and formset.is_valid():
         form.save()
+        formset.save()
         messages.success(request, 'Test subject updated successfully.')
         return redirect('dashboard:subject_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Edit Test Subject',
-        cancel_url='dashboard:subject_list',
+        'dashboard/subject_form.html',
+        {'form': form, 'formset': formset, 'title': 'Edit Test Subject', 'cancel_url': 'dashboard:subject_list'},
     )
 
 
@@ -275,71 +267,10 @@ def subject_delete(request, pk):
         subject.delete()
         messages.success(request, 'Test subject deleted successfully.')
         return redirect('dashboard:subject_list')
-    return render_crud_delete(
+    return render(
         request,
-        obj=subject,
-        title='Delete Test Subject',
-        cancel_url='dashboard:subject_list',
-    )
-
-
-@company_login_required
-def subtitle_list(request):
-    queryset = SubTitle.objects.filter(test_subject__company=request.company).select_related('test_subject', 'test_subject__company')
-    return render_crud_list(
-        request,
-        queryset=queryset,
-        title='Sub Titles',
-        create_url='dashboard:subtitle_create',
-        edit_url_name='dashboard:subtitle_update',
-        delete_url_name='dashboard:subtitle_delete',
-        fields=['test_subject', 'title', 'created_at'],
-    )
-
-
-@company_login_required
-def subtitle_create(request):
-    form = SubTitleForm(request.POST or None, company=request.company)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Sub title created successfully.')
-        return redirect('dashboard:subtitle_list')
-    return render_crud_form(
-        request,
-        form=form,
-        title='Create Sub Title',
-        cancel_url='dashboard:subtitle_list',
-    )
-
-
-@company_login_required
-def subtitle_update(request, pk):
-    subtitle = get_object_or_404(SubTitle, pk=pk, test_subject__company=request.company)
-    form = SubTitleForm(request.POST or None, instance=subtitle, company=request.company)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Sub title updated successfully.')
-        return redirect('dashboard:subtitle_list')
-    return render_crud_form(
-        request,
-        form=form,
-        title='Edit Sub Title',
-        cancel_url='dashboard:subtitle_list',
-    )
-
-
-@company_login_required
-def subtitle_delete(request, pk):
-    subtitle = get_object_or_404(SubTitle, pk=pk, test_subject__company=request.company)
-    if request.method == 'POST':
-        subtitle.delete()
-        messages.success(request, 'Sub title deleted successfully.')
-        return redirect('dashboard:subtitle_list')
-    return render_crud_delete(
-        request,
-        obj=subtitle,
-        title='Delete Sub Title',
-        cancel_url='dashboard:subtitle_list',
+        'dashboard/subject_delete.html',
+        {'object': subject, 'title': 'Delete Test Subject', 'cancel_url': 'dashboard:subject_list'},
     )
 
 

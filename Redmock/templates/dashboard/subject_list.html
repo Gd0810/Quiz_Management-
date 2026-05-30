@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .subject-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2, 62, 138, .08); }
+    .subject-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .subject-heading-main { display: flex; align-items: center; gap: 12px; }
+    .subject-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
+    .subject-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .subject-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .subject-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+    .subject-btn.primary { border: 0; background: #03045e; color: #fff; }
+    .subject-btn.secondary { background: #e0f2fe; color: #075985; }
+    .subject-btn.danger { background: #fff1f2; color: #be123c; }
+    .subject-grid { display: grid; gap: 16px; }
+    .subject-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 76px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
+    .subject-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .subject-card-body { min-width: 0; padding: 14px; }
+    .subject-card-title { color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .subject-card-text { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .subject-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; background: #e0f2fe; padding: 4px 9px; color: #075985; font-size: .73rem; font-weight: 700; }
+    .subject-chip.off { background: #f1f5f9; color: #64748b; }
+    .subject-actions { display: flex; gap: 8px; padding: 14px; }
+    .subject-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
+    @media (max-width: 820px) {
+        .subject-shell { padding: 20px; }
+        .subject-heading { flex-direction: column; align-items: flex-start; }
+        .subject-card { display: block; }
+        .subject-card-icon { min-height: 58px; }
+        .subject-actions { padding-top: 0; }
+    }
+</style>
+
+<section class="subject-shell">
+    <div class="subject-heading">
+        <div class="subject-heading-main">
+            <span class="subject-heading-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+            <div>
+                <h1 class="subject-title">Subjects</h1>
+                <p class="subject-subtitle">Manage subjects and their optional sub titles together</p>
+            </div>
+        </div>
+        <a href="{% url 'dashboard:subject_create' %}" class="subject-btn primary">
+            <iconify-icon icon="mdi:plus"></iconify-icon>
+            Create Subject
+        </a>
+    </div>
+
+    <div class="subject-grid">
+        {% for object in objects %}
+            <article class="subject-card">
+                <span class="subject-card-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+                <div class="subject-card-body">
+                    <div class="subject-card-title">{{ object.subject }}</div>
+                    <div class="subject-card-text">
+                        {% for subtitle in object.sub_titles.all %}
+                            <span class="subject-chip"><iconify-icon icon="mdi:format-title"></iconify-icon>{{ subtitle.title }}</span>
+                        {% empty %}
+                            <span class="subject-chip off"><iconify-icon icon="mdi:minus-circle-outline"></iconify-icon>No sub titles</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="subject-actions">
+                    <a href="{% url 'dashboard:subject_update' object.pk %}" class="subject-btn secondary">
+                        <iconify-icon icon="mdi:pencil"></iconify-icon>
+                        Edit
+                    </a>
+                    <a href="{% url 'dashboard:subject_delete' object.pk %}" class="subject-btn danger">
+                        <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
+                        Delete
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="subject-empty">No subjects yet. Create a subject, then add any sub titles it needs.</div>
+        {% endfor %}
+    </div>
+</section>
+</div>
+{% endblock %}
