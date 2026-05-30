@@ -27,6 +27,11 @@
     .subject-chip.off { background: #f1f5f9; color: #64748b; }
     .subject-actions { display: flex; gap: 8px; padding: 14px; }
     .subject-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
+    .subject-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+    .subject-page-status { color: #008fd1; font-size: .82rem; font-weight: 700; }
+    .subject-page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .subject-page-link { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; border-radius: 10px; background: #e0f2fe; padding: 8px 13px; color: #075985; font-size: .82rem; font-weight: 800; text-decoration: none; }
+    .subject-page-link.is-disabled { opacity: .45; pointer-events: none; }
     @media (max-width: 820px) {
         .subject-shell { padding: 20px; }
         .subject-heading { flex-direction: column; align-items: flex-start; }
@@ -86,6 +91,39 @@
             <div class="subject-empty">No subjects yet. Create a subject, then add any sub titles it needs.</div>
         {% endfor %}
     </div>
+
+    {% if page_obj.has_other_pages %}
+        <div class="subject-pagination">
+            <div class="subject-page-status">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+            <div class="subject-page-actions">
+                {% if page_obj.has_previous %}
+                    <a class="subject-page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <iconify-icon icon="mdi:chevron-left"></iconify-icon>
+                        Previous
+                    </a>
+                {% else %}
+                    <span class="subject-page-link is-disabled">
+                        <iconify-icon icon="mdi:chevron-left"></iconify-icon>
+                        Previous
+                    </span>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a class="subject-page-link" href="?page={{ page_obj.next_page_number }}">
+                        Next
+                        <iconify-icon icon="mdi:chevron-right"></iconify-icon>
+                    </a>
+                {% else %}
+                    <span class="subject-page-link is-disabled">
+                        Next
+                        <iconify-icon icon="mdi:chevron-right"></iconify-icon>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 </section>
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
+from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -217,10 +218,12 @@ def render_crud_delete(request, *, obj, title, cancel_url):
 @company_login_required
 def subject_list(request):
     queryset = TestSubject.objects.filter(company=request.company).prefetch_related('sub_titles')
+    paginator = Paginator(queryset, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
     return render(
         request,
         'dashboard/subject_list.html',
-        {'title': 'Test Subjects', 'objects': queryset},
+        {'title': 'Test Subjects', 'objects': page_obj.object_list, 'page_obj': page_obj},
     )
 
 
