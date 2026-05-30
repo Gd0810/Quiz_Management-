@@ -118,10 +118,42 @@ class CompanyInstructionsForm(forms.ModelForm):
         }
 
 
+DEFAULT_SUBJECT_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" '
+    'viewBox="0 0 24 24"><path fill="currentColor" '
+    'd="M14.738 14.688q.312-.313.312-.738t-.312-.737T14 '
+    '12.9t-.737.313t-.313.737t.313.738T14 15t.738-.312M13.25 '
+    '11.8h1.5q0-.725.15-1.062t.7-.888q.75-.75 1-1.212t.25-1.088'
+    'q0-1.125-.788-1.837T14 5q-1.025 0-1.787.575T11.15 7.1l1.35.55'
+    'q.225-.625.613-.937T14 6.4q.6 0 .975.338t.375.912q0 .35-.2.663'
+    't-.7.787q-.825.725-1.012 1.138T13.25 11.8M6 18V2h16v16zm-4 '
+    '4V6h2v14h14v2z"/></svg>'
+)
+
+
 class TestSubjectForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk and not self.initial.get('subject_svg'):
+            self.initial['subject_svg'] = DEFAULT_SUBJECT_SVG
+
+    def clean_subject_svg(self):
+        subject_svg = (self.cleaned_data.get('subject_svg') or '').strip()
+        if not subject_svg:
+            return DEFAULT_SUBJECT_SVG
+        if '<svg' not in subject_svg.lower() or '</svg>' not in subject_svg.lower():
+            raise ValidationError('Subject image must be valid SVG markup.')
+        return subject_svg
+
     class Meta:
         model = TestSubject
-        fields = ['subject']
+        fields = ['subject', 'subject_svg']
+        labels = {
+            'subject_svg': 'Subject SVG Image',
+        }
+        widgets = {
+            'subject_svg': forms.Textarea(attrs={'rows': 5}),
+        }
 
 
 SubTitleInlineFormSet = inlineformset_factory(

@@ -20,8 +20,11 @@
     .subject-form-body { display: grid; gap: 16px; padding: 16px; }
     .subject-field { border: 1px solid #7dddf0; border-radius: 11px; background: #fff; padding: 16px; }
     .subject-field label { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; color: #334155; font-size: .78rem; font-weight: 700; }
-    .subject-field input { width: 100%; border: 1px solid #bae6fd; border-radius: 9px; background: #fff; padding: 10px 12px; color: #0f172a; outline: 0; }
-    .subject-field input:focus { border-color: #0096c7; box-shadow: 0 0 0 3px rgba(0, 180, 216, .14); }
+    .subject-field input, .subject-field textarea { width: 100%; border: 1px solid #bae6fd; border-radius: 9px; background: #fff; padding: 10px 12px; color: #0f172a; outline: 0; }
+    .subject-field textarea { min-height: 120px; font-family: Consolas, monospace; font-size: .82rem; line-height: 1.45; }
+    .subject-field input:focus, .subject-field textarea:focus { border-color: #0096c7; box-shadow: 0 0 0 3px rgba(0, 180, 216, .14); }
+    .subject-svg-preview { display: inline-grid; width: 54px; height: 54px; place-items: center; margin-bottom: 10px; border: 1px solid #7dddf0; border-radius: 12px; background: #c9f5fb; color: #0096c7; }
+    .subject-svg-preview svg { width: 28px; height: 28px; display: block; }
     .subtitle-list { display: grid; gap: 12px; }
     .subtitle-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; border: 1px solid #bae6fd; border-radius: 10px; background: #f8fdff; padding: 12px; }
     .subtitle-row.is-template { display: none; }
@@ -72,6 +75,20 @@
                     <label for="{{ form.subject.id_for_label }}"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>{{ form.subject.label }}</label>
                     {{ form.subject }}
                     {% if form.subject.errors %}<p class="subject-error">{{ form.subject.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <div class="subject-field">
+                    <label for="{{ form.subject_svg.id_for_label }}"><iconify-icon icon="mdi:image-edit-outline"></iconify-icon>{{ form.subject_svg.label }}</label>
+                    <span class="subject-svg-preview">
+                        {% if form.subject_svg.value %}
+                            {{ form.subject_svg.value|safe }}
+                        {% else %}
+                            <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
+                        {% endif %}
+                    </span>
+                    {{ form.subject_svg }}
+                    <p class="subject-help">Paste SVG markup for this subject icon. If this is empty, the default SVG icon is saved.</p>
+                    {% if form.subject_svg.errors %}<p class="subject-error">{{ form.subject_svg.errors|join:", " }}</p>{% endif %}
                 </div>
 
                 <div class="subject-field">
