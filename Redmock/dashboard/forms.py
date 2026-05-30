@@ -160,7 +160,7 @@ SubTitleInlineFormSet = inlineformset_factory(
     TestSubject,
     SubTitle,
     fields=('title',),
-    extra=3,
+    extra=1,
     can_delete=True,
     min_num=0,
     validate_min=False,

@@ -93,7 +93,7 @@
 
                 <div class="subject-field">
                     <label><iconify-icon icon="mdi:format-title"></iconify-icon>Sub Titles</label>
-                    <p class="subject-help">Add as many sub titles as this subject needs. Blank rows are ignored.</p>
+                    <p class="subject-help" style="margin-bottom:12px;">Add as many sub titles as this subject needs. Blank rows are ignored.</p>
                     {{ formset.management_form }}
                     <div class="subtitle-list" data-subtitle-list>
                         {% for subtitle_form in formset %}
@@ -113,7 +113,7 @@
                             </div>
                         {% endfor %}
                     </div>
-                    <button type="button" class="subject-btn soft" data-add-subtitle>
+                    <button type="button" class="subject-btn soft mt-2" data-add-subtitle>
                         <iconify-icon icon="mdi:plus"></iconify-icon>
                         Add Sub Title
                     </button>
