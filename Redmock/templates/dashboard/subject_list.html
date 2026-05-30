@@ -54,11 +54,14 @@
     .subject-chip.off { background: #f1f5f9; color: #64748b; }
     .subject-actions { display: flex; gap: 8px; padding: 14px; }
     .subject-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
-    .subject-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
-    .subject-page-status { color: #008fd1; font-size: .82rem; font-weight: 700; }
-    .subject-page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .subject-page-link { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; border-radius: 10px; background: #e0f2fe; padding: 8px 13px; color: #075985; font-size: .82rem; font-weight: 800; text-decoration: none; }
-    .subject-page-link.is-disabled { opacity: .45; pointer-events: none; }
+    .subject-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 22px 16px 16px; padding-top: 14px; border-top: 1px solid #e0f2fe; flex-wrap: wrap; }
+    .subject-page-link,
+    .subject-page-ellipsis { position: relative; display: inline-flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; border-radius: 8px; color: #023e8a; font-size: .88rem; font-weight: 800; text-decoration: none; transition: background .18s ease, color .18s ease; }
+    .subject-page-link:hover { background: #e0f2fe; color: #0077b6; }
+    .subject-page-link.is-active { color: #03045e; }
+    .subject-page-link.is-active::after { position: absolute; right: 6px; bottom: -8px; left: 6px; height: 4px; border-radius: 999px; background: #00b4d8; content: ""; box-shadow: 0 4px 10px rgba(0, 180, 216, .35); }
+    .subject-page-link.is-disabled { color: #90a4b8; pointer-events: none; }
+    .subject-page-ellipsis { color: #0077b6; }
     @media (max-width: 820px) {
         .subject-shell { padding: 20px; }
         .subject-heading { flex-direction: column; align-items: flex-start; }
@@ -212,34 +215,31 @@
 
         {% if page_obj.has_other_pages %}
             <div class="subject-pagination">
-                <div class="subject-page-status">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                </div>
-                <div class="subject-page-actions">
-                    {% if page_obj.has_previous %}
-                        <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}">
-                            <iconify-icon icon="mdi:chevron-left"></iconify-icon>
-                            Previous
-                        </a>
-                    {% else %}
-                        <span class="subject-page-link is-disabled">
-                            <iconify-icon icon="mdi:chevron-left"></iconify-icon>
-                            Previous
-                        </span>
-                    {% endif %}
+                {% if page_obj.has_previous %}
+                    <a class="subject-page-link" href="?{{ page_query_prefix }}page=1" aria-label="First page"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></a>
+                    <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}" aria-label="Previous page"><iconify-icon icon="mdi:chevron-left"></iconify-icon></a>
+                {% else %}
+                    <span class="subject-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></span>
+                    <span class="subject-page-link is-disabled"><iconify-icon icon="mdi:chevron-left"></iconify-icon></span>
+                {% endif %}
 
-                    {% if page_obj.has_next %}
-                        <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}">
-                            Next
-                            <iconify-icon icon="mdi:chevron-right"></iconify-icon>
-                        </a>
+                {% for page_number in page_numbers %}
+                    {% if page_number == page_obj.paginator.ELLIPSIS %}
+                        <span class="subject-page-ellipsis">{{ page_number }}</span>
+                    {% elif page_number == page_obj.number %}
+                        <span class="subject-page-link is-active" aria-current="page">{{ page_number }}</span>
                     {% else %}
-                        <span class="subject-page-link is-disabled">
-                            Next
-                            <iconify-icon icon="mdi:chevron-right"></iconify-icon>
-                        </span>
+                        <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_number }}">{{ page_number }}</a>
                     {% endif %}
-                </div>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}" aria-label="Next page"><iconify-icon icon="mdi:chevron-right"></iconify-icon></a>
+                    <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.paginator.num_pages }}" aria-label="Last page"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></a>
+                {% else %}
+                    <span class="subject-page-link is-disabled"><iconify-icon icon="mdi:chevron-right"></iconify-icon></span>
+                    <span class="subject-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></span>
+                {% endif %}
             </div>
         {% endif %}
     </div>

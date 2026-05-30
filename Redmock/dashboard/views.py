@@ -271,6 +271,7 @@ def subject_list(request):
 
     paginator = Paginator(queryset, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
+    page_numbers = paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1)
     return render(
         request,
         'dashboard/subject_list.html',
@@ -289,6 +290,7 @@ def subject_list(request):
             'subtitle_filter': subtitle_filter,
             'sort_by': sort_by,
             'page_query_prefix': page_query_prefix,
+            'page_numbers': page_numbers,
         },
     )
 
