@@ -254,7 +254,29 @@
     Chart.defaults.font.family = "'Poppins', sans-serif";
     Chart.defaults.color = '#023e8a';
 
-    new Chart(canvas, {
+    var subjectSvgs = {{ chart_svgs_json|safe }};
+    var subjectPointImages = subjectSvgs.map(function (svg) {
+        if (!svg) return null;
+
+        var image = new Image(34, 34);
+        var cleanSvg = svg
+            .replace(/\b(width|height)="[^"]*"/g, '')
+            .replace(/currentColor/g, '#0096c7');
+        var markerSvg = [
+            '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">',
+            '<defs><filter id="markerShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#023e8a" flood-opacity=".16"/></filter></defs>',
+            '<rect x="3" y="3" width="28" height="28" rx="10" fill="#caf0f8" stroke="#90e0ef" stroke-width="2" filter="url(#markerShadow)"/>',
+            '<image href="data:image/svg+xml;charset=utf-8,',
+            encodeURIComponent(cleanSvg),
+            '" x="9" y="9" width="16" height="16" preserveAspectRatio="xMidYMid meet"/>',
+            '</svg>'
+        ].join('');
+
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markerSvg);
+        return image;
+    });
+
+    var subjectAttemptsChart = new Chart(canvas, {
         type: 'bar',
         data: {
             labels: {{ chart_labels_json|safe }},
@@ -288,11 +310,14 @@
                     borderColor: '#00b4d8',
                     backgroundColor: 'rgba(0, 180, 216, .12)',
                     borderWidth: 3,
-                    pointRadius: 5,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#0096c7',
+                    pointStyle: function (context) {
+                        return subjectPointImages[context.dataIndex] || 'circle';
+                    },
+                    pointRadius: 17,
+                    pointHoverRadius: 19,
+                    pointBackgroundColor: 'transparent',
                     pointBorderColor: '#caf0f8',
-                    pointBorderWidth: 4,
+                    pointBorderWidth: 0,
                     tension: .42,
                     fill: false,
                     order: 1
@@ -344,6 +369,13 @@
                 }
             }
         }
+    });
+
+    subjectPointImages.forEach(function (image) {
+        if (!image) return;
+        image.onload = function () {
+            subjectAttemptsChart.update();
+        };
     });
 }());
 </script>

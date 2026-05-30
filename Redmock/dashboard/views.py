@@ -236,6 +236,7 @@ def subject_list(request):
         {
             'label': subject_by_id[subject_id].subject,
             'count': count,
+            'svg': subject_by_id[subject_id].subject_svg or '',
         }
         for subject_id, count in subject_attempt_counts.most_common()
         if subject_id in subject_by_id
@@ -286,6 +287,7 @@ def subject_list(request):
             'most_attempted_subject': most_attempted,
             'chart_labels_json': json.dumps([row['label'] for row in chart_rows]),
             'chart_counts_json': json.dumps([row['count'] for row in chart_rows]),
+            'chart_svgs_json': json.dumps([row['svg'] for row in chart_rows]),
             'search_query': search_query,
             'subtitle_filter': subtitle_filter,
             'sort_by': sort_by,
