@@ -31,7 +31,19 @@
     .subject-chart-body { height: 320px; padding: 18px; }
     .subject-chart-body canvas { font-family: 'Poppins', sans-serif; }
     .subject-chart-empty { display: grid; height: 100%; place-items: center; border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; color: #0369a1; font-size: .9rem; }
+    .subject-list-panel { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .subject-list-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .subject-list-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .subject-list-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .subject-list-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .subject-controls { display: grid; grid-template-columns: minmax(220px, 1fr) 170px 160px auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .subject-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
+    .subject-control-field input,
+    .subject-control-field select { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .subject-control-field select { cursor: pointer; }
+    .subject-control-submit { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: #03045e; padding: 10px 16px; color: #fff; font-size: .9rem; font-weight: 700; }
     .subject-grid { display: grid; gap: 16px; }
+    .subject-list-panel .subject-grid { padding: 16px; }
     .subject-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 76px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
     .subject-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
     .subject-card-icon svg { width: 28px; height: 28px; display: block; color: currentColor; }
@@ -51,6 +63,7 @@
         .subject-shell { padding: 20px; }
         .subject-heading { flex-direction: column; align-items: flex-start; }
         .subject-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .subject-controls { grid-template-columns: 1fr; }
         .subject-card { display: block; }
         .subject-card-icon { min-height: 58px; }
         .subject-actions { padding-top: 0; }
@@ -58,6 +71,7 @@
     @media (max-width: 540px) {
         .subject-stats { grid-template-columns: 1fr; }
         .subject-chart-head { grid-template-columns: 52px minmax(0, 1fr); }
+        .subject-list-head { grid-template-columns: 52px minmax(0, 1fr); }
     }
 </style>
 
@@ -124,74 +138,111 @@
         </div>
     </div>
 
-    <div class="subject-grid">
-        {% for object in objects %}
-            <article class="subject-card">
-                <span class="subject-card-icon">
-                    {% if object.subject_svg %}
-                        {{ object.subject_svg|safe }}
-                    {% else %}
-                        <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
-                    {% endif %}
-                </span>
-                <div class="subject-card-body">
-                    <div class="subject-card-title">{{ object.subject }}</div>
-                    <div class="subject-card-text">
-                        {% for subtitle in object.sub_titles.all %}
-                            <span class="subject-chip"><iconify-icon icon="mdi:format-title"></iconify-icon>{{ subtitle.title }}</span>
-                        {% empty %}
-                            <span class="subject-chip off"><iconify-icon icon="mdi:minus-circle-outline"></iconify-icon>No sub titles</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="subject-actions">
-                    <a href="{% url 'dashboard:subject_update' object.pk %}" class="subject-btn secondary">
-                        <iconify-icon icon="mdi:pencil"></iconify-icon>
-                        Edit
-                    </a>
-                    <a href="{% url 'dashboard:subject_delete' object.pk %}" class="subject-btn danger">
-                        <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
-                        Delete
-                    </a>
-                </div>
-            </article>
-        {% empty %}
-            <div class="subject-empty">No subjects yet. Create a subject, then add any sub titles it needs.</div>
-        {% endfor %}
-    </div>
-
-    {% if page_obj.has_other_pages %}
-        <div class="subject-pagination">
-            <div class="subject-page-status">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </div>
-            <div class="subject-page-actions">
-                {% if page_obj.has_previous %}
-                    <a class="subject-page-link" href="?page={{ page_obj.previous_page_number }}">
-                        <iconify-icon icon="mdi:chevron-left"></iconify-icon>
-                        Previous
-                    </a>
-                {% else %}
-                    <span class="subject-page-link is-disabled">
-                        <iconify-icon icon="mdi:chevron-left"></iconify-icon>
-                        Previous
-                    </span>
-                {% endif %}
-
-                {% if page_obj.has_next %}
-                    <a class="subject-page-link" href="?page={{ page_obj.next_page_number }}">
-                        Next
-                        <iconify-icon icon="mdi:chevron-right"></iconify-icon>
-                    </a>
-                {% else %}
-                    <span class="subject-page-link is-disabled">
-                        Next
-                        <iconify-icon icon="mdi:chevron-right"></iconify-icon>
-                    </span>
-                {% endif %}
+    <div class="subject-list-panel">
+        <div class="subject-list-head">
+            <span class="subject-list-icon"><iconify-icon icon="mdi:format-list-bulleted"></iconify-icon></span>
+            <div class="subject-card-body">
+                <p class="subject-list-title">Subject Listing</p>
+                <p class="subject-list-text">Search, filter, and sort subjects without changing the analytics above</p>
             </div>
         </div>
-    {% endif %}
+
+        <form method="get" class="subject-controls">
+            <label class="subject-control-field">
+                <iconify-icon icon="mdi:magnify"></iconify-icon>
+                <input type="search" name="q" value="{{ search_query }}" placeholder="Search subjects or sub titles">
+            </label>
+            <label class="subject-control-field">
+                <iconify-icon icon="mdi:filter-variant"></iconify-icon>
+                <select name="subtitle_filter">
+                    <option value="all" {% if subtitle_filter == 'all' %}selected{% endif %}>All subjects</option>
+                    <option value="with" {% if subtitle_filter == 'with' %}selected{% endif %}>With sub titles</option>
+                    <option value="without" {% if subtitle_filter == 'without' %}selected{% endif %}>Without sub titles</option>
+                </select>
+            </label>
+            <label class="subject-control-field">
+                <iconify-icon icon="mdi:sort"></iconify-icon>
+                <select name="sort">
+                    <option value="subject" {% if sort_by == 'subject' %}selected{% endif %}>Subject A-Z</option>
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest first</option>
+                    <option value="subtitles" {% if sort_by == 'subtitles' %}selected{% endif %}>Most sub titles</option>
+                </select>
+            </label>
+            <button type="submit" class="subject-control-submit">
+                <iconify-icon icon="mdi:tune"></iconify-icon>
+                Apply
+            </button>
+        </form>
+
+        <div class="subject-grid">
+            {% for object in objects %}
+                <article class="subject-card">
+                    <span class="subject-card-icon">
+                        {% if object.subject_svg %}
+                            {{ object.subject_svg|safe }}
+                        {% else %}
+                            <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
+                        {% endif %}
+                    </span>
+                    <div class="subject-card-body">
+                        <div class="subject-card-title">{{ object.subject }}</div>
+                        <div class="subject-card-text">
+                            {% for subtitle in object.sub_titles.all %}
+                                <span class="subject-chip"><iconify-icon icon="mdi:format-title"></iconify-icon>{{ subtitle.title }}</span>
+                            {% empty %}
+                                <span class="subject-chip off"><iconify-icon icon="mdi:minus-circle-outline"></iconify-icon>No sub titles</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="subject-actions">
+                        <a href="{% url 'dashboard:subject_update' object.pk %}" class="subject-btn secondary">
+                            <iconify-icon icon="mdi:pencil"></iconify-icon>
+                            Edit
+                        </a>
+                        <a href="{% url 'dashboard:subject_delete' object.pk %}" class="subject-btn danger">
+                            <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
+                            Delete
+                        </a>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="subject-empty">No subjects match the current listing filters.</div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <div class="subject-pagination">
+                <div class="subject-page-status">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+                <div class="subject-page-actions">
+                    {% if page_obj.has_previous %}
+                        <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}">
+                            <iconify-icon icon="mdi:chevron-left"></iconify-icon>
+                            Previous
+                        </a>
+                    {% else %}
+                        <span class="subject-page-link is-disabled">
+                            <iconify-icon icon="mdi:chevron-left"></iconify-icon>
+                            Previous
+                        </span>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <a class="subject-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}">
+                            Next
+                            <iconify-icon icon="mdi:chevron-right"></iconify-icon>
+                        </a>
+                    {% else %}
+                        <span class="subject-page-link is-disabled">
+                            Next
+                            <iconify-icon icon="mdi:chevron-right"></iconify-icon>
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </section>
 {% if subject_attempt_total %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

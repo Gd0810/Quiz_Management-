@@ -4,7 +4,7 @@ from collections import Counter
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from django.core.paginator import Paginator
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from functools import wraps
@@ -220,8 +220,8 @@ def render_crud_delete(request, *, obj, title, cancel_url):
 
 @company_login_required
 def subject_list(request):
-    queryset = TestSubject.objects.filter(company=request.company).prefetch_related('sub_titles')
-    all_subjects = list(queryset)
+    base_queryset = TestSubject.objects.filter(company=request.company).prefetch_related('sub_titles')
+    all_subjects = list(base_queryset)
     subject_by_id = {subject.id: subject for subject in all_subjects}
     attempts = CandidateTestAttempt.objects.filter(company=request.company).values_list('selected_subjects', flat=True)
     subject_attempt_counts = Counter()
@@ -242,6 +242,33 @@ def subject_list(request):
     ][:7]
     most_attempted = chart_rows[0]['label'] if chart_rows else 'No attempts yet'
 
+    search_query = request.GET.get('q', '').strip()
+    subtitle_filter = request.GET.get('subtitle_filter', 'all')
+    sort_by = request.GET.get('sort', 'subject')
+
+    queryset = TestSubject.objects.filter(company=request.company).annotate(subtitle_count=Count('sub_titles')).prefetch_related('sub_titles')
+    if search_query:
+        queryset = queryset.filter(
+            Q(subject__icontains=search_query) | Q(sub_titles__title__icontains=search_query)
+        ).distinct()
+    if subtitle_filter == 'with':
+        queryset = queryset.filter(subtitle_count__gt=0)
+    elif subtitle_filter == 'without':
+        queryset = queryset.filter(subtitle_count=0)
+
+    if sort_by == 'newest':
+        queryset = queryset.order_by('-created_at')
+    elif sort_by == 'subtitles':
+        queryset = queryset.order_by('-subtitle_count', 'subject')
+    else:
+        sort_by = 'subject'
+        queryset = queryset.order_by('subject')
+
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    querystring = query_params.urlencode()
+    page_query_prefix = f'{querystring}&' if querystring else ''
+
     paginator = Paginator(queryset, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(
@@ -258,6 +285,10 @@ def subject_list(request):
             'most_attempted_subject': most_attempted,
             'chart_labels_json': json.dumps([row['label'] for row in chart_rows]),
             'chart_counts_json': json.dumps([row['count'] for row in chart_rows]),
+            'search_query': search_query,
+            'subtitle_filter': subtitle_filter,
+            'sort_by': sort_by,
+            'page_query_prefix': page_query_prefix,
         },
     )
 
