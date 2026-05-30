@@ -29,6 +29,7 @@
     .subject-chart-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
     .subject-chart-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
     .subject-chart-body { height: 320px; padding: 18px; }
+    .subject-chart-body canvas { font-family: 'Poppins', sans-serif; }
     .subject-chart-empty { display: grid; height: 100%; place-items: center; border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; color: #0369a1; font-size: .9rem; }
     .subject-grid { display: grid; gap: 16px; }
     .subject-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 76px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
@@ -108,10 +109,10 @@
 
     <div class="subject-chart-card">
         <div class="subject-chart-head">
-            <span class="subject-chart-icon"><iconify-icon icon="mdi:chart-bar"></iconify-icon></span>
+            <span class="subject-chart-icon"><iconify-icon icon="mdi:chart-areaspline"></iconify-icon></span>
             <div class="subject-card-body">
                 <p class="subject-chart-title">Top Subject Attempts</p>
-                <p class="subject-chart-text">Top 7 subjects by test attempts</p>
+                <p class="subject-chart-text">Bar and line view of the top 7 subjects by test attempts</p>
             </div>
         </div>
         <div class="subject-chart-body">
@@ -199,23 +200,60 @@
     var canvas = document.getElementById('subjectAttemptsChart');
     if (!canvas || !window.Chart) return;
 
+    Chart.defaults.font.family = "'Poppins', sans-serif";
+    Chart.defaults.color = '#023e8a';
+
     new Chart(canvas, {
         type: 'bar',
         data: {
             labels: {{ chart_labels_json|safe }},
-            datasets: [{
-                label: 'Attempts',
-                data: {{ chart_counts_json|safe }},
-                backgroundColor: '#0096c7',
-                borderColor: '#03045e',
-                borderWidth: 1,
-                borderRadius: 8,
-                maxBarThickness: 42
-            }]
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Attempts',
+                    data: {{ chart_counts_json|safe }},
+                    backgroundColor: function (context) {
+                        var chart = context.chart;
+                        var area = chart.chartArea;
+                        if (!area) return '#90e0ef';
+                        var gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                        gradient.addColorStop(0, 'rgba(202, 240, 248, .72)');
+                        gradient.addColorStop(.52, 'rgba(72, 202, 228, .55)');
+                        gradient.addColorStop(1, 'rgba(2, 62, 138, .78)');
+                        return gradient;
+                    },
+                    borderColor: 'rgba(0, 150, 199, .2)',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    barPercentage: .42,
+                    categoryPercentage: .7,
+                    maxBarThickness: 34,
+                    order: 2
+                },
+                {
+                    type: 'line',
+                    label: 'Trend',
+                    data: {{ chart_counts_json|safe }},
+                    borderColor: '#00b4d8',
+                    backgroundColor: 'rgba(0, 180, 216, .12)',
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#0096c7',
+                    pointBorderColor: '#caf0f8',
+                    pointBorderWidth: 4,
+                    tension: .42,
+                    fill: false,
+                    order: 1
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { top: 18, right: 14, bottom: 2, left: 4 }
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -228,14 +266,30 @@
             },
             scales: {
                 x: {
+                    border: { color: 'rgba(2, 62, 138, .28)' },
                     grid: { display: false },
-                    ticks: { color: '#023e8a', font: { weight: 700 } }
+                    ticks: {
+                        color: '#023e8a',
+                        font: { family: "'Poppins', sans-serif", size: 11, weight: 700 },
+                        maxRotation: 0,
+                        autoSkip: false
+                    }
                 },
                 y: {
                     beginAtZero: true,
                     precision: 0,
-                    grid: { color: '#ade8f4' },
-                    ticks: { color: '#0077b6', stepSize: 1 }
+                    border: { color: 'rgba(2, 62, 138, .28)' },
+                    grid: {
+                        color: 'rgba(2, 62, 138, .22)',
+                        borderDash: [3, 3],
+                        drawTicks: false
+                    },
+                    ticks: {
+                        color: '#0077b6',
+                        stepSize: 1,
+                        padding: 8,
+                        font: { family: "'Poppins', sans-serif", size: 11, weight: 600 }
+                    }
                 }
             }
         }
