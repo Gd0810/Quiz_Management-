@@ -111,12 +111,10 @@ def company_instructions(request):
         messages.success(request, 'Test instructions updated successfully.')
         return redirect('dashboard:company_instructions')
 
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Test Instructions',
-        cancel_url='dashboard:home',
-        use_tinymce=True,
+        'dashboard/instructions_settings.html',
+        {'form': form, 'title': 'Test Instructions', 'cancel_url': 'dashboard:home'},
     )
 
 
