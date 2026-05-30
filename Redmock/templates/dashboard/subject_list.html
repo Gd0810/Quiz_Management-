@@ -245,138 +245,167 @@
     </div>
 </section>
 {% if subject_attempt_total %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function () {
-    var canvas = document.getElementById('subjectAttemptsChart');
-    if (!canvas || !window.Chart) return;
+    var chartJsUrl = 'https://cdn.jsdelivr.net/npm/chart.js';
 
-    Chart.defaults.font.family = "'Poppins', sans-serif";
-    Chart.defaults.color = '#023e8a';
+    function loadChartJs(callback) {
+        if (window.Chart) {
+            callback();
+            return;
+        }
 
-    var subjectSvgs = {{ chart_svgs_json|safe }};
-    var subjectPointImages = subjectSvgs.map(function (svg) {
-        if (!svg) return null;
+        var existingScript = document.getElementById('chartjs-loader');
+        if (existingScript) {
+            existingScript.addEventListener('load', callback, { once: true });
+            return;
+        }
 
-        var image = new Image(34, 34);
-        var cleanSvg = svg
-            .replace(/\b(width|height)="[^"]*"/g, '')
-            .replace(/currentColor/g, '#0096c7');
-        var markerSvg = [
-            '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">',
-            '<defs><filter id="markerShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#023e8a" flood-opacity=".16"/></filter></defs>',
-            '<rect x="3" y="3" width="28" height="28" rx="10" fill="#caf0f8" stroke="#90e0ef" stroke-width="2" filter="url(#markerShadow)"/>',
-            '<image href="data:image/svg+xml;charset=utf-8,',
-            encodeURIComponent(cleanSvg),
-            '" x="9" y="9" width="16" height="16" preserveAspectRatio="xMidYMid meet"/>',
-            '</svg>'
-        ].join('');
+        var script = document.createElement('script');
+        script.id = 'chartjs-loader';
+        script.src = chartJsUrl;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
 
-        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markerSvg);
-        return image;
-    });
+    function initSubjectAttemptsChart() {
+        var canvas = document.getElementById('subjectAttemptsChart');
+        if (!canvas || !window.Chart) return;
 
-    var subjectAttemptsChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: {{ chart_labels_json|safe }},
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Attempts',
-                    data: {{ chart_counts_json|safe }},
-                    backgroundColor: function (context) {
-                        var chart = context.chart;
-                        var area = chart.chartArea;
-                        if (!area) return '#90e0ef';
-                        var gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
-                        gradient.addColorStop(0, 'rgba(202, 240, 248, .72)');
-                        gradient.addColorStop(.52, 'rgba(72, 202, 228, .55)');
-                        gradient.addColorStop(1, 'rgba(2, 62, 138, .78)');
-                        return gradient;
+        var existingChart = Chart.getChart ? Chart.getChart(canvas) : null;
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#023e8a';
+
+        var subjectSvgs = {{ chart_svgs_json|safe }};
+        var subjectPointImages = subjectSvgs.map(function (svg) {
+            if (!svg) return null;
+
+            var image = new Image(34, 34);
+            var cleanSvg = svg
+                .replace(/\b(width|height)="[^"]*"/g, '')
+                .replace(/currentColor/g, '#0096c7');
+            var markerSvg = [
+                '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">',
+                '<defs><filter id="markerShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#023e8a" flood-opacity=".16"/></filter></defs>',
+                '<rect x="3" y="3" width="28" height="28" rx="10" fill="#caf0f8" stroke="#90e0ef" stroke-width="2" filter="url(#markerShadow)"/>',
+                '<image href="data:image/svg+xml;charset=utf-8,',
+                encodeURIComponent(cleanSvg),
+                '" x="9" y="9" width="16" height="16" preserveAspectRatio="xMidYMid meet"/>',
+                '</svg>'
+            ].join('');
+
+            image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markerSvg);
+            return image;
+        });
+
+        var subjectAttemptsChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels_json|safe }},
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Attempts',
+                        data: {{ chart_counts_json|safe }},
+                        backgroundColor: function (context) {
+                            var chart = context.chart;
+                            var area = chart.chartArea;
+                            if (!area) return '#90e0ef';
+                            var gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                            gradient.addColorStop(0, 'rgba(202, 240, 248, .72)');
+                            gradient.addColorStop(.52, 'rgba(72, 202, 228, .55)');
+                            gradient.addColorStop(1, 'rgba(2, 62, 138, .78)');
+                            return gradient;
+                        },
+                        borderColor: 'rgba(0, 150, 199, .2)',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        barPercentage: .42,
+                        categoryPercentage: .7,
+                        maxBarThickness: 34,
+                        order: 2
                     },
-                    borderColor: 'rgba(0, 150, 199, .2)',
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    barPercentage: .42,
-                    categoryPercentage: .7,
-                    maxBarThickness: 34,
-                    order: 2
+                    {
+                        type: 'line',
+                        label: 'Trend',
+                        data: {{ chart_counts_json|safe }},
+                        borderColor: '#00b4d8',
+                        backgroundColor: 'rgba(0, 180, 216, .12)',
+                        borderWidth: 3,
+                        pointStyle: function (context) {
+                            return subjectPointImages[context.dataIndex] || 'circle';
+                        },
+                        pointRadius: 17,
+                        pointHoverRadius: 19,
+                        pointBackgroundColor: 'transparent',
+                        pointBorderColor: '#caf0f8',
+                        pointBorderWidth: 0,
+                        tension: .42,
+                        fill: false,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: { top: 18, right: 14, bottom: 2, left: 4 }
                 },
-                {
-                    type: 'line',
-                    label: 'Trend',
-                    data: {{ chart_counts_json|safe }},
-                    borderColor: '#00b4d8',
-                    backgroundColor: 'rgba(0, 180, 216, .12)',
-                    borderWidth: 3,
-                    pointStyle: function (context) {
-                        return subjectPointImages[context.dataIndex] || 'circle';
-                    },
-                    pointRadius: 17,
-                    pointHoverRadius: 19,
-                    pointBackgroundColor: 'transparent',
-                    pointBorderColor: '#caf0f8',
-                    pointBorderWidth: 0,
-                    tension: .42,
-                    fill: false,
-                    order: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: {
-                padding: { top: 18, right: 14, bottom: 2, left: 4 }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#03045e',
-                    titleColor: '#caf0f8',
-                    bodyColor: '#ffffff',
-                    borderColor: '#90e0ef',
-                    borderWidth: 1
-                }
-            },
-            scales: {
-                x: {
-                    border: { color: 'rgba(2, 62, 138, .28)' },
-                    grid: { display: false },
-                    ticks: {
-                        color: '#023e8a',
-                        font: { family: "'Poppins', sans-serif", size: 11, weight: 700 },
-                        maxRotation: 0,
-                        autoSkip: false
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#03045e',
+                        titleColor: '#caf0f8',
+                        bodyColor: '#ffffff',
+                        borderColor: '#90e0ef',
+                        borderWidth: 1
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    precision: 0,
-                    border: { color: 'rgba(2, 62, 138, .28)' },
-                    grid: {
-                        color: 'rgba(2, 62, 138, .22)',
-                        borderDash: [3, 3],
-                        drawTicks: false
+                scales: {
+                    x: {
+                        border: { color: 'rgba(2, 62, 138, .28)' },
+                        grid: { display: false },
+                        ticks: {
+                            color: '#023e8a',
+                            font: { family: "'Poppins', sans-serif", size: 11, weight: 700 },
+                            maxRotation: 0,
+                            autoSkip: false
+                        }
                     },
-                    ticks: {
-                        color: '#0077b6',
-                        stepSize: 1,
-                        padding: 8,
-                        font: { family: "'Poppins', sans-serif", size: 11, weight: 600 }
+                    y: {
+                        beginAtZero: true,
+                        precision: 0,
+                        border: { color: 'rgba(2, 62, 138, .28)' },
+                        grid: {
+                            color: 'rgba(2, 62, 138, .22)',
+                            borderDash: [3, 3],
+                            drawTicks: false
+                        },
+                        ticks: {
+                            color: '#0077b6',
+                            stepSize: 1,
+                            padding: 8,
+                            font: { family: "'Poppins', sans-serif", size: 11, weight: 600 }
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 
-    subjectPointImages.forEach(function (image) {
-        if (!image) return;
-        image.onload = function () {
-            subjectAttemptsChart.update();
-        };
-    });
+        subjectPointImages.forEach(function (image) {
+            if (!image) return;
+            image.onload = function () {
+                subjectAttemptsChart.update();
+            };
+        });
+    }
+
+    loadChartJs(initSubjectAttemptsChart);
 }());
 </script>
 {% endif %}
