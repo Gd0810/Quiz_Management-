@@ -19,6 +19,7 @@
     .subject-grid { display: grid; gap: 16px; }
     .subject-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 76px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
     .subject-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .subject-card-icon svg { width: 28px; height: 28px; display: block; color: currentColor; }
     .subject-card-body { min-width: 0; padding: 14px; }
     .subject-card-title { color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
     .subject-card-text { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
@@ -53,7 +54,13 @@
     <div class="subject-grid">
         {% for object in objects %}
             <article class="subject-card">
-                <span class="subject-card-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+                <span class="subject-card-icon">
+                    {% if object.subject_svg %}
+                        {{ object.subject_svg|safe }}
+                    {% else %}
+                        <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
+                    {% endif %}
+                </span>
                 <div class="subject-card-body">
                     <div class="subject-card-title">{{ object.subject }}</div>
                     <div class="subject-card-text">
