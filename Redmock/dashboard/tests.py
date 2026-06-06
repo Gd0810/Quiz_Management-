@@ -1,5 +1,8 @@
+import json
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.urls import reverse
 
 from .models import BulkQuestionUpload, Company, Quiz, SubTitle, TestSubject
 
@@ -103,3 +106,46 @@ class BulkQuestionUploadTests(TestCase):
 
         with self.assertRaises(ValidationError):
             upload.import_questions()
+
+
+class SubjectQuestionUploadViewTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(
+            name='Acme',
+            email='acme@example.com',
+            password='hashed-password',
+        )
+        self.subject = TestSubject.objects.create(company=self.company, subject='Python')
+        session = self.client.session
+        session['company_id'] = self.company.id
+        session.save()
+
+    def test_upload_questions_without_subtitles_imports_as_general(self):
+        payload = [
+            {
+                'question_paragraph': 'Python has built-in data types.',
+                'question': 'What is type(10.5)?',
+                'option_1': "<class 'int'>",
+                'option_2': "<class 'float'>",
+                'option_3': "<class 'number'>",
+                'option_4': "<class 'decimal'>",
+                'correct_answer': 'option_2',
+            }
+        ]
+
+        response = self.client.post(
+            reverse('dashboard:subject_question_upload'),
+            {
+                'test_subject': self.subject.id,
+                'sub_title': '',
+                'level': Quiz.LEVEL_BASIC,
+                'questions_text': json.dumps(payload),
+                'notes': 'Python data types',
+            },
+        )
+
+        self.assertRedirects(response, reverse('dashboard:subject_list'))
+        quiz = Quiz.objects.get(test_subject=self.subject)
+        self.assertIsNone(quiz.sub_title)
+        self.assertEqual(quiz.question, 'What is type(10.5)?')
+        self.assertEqual(quiz.correct_answer, 'option_2')

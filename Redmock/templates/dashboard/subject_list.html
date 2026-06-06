@@ -12,6 +12,7 @@
     .subject-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
     .subject-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
     .subject-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .subject-heading-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .subject-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; }
     .subject-btn.primary { border: 0; background: #03045e; color: #fff; }
     .subject-btn.secondary { background: #e0f2fe; color: #075985; }
@@ -87,10 +88,16 @@
                 <p class="subject-subtitle">Manage subjects and their optional sub titles together</p>
             </div>
         </div>
-        <a href="{% url 'dashboard:subject_create' %}" class="subject-btn primary">
-            <iconify-icon icon="mdi:plus"></iconify-icon>
-            Create Subject
-        </a>
+        <div class="subject-heading-actions">
+            <a href="{% url 'dashboard:subject_question_upload' %}" class="subject-btn secondary">
+                <iconify-icon icon="mdi:upload"></iconify-icon>
+                Upload
+            </a>
+            <a href="{% url 'dashboard:subject_create' %}" class="subject-btn primary">
+                <iconify-icon icon="mdi:plus"></iconify-icon>
+                Create Subject
+            </a>
+        </div>
     </div>
 
     <div class="subject-stats">

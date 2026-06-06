@@ -3,6 +3,7 @@ from collections import Counter
 
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,6 +16,7 @@ from .forms import (
     CandidateForm,
     CandidateFormFieldForm,
     CandidateTestAttemptForm,
+    BulkQuestionUploadForm,
     CompanyInstructionsForm,
     CompanySecurityForm,
     QuizForm,
@@ -344,6 +346,51 @@ def subject_delete(request, pk):
         request,
         'dashboard/subject_delete.html',
         {'object': subject, 'title': 'Delete Test Subject', 'cancel_url': 'dashboard:subject_list'},
+    )
+
+
+def _validation_error_text(error):
+    if hasattr(error, 'messages'):
+        return ' '.join(error.messages)
+    return str(error)
+
+
+@company_login_required
+def subject_question_upload(request):
+    form = BulkQuestionUploadForm(request.POST or None, request.FILES or None, company=request.company)
+    subtitles = SubTitle.objects.filter(test_subject__company=request.company).select_related('test_subject')
+    subtitles_json = json.dumps([
+        {
+            'id': subtitle.id,
+            'subject_id': subtitle.test_subject_id,
+            'title': subtitle.title,
+        }
+        for subtitle in subtitles
+    ])
+
+    if request.method == 'POST' and form.is_valid():
+        upload = form.save()
+        try:
+            imported_count = upload.import_questions()
+        except ValidationError as exc:
+            upload.delete()
+            form.add_error(None, _validation_error_text(exc))
+        else:
+            subtitle_name = upload.sub_title.title if upload.sub_title else 'General'
+            messages.success(
+                request,
+                f'{imported_count} questions uploaded for {upload.test_subject.subject} / {subtitle_name} / {upload.get_level_display()}.',
+            )
+            return redirect('dashboard:subject_list')
+
+    return render(
+        request,
+        'dashboard/bulk_question_upload.html',
+        {
+            'title': 'Upload Questions',
+            'form': form,
+            'subtitles_json': subtitles_json,
+        },
     )
 
 

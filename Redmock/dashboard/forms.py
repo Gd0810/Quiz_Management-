@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -6,7 +8,7 @@ from django.utils.text import slugify
 
 from quiz.models import Candidate, CandidateTestAttempt
 
-from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
+from .models import BulkQuestionUpload, CandidateFormField, Company, Quiz, SubTitle, TestSubject
 
 
 class CompanySecurityForm(forms.ModelForm):
@@ -202,6 +204,71 @@ class QuizForm(forms.ModelForm):
         widgets = {
             'question_paragraph': forms.Textarea(attrs={'rows': 3}),
             'question': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class BulkQuestionUploadForm(forms.ModelForm):
+    questions_text = forms.CharField(
+        label='Questions JSON',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 14,
+            'placeholder': '[{"question": "...", "option_1": "...", "option_2": "...", "option_3": "...", "option_4": "...", "correct_answer": "option_1"}]',
+        }),
+        help_text='Paste a JSON array of question objects, or upload a .json file.',
+    )
+
+    def __init__(self, *args, company=None, **kwargs):
+        self.company = company
+        super().__init__(*args, **kwargs)
+        self.fields['sub_title'].required = False
+        if company is not None:
+            self.fields['test_subject'].queryset = TestSubject.objects.filter(company=company)
+            self.fields['sub_title'].queryset = SubTitle.objects.filter(test_subject__company=company)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        test_subject = cleaned_data.get('test_subject')
+        sub_title = cleaned_data.get('sub_title')
+        json_file = cleaned_data.get('json_file')
+        questions_text = (cleaned_data.get('questions_text') or '').strip()
+
+        if test_subject and sub_title and sub_title.test_subject_id != test_subject.id:
+            raise ValidationError('Selected sub title does not belong to the selected subject.')
+
+        if test_subject and not sub_title and test_subject.sub_titles.exists():
+            raise ValidationError({'sub_title': 'Choose a sub title for this subject.'})
+
+        if not json_file and not questions_text:
+            raise ValidationError('Paste questions JSON or upload a JSON file.')
+
+        if json_file and questions_text:
+            raise ValidationError('Use either pasted JSON or a JSON file, not both.')
+
+        if questions_text:
+            try:
+                questions_json = json.loads(questions_text)
+            except json.JSONDecodeError as exc:
+                raise ValidationError({'questions_text': f'Invalid JSON: {exc}'}) from exc
+            if not isinstance(questions_json, list):
+                raise ValidationError({'questions_text': 'Questions JSON must be an array of question objects.'})
+            cleaned_data['questions_json'] = questions_json
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.questions_json = self.cleaned_data.get('questions_json') or []
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+    class Meta:
+        model = BulkQuestionUpload
+        fields = ['test_subject', 'sub_title', 'level', 'json_file', 'questions_text', 'notes']
+        widgets = {
+            'notes': forms.TextInput(attrs={'placeholder': 'Optional note for this upload'}),
         }
 
 
