@@ -977,10 +977,10 @@
                     {# Experience #}
                     {% if setup_state.subject_configs %}
                         {% with cl=setup_state.subject_configs.0.level %}
-                            <input class="bp-level-radio-opt" type="radio" id="sl_experience" name="single_level" value="experience" {% if cl == 'experience' %}checked{% endif %}>
+                            <input class="bp-level-radio-opt" type="radio" id="sl_experience" name="single_level" value="experienced" {% if cl == 'experienced' or cl == 'experience' %}checked{% endif %}>
                         {% endwith %}
                     {% else %}
-                        <input class="bp-level-radio-opt" type="radio" id="sl_experience" name="single_level" value="experience">
+                        <input class="bp-level-radio-opt" type="radio" id="sl_experience" name="single_level" value="experienced">
                     {% endif %}
                     <label class="bp-level-radio-lbl" for="sl_experience">
                         <span class="bp-lvl-radio-dot"></span>

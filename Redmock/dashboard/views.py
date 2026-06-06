@@ -357,7 +357,19 @@ def _validation_error_text(error):
 
 @company_login_required
 def subject_question_upload(request):
-    form = BulkQuestionUploadForm(request.POST or None, request.FILES or None, company=request.company)
+    initial = {}
+    subject_id = request.GET.get('subject')
+    if subject_id:
+        selected_subject = TestSubject.objects.filter(pk=subject_id, company=request.company).first()
+        if selected_subject:
+            initial['test_subject'] = selected_subject
+
+    form = BulkQuestionUploadForm(
+        request.POST or None,
+        request.FILES or None,
+        company=request.company,
+        initial=initial,
+    )
     subtitles = SubTitle.objects.filter(test_subject__company=request.company).select_related('test_subject')
     subtitles_json = json.dumps([
         {

@@ -25,6 +25,13 @@ def _level_choices():
     return Quiz.LEVEL_CHOICES
 
 
+def _normalize_level(raw_level):
+    if raw_level == 'experience':
+        return Quiz.LEVEL_EXPERIENCED
+    valid_levels = {value for value, _label in Quiz.LEVEL_CHOICES}
+    return raw_level if raw_level in valid_levels else Quiz.LEVEL_BASIC
+
+
 def _parse_positive_int(raw_value, default=0):
     try:
         value = int(raw_value)
@@ -219,7 +226,7 @@ def _build_setup_state(request, company, data=None):
         subject_id = _parse_positive_int(data.get('single_subject'))
         if subject_id in subject_map:
             selected_subject_ids = [subject_id]
-            level_by_subject[subject_id] = data.get('single_level') or Quiz.LEVEL_BASIC
+            level_by_subject[subject_id] = _normalize_level(data.get('single_level'))
             submitted_subtitles = [
                 subtitle_id
                 for subtitle_id in data.getlist('single_subtitles')
@@ -238,7 +245,7 @@ def _build_setup_state(request, company, data=None):
         submitted_subject_ids = [_parse_positive_int(value) for value in data.getlist('multi_subjects')]
         selected_subject_ids = [subject_id for subject_id in submitted_subject_ids if subject_id in subject_map]
         for subject_id in selected_subject_ids:
-            level_by_subject[subject_id] = data.get(f'multi_level_{subject_id}') or Quiz.LEVEL_BASIC
+            level_by_subject[subject_id] = _normalize_level(data.get(f'multi_level_{subject_id}'))
             valid_default_ids = [
                 subtitle.id for subtitle in subtitle_map.values() if subtitle.test_subject_id == subject_id
             ]

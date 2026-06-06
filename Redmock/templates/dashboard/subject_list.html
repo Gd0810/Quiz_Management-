@@ -89,10 +89,6 @@
             </div>
         </div>
         <div class="subject-heading-actions">
-            <a href="{% url 'dashboard:subject_question_upload' %}" class="subject-btn secondary">
-                <iconify-icon icon="mdi:upload"></iconify-icon>
-                Upload
-            </a>
             <a href="{% url 'dashboard:subject_create' %}" class="subject-btn primary">
                 <iconify-icon icon="mdi:plus"></iconify-icon>
                 Create Subject
@@ -205,6 +201,10 @@
                         </div>
                     </div>
                     <div class="subject-actions">
+                        <a href="{% url 'dashboard:subject_question_upload' %}?subject={{ object.pk }}" class="subject-btn secondary">
+                            <iconify-icon icon="mdi:upload"></iconify-icon>
+                            Upload
+                        </a>
                         <a href="{% url 'dashboard:subject_update' object.pk %}" class="subject-btn secondary">
                             <iconify-icon icon="mdi:pencil"></iconify-icon>
                             Edit
