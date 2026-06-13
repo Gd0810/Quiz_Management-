@@ -10,6 +10,7 @@ urlpatterns = [
     path('', views.dashboard_home, name='home'),
     path('settings/instructions/', views.company_instructions, name='company_instructions'),
     path('settings/security/', views.company_settings, name='company_settings'),
+    path('settings/mail/', views.company_mail_settings, name='company_mail_settings'),
     path('forms-control/', views.candidate_form_field_list, name='candidate_form_field_list'),
     path('forms-control/create/', views.candidate_form_field_create, name='candidate_form_field_create'),
     path('forms-control/<int:pk>/edit/', views.candidate_form_field_update, name='candidate_form_field_update'),

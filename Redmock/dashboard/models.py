@@ -37,6 +37,13 @@ class Company(models.Model):
     right_click_disable_enabled = models.BooleanField(default=False)
     max_violation_warnings = models.PositiveIntegerField(default=3)
     exam_control_password = models.CharField(max_length=128, blank=True)
+    mail_sender_enabled = models.BooleanField(default=False)
+    smtp_host = models.CharField(max_length=255, blank=True)
+    smtp_port = models.PositiveIntegerField(default=587)
+    smtp_username = models.CharField(max_length=255, blank=True)
+    smtp_app_key = models.CharField(max_length=255, blank=True)
+    smtp_use_tls = models.BooleanField(default=True)
+    smtp_from_email = models.EmailField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,6 +58,20 @@ class Company(models.Model):
         if not self.exam_control_password:
             return False
         return check_password(raw_password, self.exam_control_password)
+
+    @property
+    def mail_sender_ready(self):
+        return bool(
+            self.mail_sender_enabled
+            and self.smtp_host
+            and self.smtp_port
+            and self.smtp_username
+            and self.smtp_app_key
+        )
+
+    @property
+    def effective_smtp_from_email(self):
+        return self.smtp_from_email or self.smtp_username
 
 
 class CandidateFormField(models.Model):

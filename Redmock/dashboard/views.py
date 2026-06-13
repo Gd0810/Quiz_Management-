@@ -18,6 +18,7 @@ from .forms import (
     CandidateTestAttemptForm,
     BulkQuestionUploadForm,
     CompanyInstructionsForm,
+    CompanyMailSettingsForm,
     CompanySecurityForm,
     QuizForm,
     SubTitleInlineFormSet,
@@ -136,6 +137,29 @@ def company_settings(request):
         request,
         'dashboard/security_settings.html',
         {'form': form, 'title': 'Exam Security Settings', 'cancel_url': 'dashboard:home'},
+    )
+
+
+@company_login_required
+def company_mail_settings(request):
+    form = CompanyMailSettingsForm(request.POST or None, instance=request.company)
+    if request.method == 'POST' and form.is_valid():
+        company = form.save()
+        print(
+            '[Redmock Mail] settings saved: '
+            f'company={company.name!r}, enabled={company.mail_sender_enabled}, '
+            f'host_set={bool(company.smtp_host)}, port={company.smtp_port}, '
+            f'username_set={bool(company.smtp_username)}, app_key_set={bool(company.smtp_app_key)}, '
+            f'use_tls={company.smtp_use_tls}, ready={company.mail_sender_ready}',
+            flush=True,
+        )
+        messages.success(request, 'Mail settings updated successfully.')
+        return redirect('dashboard:company_mail_settings')
+
+    return render(
+        request,
+        'dashboard/mail_settings.html',
+        {'form': form, 'title': 'Mail Settings', 'cancel_url': 'dashboard:home'},
     )
 
 

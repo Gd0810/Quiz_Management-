@@ -1,9 +1,12 @@
 from datetime import timedelta
 from decimal import Decimal
+import logging
 
 from django.contrib import messages
+from django.core.mail import EmailMessage, get_connection
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -15,6 +18,7 @@ from .models import Candidate, CandidateTestAttempt
 
 PENDING_TEST_SETUP_SESSION_KEY = 'pending_test_setup'
 PENDING_SECURITY_SETUP_SESSION_KEY = 'pending_security_setup'
+logger = logging.getLogger(__name__)
 
 
 def _is_htmx(request):
@@ -563,6 +567,52 @@ def _public_attempt_or_404(attempt_slug):
     )
 
 
+def _send_attempt_link_email(request, attempt):
+    company = attempt.company
+    if not company.mail_sender_ready or attempt.test_link_email_sent_at:
+        return False
+
+    test_link = request.build_absolute_uri(reverse('quiz:take', args=[attempt.public_slug]))
+    print(
+        '[Redmock Mail] sending test link: '
+        f'attempt={attempt.public_slug}, to={attempt.candidate.email}, '
+        f'host={company.smtp_host}, port={company.smtp_port}, tls={company.smtp_use_tls}, '
+        f'from={company.effective_smtp_from_email}, link={test_link}',
+        flush=True,
+    )
+    subject = f'{company.name} test link'
+    body = (
+        f'Hello {attempt.candidate.name},\n\n'
+        f'Your test link is ready:\n{test_link}\n\n'
+        'Please open this link in your browser to continue your test.\n\n'
+        f'Regards,\n{company.name}'
+    )
+    connection = get_connection(
+        host=company.smtp_host,
+        port=company.smtp_port,
+        username=company.smtp_username,
+        password=company.smtp_app_key,
+        use_tls=company.smtp_use_tls,
+        timeout=10,
+    )
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=company.effective_smtp_from_email,
+        to=[attempt.candidate.email],
+        connection=connection,
+    )
+    message.send(fail_silently=False)
+    attempt.test_link_email_sent_at = timezone.now()
+    attempt.save(update_fields=['test_link_email_sent_at'])
+    print(
+        '[Redmock Mail] test link sent successfully: '
+        f'attempt={attempt.public_slug}, to={attempt.candidate.email}',
+        flush=True,
+    )
+    return True
+
+
 def _answers_from_request(request, answer_rows):
     return [
         {
@@ -900,7 +950,50 @@ def take_test(request, attempt_slug):
         if attempt.started_at
         else '',
     }
+    print(
+        '[Redmock Mail] take-test page loaded: '
+        f'attempt={attempt.public_slug}, candidate_email={attempt.candidate.email}, '
+        f'enabled={attempt.company.mail_sender_enabled}, '
+        f'host_set={bool(attempt.company.smtp_host)}, port={attempt.company.smtp_port}, '
+        f'username_set={bool(attempt.company.smtp_username)}, app_key_set={bool(attempt.company.smtp_app_key)}, '
+        f'ready={attempt.company.mail_sender_ready}, already_sent={bool(attempt.test_link_email_sent_at)}',
+        flush=True,
+    )
     return render(request, 'quiz/take_test.html', context)
+
+
+@require_POST
+def send_test_link_email(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
+    if not attempt.company.mail_sender_ready:
+        print(
+            '[Redmock Mail] skipped test link email: '
+            f'attempt={attempt.public_slug}, enabled={attempt.company.mail_sender_enabled}, '
+            f'host_set={bool(attempt.company.smtp_host)}, port={attempt.company.smtp_port}, '
+            f'username_set={bool(attempt.company.smtp_username)}, app_key_set={bool(attempt.company.smtp_app_key)}',
+            flush=True,
+        )
+        return JsonResponse({'status': 'skipped'})
+    if attempt.test_link_email_sent_at:
+        print(
+            '[Redmock Mail] skipped test link email: '
+            f'attempt={attempt.public_slug}, reason=already_sent',
+            flush=True,
+        )
+        return JsonResponse({'status': 'already_sent'})
+
+    try:
+        sent = _send_attempt_link_email(request, attempt)
+    except Exception as exc:
+        logger.exception('Failed to send test link email for attempt %s', attempt.public_slug)
+        print(
+            '[Redmock Mail] failed to send test link email: '
+            f'attempt={attempt.public_slug}, error={exc}',
+            flush=True,
+        )
+        return JsonResponse({'status': 'failed'}, status=202)
+
+    return JsonResponse({'status': 'sent' if sent else 'skipped'})
 
 
 @require_POST

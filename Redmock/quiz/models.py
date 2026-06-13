@@ -73,6 +73,7 @@ class CandidateTestAttempt(models.Model):
     warning_count = models.PositiveIntegerField(default=0)
     last_violation_at = models.DateTimeField(blank=True, null=True)
     violation_log_json = models.JSONField(default=list, blank=True)
+    test_link_email_sent_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

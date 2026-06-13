@@ -1316,10 +1316,25 @@ var actionUrls = {
     pause: "{% url 'quiz:pause' attempt.public_slug %}",
     resume: "{% url 'quiz:resume' attempt.public_slug %}",
     fullscreen: "{% url 'quiz:unlock_fullscreen' attempt.public_slug %}",
-    violation: "{% url 'quiz:record_violation' attempt.public_slug %}"
+    violation: "{% url 'quiz:record_violation' attempt.public_slug %}",
+    testLinkEmail: "{% url 'quiz:send_test_link_email' attempt.public_slug %}"
 };
 var attemptStorageKey = 'redmock:take-test:attempt:{{ attempt.public_slug }}';
 var storedAttemptState = readStoredAttemptState();
+
+function sendTestLinkEmailInBackground() {
+    if (!csrfToken || !window.fetch) return;
+    fetch(actionUrls.testLinkEmail, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    }).catch(function () {});
+}
+
+sendTestLinkEmailInBackground();
 
 function canUseLocalStorage() {
     try {

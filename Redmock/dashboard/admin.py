@@ -33,6 +33,7 @@ class CompanyAdmin(admin.ModelAdmin):
         'tab_switch_guard_enabled',
         'copy_paste_block_enabled',
         'right_click_disable_enabled',
+        'mail_sender_enabled',
         'max_violation_warnings',
         'created_at',
     )
@@ -83,6 +84,20 @@ class CompanyAdmin(admin.ModelAdmin):
                     'copy_paste_block_enabled',
                     'right_click_disable_enabled',
                     'max_violation_warnings',
+                )
+            },
+        ),
+        (
+            'Mail Settings',
+            {
+                'fields': (
+                    'mail_sender_enabled',
+                    'smtp_host',
+                    'smtp_port',
+                    'smtp_username',
+                    'smtp_app_key',
+                    'smtp_use_tls',
+                    'smtp_from_email',
                 )
             },
         ),

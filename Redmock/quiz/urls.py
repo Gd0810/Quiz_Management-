@@ -13,6 +13,7 @@ urlpatterns = [
     path('setup-back/', views.setup_back, name='setup_back'),
     path('begin/', views.begin_test, name='begin'),
     path('<slug:attempt_slug>/', views.take_test, name='take'),
+    path('<slug:attempt_slug>/send-test-link-email/', views.send_test_link_email, name='send_test_link_email'),
     path('<slug:attempt_slug>/pause/', views.pause_attempt, name='pause'),
     path('<slug:attempt_slug>/resume/', views.resume_attempt, name='resume'),
     path('<slug:attempt_slug>/unlock-fullscreen/', views.unlock_fullscreen, name='unlock_fullscreen'),

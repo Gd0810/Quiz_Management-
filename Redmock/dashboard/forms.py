@@ -120,6 +120,56 @@ class CompanyInstructionsForm(forms.ModelForm):
         }
 
 
+class CompanyMailSettingsForm(forms.ModelForm):
+    smtp_app_key = forms.CharField(
+        label='SMTP app key',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        help_text='Leave blank to keep the current app key.',
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        app_key = (cleaned_data.get('smtp_app_key') or '').strip()
+        if not app_key:
+            cleaned_data['smtp_app_key'] = self.instance.smtp_app_key
+
+        if cleaned_data.get('mail_sender_enabled'):
+            missing_fields = []
+            if not cleaned_data.get('smtp_host'):
+                missing_fields.append('SMTP host')
+            if not cleaned_data.get('smtp_port'):
+                missing_fields.append('SMTP port')
+            if not cleaned_data.get('smtp_username'):
+                missing_fields.append('SMTP username')
+            if not cleaned_data.get('smtp_app_key'):
+                missing_fields.append('SMTP app key')
+            if missing_fields:
+                raise ValidationError(
+                    'Mail sender can be enabled only after setting: ' + ', '.join(missing_fields) + '.'
+                )
+
+        return cleaned_data
+
+    class Meta:
+        model = Company
+        fields = [
+            'mail_sender_enabled',
+            'smtp_host',
+            'smtp_port',
+            'smtp_username',
+            'smtp_app_key',
+            'smtp_use_tls',
+            'smtp_from_email',
+        ]
+        widgets = {
+            'smtp_host': forms.TextInput(attrs={'placeholder': 'smtp.gmail.com'}),
+            'smtp_port': forms.NumberInput(attrs={'min': 1, 'placeholder': '587'}),
+            'smtp_username': forms.TextInput(attrs={'placeholder': 'sender@example.com'}),
+            'smtp_from_email': forms.EmailInput(attrs={'placeholder': 'sender@example.com'}),
+        }
+
+
 DEFAULT_SUBJECT_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" '
     'viewBox="0 0 24 24"><path fill="currentColor" '

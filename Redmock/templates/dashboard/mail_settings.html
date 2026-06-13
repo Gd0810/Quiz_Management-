@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .mail-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2, 62, 138, .08); }
+    .mail-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .mail-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
+    .mail-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .mail-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .mail-card { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .mail-card-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .mail-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .mail-card-body { min-width: 0; padding: 14px; }
+    .mail-card-title { display: block; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .mail-card-text { display: block; margin-top: 5px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .mail-form-body { display: grid; gap: 16px; padding: 16px; }
+    .mail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .mail-field { border: 1px solid #7dddf0; border-radius: 11px; background: #fff; padding: 16px; }
+    .mail-field label { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; color: #334155; font-size: .78rem; font-weight: 700; }
+    .mail-field input { width: 100%; border: 1px solid #bae6fd; border-radius: 9px; background: #fff; padding: 10px 12px; color: #0f172a; outline: 0; }
+    .mail-field input:focus { border-color: #0096c7; box-shadow: 0 0 0 3px rgba(0, 180, 216, .14); }
+    .mail-switch-card { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 70px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; cursor: pointer; }
+    .mail-switch-card input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .mail-switch { position: relative; width: 44px; height: 24px; margin-right: 18px; border-radius: 999px; background: #94a3b8; transition: background .2s ease; }
+    .mail-switch::after { position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; border-radius: 50%; background: #fff; content: ""; transition: transform .2s ease; }
+    .mail-switch-card input:checked ~ .mail-switch { background: #0096c7; }
+    .mail-switch-card input:checked ~ .mail-switch::after { transform: translateX(20px); }
+    .mail-help, .mail-error { margin: 8px 0 0; font-size: .78rem; line-height: 1.4; }
+    .mail-help { color: #64748b; }
+    .mail-error { color: #e11d48; }
+    .mail-alert { margin-bottom: 18px; border: 1px solid #fecdd3; border-radius: 12px; background: #fff1f2; padding: 14px 16px; color: #be123c; font-size: .9rem; }
+    .mail-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .mail-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+    .mail-btn.primary { background: #03045e; color: #fff; }
+    .mail-btn.secondary { background: #e0f2fe; color: #075985; }
+    @media (max-width: 820px) { .mail-shell { padding: 20px; } .mail-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 540px) { .mail-shell { padding: 16px; } .mail-card-head { grid-template-columns: 52px minmax(0, 1fr); } .mail-switch-card { grid-template-columns: 52px minmax(0, 1fr) auto; } .mail-actions { flex-direction: column; } }
+</style>
+
+<section class="mail-shell">
+    <div class="mail-heading">
+        <span class="mail-heading-icon"><iconify-icon icon="mdi:email-cog-outline"></iconify-icon></span>
+        <div>
+            <h1 class="mail-title">{{ title }}</h1>
+            <p class="mail-subtitle">Send candidate test links using your company SMTP account</p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="mail-alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <label class="mail-switch-card">
+            <span class="mail-card-icon"><iconify-icon icon="mdi:email-fast-outline"></iconify-icon></span>
+            <span class="mail-card-body">
+                <span class="mail-card-title">Mail Sender</span>
+                <span class="mail-card-text">When enabled, candidate test links are mailed in the background after the test starts.</span>
+            </span>
+            {{ form.mail_sender_enabled }}
+            <span class="mail-switch"></span>
+        </label>
+        {% if form.mail_sender_enabled.errors %}<p class="mail-error">{{ form.mail_sender_enabled.errors|join:", " }}</p>{% endif %}
+
+        <div class="mail-card" style="margin-top:16px;">
+            <div class="mail-card-head">
+                <span class="mail-card-icon"><iconify-icon icon="mdi:server-network"></iconify-icon></span>
+                <span class="mail-card-body">
+                    <span class="mail-card-title">SMTP Details</span>
+                    <span class="mail-card-text">Use your SMTP username and app key. The app key is kept unchanged when left blank.</span>
+                </span>
+            </div>
+            <div class="mail-form-body">
+                <div class="mail-grid">
+                    <div class="mail-field">
+                        <label for="{{ form.smtp_host.id_for_label }}"><iconify-icon icon="mdi:web"></iconify-icon>SMTP Host</label>
+                        {{ form.smtp_host }}
+                        {% if form.smtp_host.errors %}<p class="mail-error">{{ form.smtp_host.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="mail-field">
+                        <label for="{{ form.smtp_port.id_for_label }}"><iconify-icon icon="mdi:lan-connect"></iconify-icon>SMTP Port</label>
+                        {{ form.smtp_port }}
+                        {% if form.smtp_port.errors %}<p class="mail-error">{{ form.smtp_port.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="mail-field">
+                        <label for="{{ form.smtp_username.id_for_label }}"><iconify-icon icon="mdi:account-outline"></iconify-icon>SMTP Mail</label>
+                        {{ form.smtp_username }}
+                        {% if form.smtp_username.errors %}<p class="mail-error">{{ form.smtp_username.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="mail-field">
+                        <label for="{{ form.smtp_app_key.id_for_label }}"><iconify-icon icon="mdi:key-outline"></iconify-icon>App Key</label>
+                        {{ form.smtp_app_key }}
+                        <p class="mail-help">For Gmail, use an app password, not the normal account password.</p>
+                        {% if form.smtp_app_key.errors %}<p class="mail-error">{{ form.smtp_app_key.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="mail-field">
+                        <label for="{{ form.smtp_from_email.id_for_label }}"><iconify-icon icon="mdi:email-arrow-right-outline"></iconify-icon>From Email</label>
+                        {{ form.smtp_from_email }}
+                        <p class="mail-help">Optional. If empty, SMTP Mail is used.</p>
+                        {% if form.smtp_from_email.errors %}<p class="mail-error">{{ form.smtp_from_email.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <label class="mail-switch-card">
+                        <span class="mail-card-icon"><iconify-icon icon="mdi:lock-check-outline"></iconify-icon></span>
+                        <span class="mail-card-body">
+                            <span class="mail-card-title">Use TLS</span>
+                            <span class="mail-card-text">Recommended for port 587.</span>
+                        </span>
+                        {{ form.smtp_use_tls }}
+                        <span class="mail-switch"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mail-actions">
+            <button type="submit" class="mail-btn primary">
+                <iconify-icon icon="mdi:content-save"></iconify-icon>
+                Save Mail Settings
+            </button>
+            <a href="{% url cancel_url %}" class="mail-btn secondary">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+</div>
+{% endblock %}
