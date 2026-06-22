@@ -1559,7 +1559,7 @@ function updateProgress() {
 /* ── answer handler ── */
 window.onAnswer = function (idx) {
     if (isInteractionLocked()) return;
-    states[idx] = 'answered';
+    if (states[idx] !== 'marked') states[idx] = 'answered';
     renderPalette();
     updateProgress();
 };
@@ -1570,7 +1570,7 @@ document.getElementById('test-form').addEventListener('change', function (e) {
     var b = e.target.closest('.tt-qblock');
     if (b) {
         var i = parseInt(b.dataset.idx, 10);
-        if (!isNaN(i)) states[i] = 'answered';
+        if (!isNaN(i) && states[i] !== 'marked') states[i] = 'answered';
         renderPalette();
         updateProgress();
     }
@@ -1824,7 +1824,9 @@ if (rightClickDisableEnabled) {
 
 document.getElementById('btnSave').addEventListener('click', function () {
     if (isInteractionLocked()) return;
-    states[curIdx] = hasSelectedAnswer(curIdx) ? 'answered' : 'not-answered';
+    if (states[curIdx] !== 'marked') {
+        states[curIdx] = hasSelectedAnswer(curIdx) ? 'answered' : 'not-answered';
+    }
     renderPalette(); updateProgress();
     if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
