@@ -224,7 +224,8 @@
             <span class="icon-bg">
                 <iconify-icon icon="mdi:company" width="30" height="30"></iconify-icon>
             </span>
-            {{ request.company.name|default:"Company"|title }}
+            {% firstof company.name request.company.name "Company" as builder_company_name %}
+            {{ builder_company_name|title }}
         </div>
         <h1 class="rb-sidebar-title">Mock Test Builder</h1>
         <p class="rb-sidebar-sub">Configure your test in steps. No page reloads.</p>

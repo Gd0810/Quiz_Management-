@@ -900,7 +900,7 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
                 <span class="icon-bg">
                     <iconify-icon icon="mdi:company" width="20" height="20"></iconify-icon>
                 </span>
-                {{ request.company.name|default:"Company"|title }}
+                {{ attempt.company.name|default:"Company"|title }}
             </div>
         </div>
         <span class="tt-title">{{ attempt.candidate.name|title }} <span style="opacity:0.4; margin:0 5px;">|</span> {{ attempt.candidate.designation_tech|title }}</span>

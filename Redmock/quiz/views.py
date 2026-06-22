@@ -668,6 +668,7 @@ def start_test(request):
         {
             'step': 'security',
             'security_state': _security_state_from_session(request, request.company),
+            'company': request.company,
         },
     )
 
