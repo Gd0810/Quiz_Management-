@@ -46,6 +46,14 @@ def company_login_required(view_func):
     return wrapper
 
 
+def _parse_positive_int(raw_value, default=0):
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        return default
+    return max(value, 0)
+
+
 def landing_page(request):
     return render(
         request,
@@ -432,15 +440,73 @@ def subject_question_upload(request):
 
 @company_login_required
 def quiz_list(request):
-    queryset = Quiz.objects.filter(test_subject__company=request.company).select_related('test_subject', 'sub_title')
-    return render_crud_list(
+    base_queryset = Quiz.objects.filter(test_subject__company=request.company).select_related('test_subject', 'sub_title')
+    level_counts = dict(
+        base_queryset.values('level').annotate(total=Count('id')).values_list('level', 'total')
+    )
+    total_quiz_count = sum(level_counts.values())
+    level_rows = [
+        {
+            'value': value,
+            'label': label,
+            'count': level_counts.get(value, 0),
+            'percent': round((level_counts.get(value, 0) / total_quiz_count) * 100, 1) if total_quiz_count else 0,
+        }
+        for value, label in Quiz.LEVEL_CHOICES
+    ]
+
+    search_query = request.GET.get('q', '').strip()
+    level_filter = request.GET.get('level', 'all')
+    subject_filter = request.GET.get('subject', 'all')
+
+    queryset = base_queryset
+    if search_query:
+        queryset = queryset.filter(
+            Q(question__icontains=search_query) | Q(question_paragraph__icontains=search_query)
+        )
+    if level_filter != 'all':
+        valid_levels = {value for value, _label in Quiz.LEVEL_CHOICES}
+        if level_filter in valid_levels:
+            queryset = queryset.filter(level=level_filter)
+        else:
+            level_filter = 'all'
+    if subject_filter != 'all':
+        subject_id = _parse_positive_int(subject_filter)
+        if TestSubject.objects.filter(pk=subject_id, company=request.company).exists():
+            queryset = queryset.filter(test_subject_id=subject_id)
+        else:
+            subject_filter = 'all'
+
+    queryset = queryset.order_by('test_subject__subject', 'sub_title__title', 'level', 'id')
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    querystring = query_params.urlencode()
+    page_query_prefix = f'{querystring}&' if querystring else ''
+
+    paginator = Paginator(queryset, 40)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    page_numbers = paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1)
+
+    return render(
         request,
-        queryset=queryset,
-        title='Quizzes',
-        create_url='dashboard:quiz_create',
-        edit_url_name='dashboard:quiz_update',
-        delete_url_name='dashboard:quiz_delete',
-        fields=['test_subject', 'sub_title', 'level', 'question', 'correct_answer'],
+        'dashboard/quiz_list.html',
+        {
+            'title': 'Quizzes',
+            'objects': page_obj.object_list,
+            'page_obj': page_obj,
+            'page_numbers': page_numbers,
+            'page_query_prefix': page_query_prefix,
+            'total_quiz_count': total_quiz_count,
+            'level_rows': level_rows,
+            'level_choices': Quiz.LEVEL_CHOICES,
+            'subjects': TestSubject.objects.filter(company=request.company).order_by('subject'),
+            'search_query': search_query,
+            'level_filter': level_filter,
+            'subject_filter': subject_filter,
+            'level_chart_labels_json': json.dumps([row['label'] for row in level_rows]),
+            'level_chart_counts_json': json.dumps([row['count'] for row in level_rows]),
+            'level_chart_percents_json': json.dumps([row['percent'] for row in level_rows]),
+        },
     )
 
 

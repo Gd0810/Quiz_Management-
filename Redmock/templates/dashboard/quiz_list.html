@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .quiz-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2, 62, 138, .08); }
+    .quiz-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .quiz-heading-main { display: flex; align-items: center; gap: 12px; }
+    .quiz-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
+    .quiz-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .quiz-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .quiz-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+    .quiz-btn.primary { border: 0; background: #03045e; color: #fff; }
+    .quiz-btn.secondary { background: #e0f2fe; color: #075985; }
+    .quiz-btn.danger { background: #fff1f2; color: #be123c; }
+    .quiz-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+    .quiz-stat-card { display: grid; grid-template-columns: 58px minmax(0, 1fr); min-height: 82px; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .quiz-stat-icon { display: grid; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.5rem; }
+    .quiz-stat-body { min-width: 0; padding: 14px; }
+    .quiz-stat-label { margin: 0; color: #008fd1; font-size: .76rem; font-weight: 700; line-height: 1.25; }
+    .quiz-stat-value { margin: 6px 0 0; color: #03045e; font-size: 1.45rem; font-weight: 800; line-height: 1; }
+    .quiz-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
+    .quiz-chart-card { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .quiz-chart-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-chart-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .quiz-chart-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .quiz-chart-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .quiz-chart-body { height: 320px; padding: 18px; }
+    .quiz-chart-empty { display: grid; height: 100%; place-items: center; border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; color: #0369a1; font-size: .9rem; }
+    .quiz-list-panel { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .quiz-list-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-list-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .quiz-list-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .quiz-list-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .quiz-controls { display: grid; grid-template-columns: minmax(240px, 1fr) 180px 220px auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .quiz-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
+    .quiz-control-field input,
+    .quiz-control-field select { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .quiz-control-field select { cursor: pointer; }
+    .quiz-control-submit { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: #03045e; padding: 10px 16px; color: #fff; font-size: .9rem; font-weight: 700; }
+    .quiz-grid { display: grid; gap: 16px; padding: 16px; }
+    .quiz-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 86px; align-items: center; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; color: #03045e; }
+    .quiz-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .quiz-card-body { min-width: 0; padding: 14px; }
+    .quiz-card-title { color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.35; }
+    .quiz-card-text { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .quiz-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; background: #e0f2fe; padding: 4px 9px; color: #075985; font-size: .73rem; font-weight: 700; }
+    .quiz-actions { display: flex; gap: 8px; padding: 14px; }
+    .quiz-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
+    .quiz-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 22px 16px 16px; padding-top: 14px; border-top: 1px solid #e0f2fe; flex-wrap: wrap; }
+    .quiz-page-link,
+    .quiz-page-ellipsis { position: relative; display: inline-flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; border-radius: 8px; color: #023e8a; font-size: .88rem; font-weight: 800; text-decoration: none; transition: background .18s ease, color .18s ease; }
+    .quiz-page-link:hover { background: #e0f2fe; color: #0077b6; }
+    .quiz-page-link.is-active { color: #03045e; }
+    .quiz-page-link.is-active::after { position: absolute; right: 6px; bottom: -8px; left: 6px; height: 4px; border-radius: 999px; background: #00b4d8; content: ""; box-shadow: 0 4px 10px rgba(0, 180, 216, .35); }
+    .quiz-page-link.is-disabled { color: #90a4b8; pointer-events: none; }
+    .quiz-page-ellipsis { color: #0077b6; }
+    @media (max-width: 960px) { .quiz-chart-grid { grid-template-columns: 1fr; } .quiz-controls { grid-template-columns: 1fr; } }
+    @media (max-width: 820px) { .quiz-shell { padding: 20px; } .quiz-heading { flex-direction: column; align-items: flex-start; } .quiz-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .quiz-card { display: block; } .quiz-card-icon { min-height: 58px; } .quiz-actions { padding-top: 0; } }
+    @media (max-width: 540px) { .quiz-stats { grid-template-columns: 1fr; } .quiz-chart-head, .quiz-list-head { grid-template-columns: 52px minmax(0, 1fr); } }
+</style>
+
+<section class="quiz-shell">
+    <div class="quiz-heading">
+        <div class="quiz-heading-main">
+            <span class="quiz-heading-icon"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
+            <div>
+                <h1 class="quiz-title">Quizs</h1>
+                <p class="quiz-subtitle">Question bank analytics, filters and listing</p>
+            </div>
+        </div>
+        <a href="{% url 'dashboard:quiz_create' %}" class="quiz-btn primary">
+            <iconify-icon icon="mdi:plus"></iconify-icon>
+            Create Question
+        </a>
+    </div>
+
+    <div class="quiz-stats">
+        <div class="quiz-stat-card">
+            <span class="quiz-stat-icon"><iconify-icon icon="mdi:clipboard-list-outline"></iconify-icon></span>
+            <div class="quiz-stat-body">
+                <p class="quiz-stat-label">Total Quizs</p>
+                <p class="quiz-stat-value">{{ total_quiz_count }}</p>
+            </div>
+        </div>
+        {% for row in level_rows %}
+            <div class="quiz-stat-card">
+                <span class="quiz-stat-icon"><iconify-icon icon="mdi:signal-cellular-{{ forloop.counter }}"></iconify-icon></span>
+                <div class="quiz-stat-body">
+                    <p class="quiz-stat-label">{{ row.label }}</p>
+                    <p class="quiz-stat-value">{{ row.count }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="quiz-chart-grid">
+        <div class="quiz-chart-card">
+            <div class="quiz-chart-head">
+                <span class="quiz-chart-icon"><iconify-icon icon="mdi:chart-bar"></iconify-icon></span>
+                <div class="quiz-card-body">
+                    <p class="quiz-chart-title">Questions by Level</p>
+                    <p class="quiz-chart-text">Horizontal bar count for Basic, Intermediate and Experienced</p>
+                </div>
+            </div>
+            <div class="quiz-chart-body">
+                {% if total_quiz_count %}
+                    <canvas id="quizLevelBarChart"></canvas>
+                {% else %}
+                    <div class="quiz-chart-empty">No quiz questions yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="quiz-chart-card">
+            <div class="quiz-chart-head">
+                <span class="quiz-chart-icon"><iconify-icon icon="mdi:chart-donut"></iconify-icon></span>
+                <div class="quiz-card-body">
+                    <p class="quiz-chart-title">Level Percentage</p>
+                    <p class="quiz-chart-text">Polar area share based on question count</p>
+                </div>
+            </div>
+            <div class="quiz-chart-body">
+                {% if total_quiz_count %}
+                    <canvas id="quizLevelPolarChart"></canvas>
+                {% else %}
+                    <div class="quiz-chart-empty">No percentage data yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-list-panel">
+        <div class="quiz-list-head">
+            <span class="quiz-list-icon"><iconify-icon icon="mdi:format-list-bulleted"></iconify-icon></span>
+            <div class="quiz-card-body">
+                <p class="quiz-list-title">Quiz Listing</p>
+                <p class="quiz-list-text">Filter by level, subject, or question text. Showing 40 questions per page.</p>
+            </div>
+        </div>
+
+        <form method="get" class="quiz-controls">
+            <label class="quiz-control-field">
+                <iconify-icon icon="mdi:magnify"></iconify-icon>
+                <input type="search" name="q" value="{{ search_query }}" placeholder="Search questions">
+            </label>
+            <label class="quiz-control-field">
+                <iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>
+                <select name="level">
+                    <option value="all" {% if level_filter == 'all' %}selected{% endif %}>All levels</option>
+                    {% for level_value, level_label in level_choices %}
+                        <option value="{{ level_value }}" {% if level_filter == level_value %}selected{% endif %}>{{ level_label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="quiz-control-field">
+                <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
+                <select name="subject">
+                    <option value="all" {% if subject_filter == 'all' %}selected{% endif %}>All subjects</option>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if subject_filter == subject.id|stringformat:"s" %}selected{% endif %}>{{ subject.subject }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="quiz-control-submit">
+                <iconify-icon icon="mdi:tune"></iconify-icon>
+                Apply
+            </button>
+        </form>
+
+        <div class="quiz-grid">
+            {% for object in objects %}
+                <article class="quiz-card">
+                    <span class="quiz-card-icon"><iconify-icon icon="mdi:help-circle-outline"></iconify-icon></span>
+                    <div class="quiz-card-body">
+                        <div class="quiz-card-title">{{ object.question|truncatechars:180 }}</div>
+                        <div class="quiz-card-text">
+                            <span class="quiz-chip"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>{{ object.test_subject.subject }}</span>
+                            <span class="quiz-chip"><iconify-icon icon="mdi:format-title"></iconify-icon>{% if object.sub_title %}{{ object.sub_title.title }}{% else %}General{% endif %}</span>
+                            <span class="quiz-chip"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ object.get_level_display }}</span>
+                            <span class="quiz-chip"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon>{{ object.get_correct_answer_display }}</span>
+                        </div>
+                    </div>
+                    <div class="quiz-actions">
+                        <a href="{% url 'dashboard:quiz_update' object.pk %}" class="quiz-btn secondary">
+                            <iconify-icon icon="mdi:pencil"></iconify-icon>
+                            Edit
+                        </a>
+                        <a href="{% url 'dashboard:quiz_delete' object.pk %}" class="quiz-btn danger">
+                            <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
+                            Delete
+                        </a>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="quiz-empty">No quiz questions match the current filters.</div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <div class="quiz-pagination">
+                {% if page_obj.has_previous %}
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page=1" aria-label="First page"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></a>
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}" aria-label="Previous page"><iconify-icon icon="mdi:chevron-left"></iconify-icon></a>
+                {% else %}
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></span>
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-left"></iconify-icon></span>
+                {% endif %}
+
+                {% for page_number in page_numbers %}
+                    {% if page_number == page_obj.paginator.ELLIPSIS %}
+                        <span class="quiz-page-ellipsis">{{ page_number }}</span>
+                    {% elif page_number == page_obj.number %}
+                        <span class="quiz-page-link is-active" aria-current="page">{{ page_number }}</span>
+                    {% else %}
+                        <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_number }}">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}" aria-label="Next page"><iconify-icon icon="mdi:chevron-right"></iconify-icon></a>
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.paginator.num_pages }}" aria-label="Last page"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></a>
+                {% else %}
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-right"></iconify-icon></span>
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></span>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if total_quiz_count %}
+<script>
+(function () {
+    var chartJsUrl = 'https://cdn.jsdelivr.net/npm/chart.js';
+
+    function loadChartJs(callback) {
+        if (window.Chart) {
+            callback();
+            return;
+        }
+
+        var existingScript = document.getElementById('chartjs-loader');
+        if (existingScript) {
+            existingScript.addEventListener('load', callback, { once: true });
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.id = 'chartjs-loader';
+        script.src = chartJsUrl;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function initQuizCharts() {
+        if (!window.Chart) return;
+
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#023e8a';
+
+        var labels = {{ level_chart_labels_json|safe }};
+        var counts = {{ level_chart_counts_json|safe }};
+        var percents = {{ level_chart_percents_json|safe }};
+        var colors = ['rgba(202, 240, 248, .9)', 'rgba(72, 202, 228, .72)', 'rgba(0, 119, 182, .78)'];
+        var borders = ['#90e0ef', '#00b4d8', '#023e8a'];
+        var barCanvas = document.getElementById('quizLevelBarChart');
+        var polarCanvas = document.getElementById('quizLevelPolarChart');
+
+        if (barCanvas) {
+            var existingBar = Chart.getChart ? Chart.getChart(barCanvas) : null;
+            if (existingBar) existingBar.destroy();
+            new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors,
+                        borderColor: borders,
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        barPercentage: .52,
+                        categoryPercentage: .68
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#03045e',
+                            titleColor: '#caf0f8',
+                            bodyColor: '#ffffff',
+                            borderColor: '#90e0ef',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            precision: 0,
+                            grid: { color: 'rgba(2, 62, 138, .18)', borderDash: [3, 3] },
+                            ticks: { color: '#0077b6', stepSize: 1, font: { size: 11, weight: 600 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#023e8a', font: { size: 11, weight: 800 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        if (polarCanvas) {
+            var existingPolar = Chart.getChart ? Chart.getChart(polarCanvas) : null;
+            if (existingPolar) existingPolar.destroy();
+            new Chart(polarCanvas, {
+                type: 'polarArea',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: percents,
+                        backgroundColor: colors,
+                        borderColor: borders,
+                        borderWidth: 1.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#023e8a', boxWidth: 12, font: { size: 11, weight: 700 } }
+                        },
+                        tooltip: {
+                            backgroundColor: '#03045e',
+                            titleColor: '#caf0f8',
+                            bodyColor: '#ffffff',
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            ticks: { display: false },
+                            grid: { color: 'rgba(2, 62, 138, .16)' },
+                            angleLines: { color: 'rgba(2, 62, 138, .14)' }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    loadChartJs(initQuizCharts);
+}());
+</script>
+{% endif %}
+</div>
+{% endblock %}
