@@ -265,6 +265,8 @@
         var labels = {{ level_chart_labels_json|safe }};
         var counts = {{ level_chart_counts_json|safe }};
         var percents = {{ level_chart_percents_json|safe }};
+        var zeroCounts = counts.map(function () { return 0; });
+        var zeroPercents = percents.map(function () { return 0; });
         var colors = ['rgba(202, 240, 248, .9)', 'rgba(72, 202, 228, .72)', 'rgba(0, 119, 182, .78)'];
         var borders = ['#90e0ef', '#00b4d8', '#023e8a'];
         var barCanvas = document.getElementById('quizLevelBarChart');
@@ -273,12 +275,12 @@
         if (barCanvas) {
             var existingBar = Chart.getChart ? Chart.getChart(barCanvas) : null;
             if (existingBar) existingBar.destroy();
-            new Chart(barCanvas, {
+            var barChart = new Chart(barCanvas, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        data: counts,
+                        data: zeroCounts,
                         backgroundColor: colors,
                         borderColor: borders,
                         borderWidth: 1.5,
@@ -291,6 +293,13 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 950,
+                        easing: 'easeOutQuart',
+                        delay: function (context) {
+                            return context.type === 'data' ? context.dataIndex * 110 : 0;
+                        }
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -315,17 +324,22 @@
                     }
                 }
             });
+
+            window.setTimeout(function () {
+                barChart.data.datasets[0].data = counts;
+                barChart.update();
+            }, 180);
         }
 
         if (polarCanvas) {
             var existingPolar = Chart.getChart ? Chart.getChart(polarCanvas) : null;
             if (existingPolar) existingPolar.destroy();
-            new Chart(polarCanvas, {
+            var polarChart = new Chart(polarCanvas, {
                 type: 'polarArea',
                 data: {
                     labels: labels,
                     datasets: [{
-                        data: percents,
+                        data: zeroPercents,
                         backgroundColor: colors,
                         borderColor: borders,
                         borderWidth: 1.5
@@ -334,6 +348,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1100,
+                        easing: 'easeOutQuart'
+                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
@@ -359,6 +379,11 @@
                     }
                 }
             });
+
+            window.setTimeout(function () {
+                polarChart.data.datasets[0].data = percents;
+                polarChart.update();
+            }, 220);
         }
     }
 
