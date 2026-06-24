@@ -65,7 +65,7 @@ def build(quizzes, include_answers=False):
             context_html = (
                 '<div style="background:#EFF6FF;border-left:4px solid #2563EB;'
                 'border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;">'
-                f'<p style="margin:0;color:#1E40AF;font-size:13px;font-style:italic;'
+                f'<p style="margin:0;color:#1E40AF;font-size:13px;font-style:normal;'
                 f'line-height:1.6;">{escape(quiz.question_paragraph)}</p>'
                 '</div>'
             )
@@ -105,12 +105,12 @@ def build(quizzes, include_answers=False):
 
             # Ghost number
             f'<div style="position:absolute;top:10px;right:18px;font-size:64px;'
-            f'font-weight:900;color:#F1F5F9;font-family:Sora,Arial,sans-serif;'
+            f'font-weight:900;color:#F1F5F9;font-family:Poppins,Arial,sans-serif;'
             f'line-height:1;user-select:none;">{index:02d}</div>'
 
             # Question heading
             f'<h2 style="margin:0 0 12px;font-size:15.5px;font-weight:700;'
-            f'color:#0F172A;font-family:Sora,Arial,sans-serif;line-height:1.5;'
+            f'color:#0F172A;font-family:Poppins,Arial,sans-serif;line-height:1.5;'
             f'padding-right:60px;">'
             f'<span style="color:#2563EB;margin-right:6px;">Q{index}.</span>'
             f'{escape(quiz.question)}</h2>'
@@ -122,35 +122,16 @@ def build(quizzes, include_answers=False):
             '</div>'
         )
 
-    # --- Summary bar ---
-    total = len(quizzes)
-    summary_html = (
-        '<div style="display:flex;gap:0;border-radius:10px;overflow:hidden;'
-        'border:1px solid #E2E8F0;margin-bottom:28px;">'
-        f'<div style="flex:1;background:#EFF6FF;padding:14px 20px;text-align:center;">'
-        f'<div style="font-size:26px;font-weight:800;color:#1D4ED8;'
-        f'font-family:Sora,Arial,sans-serif;">{total}</div>'
-        f'<div style="font-size:11px;color:#3B82F6;font-weight:600;'
-        f'letter-spacing:.5px;text-transform:uppercase;">Questions</div></div>'
-        f'<div style="flex:1;background:#F0FDF4;padding:14px 20px;text-align:center;">'
-        f'<div style="font-size:26px;font-weight:800;color:#059669;'
-        f'font-family:Sora,Arial,sans-serif;">{"✓" if include_answers else "—"}</div>'
-        f'<div style="font-size:11px;color:#10B981;font-weight:600;'
-        f'letter-spacing:.5px;text-transform:uppercase;">'
-        f'{"Answers Shown" if include_answers else "Answers Hidden"}</div></div>'
-        '</div>'
-    )
-
     html = (
         '<html><head>'
         '<meta charset="utf-8">'
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;900'
-        '&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
+        '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900'
+        '&display=swap" rel="stylesheet">'
         '<style>'
-        '* { box-sizing: border-box; margin: 0; padding: 0; }'
+        '* { box-sizing: border-box; margin: 0; padding: 0; font-style: normal; }'
         'body {'
-        '  font-family: Inter, Arial, sans-serif;'
+        '  font-family: Poppins, Arial, sans-serif;'
         '  background: #F8FAFC;'
         '  color: #1E293B;'
         '  padding: 0;'
@@ -178,16 +159,13 @@ def build(quizzes, include_answers=False):
         'display:flex;align-items:center;justify-content:center;'
         'font-size:22px;">📋</div>'
         '<div>'
-        '<h1 style="font-family:Sora,Arial,sans-serif;font-size:24px;'
+        '<h1 style="font-family:Poppins,Arial,sans-serif;font-size:24px;'
         'font-weight:900;color:#0F172A;letter-spacing:-.5px;">'
         'Question Source</h1>'
-        '<p style="font-size:13px;color:#64748B;margin-top:2px;">'
-        'Auto-generated question paper export</p>'
         '</div>'
         '</div>'
         '</div>'
 
-        f'{summary_html}'
         f'{"".join(blocks)}'
 
         # Footer
