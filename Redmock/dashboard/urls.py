@@ -21,6 +21,7 @@ urlpatterns = [
     path('subjects/<int:pk>/edit/', views.subject_update, name='subject_update'),
     path('subjects/<int:pk>/delete/', views.subject_delete, name='subject_delete'),
     path('quizzes/', views.quiz_list, name='quiz_list'),
+    path('quizzes/source-download/', views.quiz_source_download, name='quiz_source_download'),
     path('quizzes/create/', views.quiz_create, name='quiz_create'),
     path('quizzes/<int:pk>/edit/', views.quiz_update, name='quiz_update'),
     path('quizzes/<int:pk>/delete/', views.quiz_delete, name='quiz_delete'),

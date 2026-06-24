@@ -6,8 +6,10 @@ from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.text import slugify
 from functools import wraps
 
 from quiz.models import Candidate, CandidateTestAttempt
@@ -25,6 +27,7 @@ from .forms import (
     TestSubjectForm,
 )
 from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
+from .source_exports import EXPORTERS
 
 
 def get_logged_in_company(request):
@@ -567,6 +570,71 @@ def quiz_delete(request, pk):
             'object': quiz,
             'title': 'Delete Quiz Question',
             'cancel_url': 'dashboard:quiz_list',
+        },
+    )
+
+
+@company_login_required
+def quiz_source_download(request):
+    subjects = TestSubject.objects.filter(company=request.company).order_by('subject')
+    selected_subject = request.POST.get('subject') or request.GET.get('subject') or 'all'
+    selected_level = request.POST.get('level') or request.GET.get('level') or Quiz.LEVEL_BASIC
+    answer_mode = request.POST.get('answer_mode') or request.GET.get('answer_mode') or 'without'
+    file_type = request.POST.get('file_type')
+    errors = []
+
+    valid_levels = {value for value, _label in Quiz.LEVEL_CHOICES}
+    if selected_level not in valid_levels:
+        selected_level = Quiz.LEVEL_BASIC
+
+    queryset = Quiz.objects.filter(test_subject__company=request.company, level=selected_level).select_related(
+        'test_subject',
+        'sub_title',
+    )
+
+    subject_label = 'all-subjects'
+    if selected_subject != 'all':
+        subject_id = _parse_positive_int(selected_subject)
+        subject = subjects.filter(pk=subject_id).first()
+        if subject:
+            queryset = queryset.filter(test_subject=subject)
+            subject_label = subject.subject
+        else:
+            errors.append('Choose a valid subject.')
+            selected_subject = 'all'
+
+    quizzes = list(queryset.order_by('test_subject__subject', 'sub_title__title', 'id'))
+    if request.method == 'POST' and not errors:
+        exporter = EXPORTERS.get(file_type or '')
+        if not exporter:
+            errors.append('Choose a valid file type.')
+        elif not quizzes:
+            errors.append('No questions found for the selected filters.')
+        else:
+            include_answers = answer_mode == 'with'
+            payload = exporter.build(quizzes, include_answers=include_answers)
+            level_label = dict(Quiz.LEVEL_CHOICES).get(selected_level, selected_level)
+            answer_label = 'with-answers' if include_answers else 'without-answers'
+            filename = (
+                f'{slugify(subject_label) or "questions"}-'
+                f'{slugify(level_label) or selected_level}-{answer_label}.{exporter.extension}'
+            )
+            response = HttpResponse(payload, content_type=exporter.content_type)
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+
+    return render(
+        request,
+        'dashboard/questions_download.html',
+        {
+            'title': 'Source Download',
+            'subjects': subjects,
+            'level_choices': Quiz.LEVEL_CHOICES,
+            'selected_subject': selected_subject,
+            'selected_level': selected_level,
+            'answer_mode': answer_mode,
+            'question_count': len(quizzes),
+            'errors': errors,
         },
     )
 

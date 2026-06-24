@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .qd-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2, 62, 138, .08); }
+    .qd-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .qd-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
+    .qd-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .qd-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .qd-card { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .qd-card + .qd-card { margin-top: 16px; }
+    .qd-card-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .qd-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .qd-card-body { min-width: 0; padding: 14px; }
+    .qd-card-title { display: block; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .qd-card-text { display: block; margin-top: 5px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .qd-body { display: grid; gap: 16px; padding: 16px; }
+    .qd-subject-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .qd-level-grid, .qd-answer-grid, .qd-file-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .qd-radio { display: none; }
+    .qd-option { position: relative; display: flex; min-height: 76px; cursor: pointer; align-items: center; gap: 12px; overflow: hidden; border: 1.5px solid #7dddf0; border-radius: 11px; background: #fff; padding: 14px; color: #03045e; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .qd-option:hover { border-color: #00b4d8; background: #f0fdff; }
+    .qd-radio:checked + .qd-option { border-color: #0096c7; background: #e0f7ff; box-shadow: 0 12px 24px rgba(0, 150, 199, .14); }
+    .qd-option-mark { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: #c9f5fb; color: #0096c7; font-size: 1.25rem; }
+    .qd-option-text { min-width: 0; }
+    .qd-option-title { display: block; overflow: hidden; color: #03045e; font-size: .88rem; font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .qd-option-sub { display: block; margin-top: 4px; color: #008fd1; font-size: .72rem; font-weight: 700; line-height: 1.25; }
+    .qd-alert { border: 1px solid #fecdd3; border-radius: 12px; background: #fff1f2; padding: 14px 16px; color: #be123c; font-size: .9rem; }
+    .qd-summary { border: 1px solid #7dddf0; border-radius: 11px; background: #f8fdff; padding: 16px; color: #023e8a; font-size: .88rem; font-weight: 700; }
+    .qd-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .qd-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+    .qd-btn.primary { background: #03045e; color: #fff; }
+    .qd-btn.secondary { background: #e0f2fe; color: #075985; }
+    @media (max-width: 980px) { .qd-subject-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .qd-level-grid, .qd-answer-grid, .qd-file-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 540px) { .qd-shell { padding: 16px; } .qd-card-head { grid-template-columns: 52px minmax(0, 1fr); } .qd-subject-grid, .qd-level-grid, .qd-answer-grid, .qd-file-grid { grid-template-columns: 1fr; } .qd-actions { flex-direction: column; } }
+</style>
+
+<section class="qd-shell">
+    <div class="qd-heading">
+        <span class="qd-heading-icon"><iconify-icon icon="mdi:download"></iconify-icon></span>
+        <div>
+            <h1 class="qd-title">{{ title }}</h1>
+            <p class="qd-subtitle">Download question source files by subject and level</p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if errors %}
+            <div class="qd-alert">
+                {% for error in errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="qd-card">
+            <div class="qd-card-head">
+                <span class="qd-card-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
+                <span class="qd-card-body">
+                    <span class="qd-card-title">Subject</span>
+                    <span class="qd-card-text">Choose one subject or export all subjects for the selected level.</span>
+                </span>
+            </div>
+            <div class="qd-body">
+                <div class="qd-subject-grid">
+                    <input class="qd-radio" type="radio" id="subject_all" name="subject" value="all" {% if selected_subject == 'all' %}checked{% endif %}>
+                    <label class="qd-option" for="subject_all">
+                        <span class="qd-option-mark"><iconify-icon icon="mdi:select-all"></iconify-icon></span>
+                        <span class="qd-option-text">
+                            <span class="qd-option-title">All Subjects</span>
+                            <span class="qd-option-sub">Combined source</span>
+                        </span>
+                    </label>
+                    {% for subject in subjects %}
+                        <input class="qd-radio" type="radio" id="subject_{{ subject.id }}" name="subject" value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}checked{% endif %}>
+                        <label class="qd-option" for="subject_{{ subject.id }}">
+                            <span class="qd-option-mark">
+                                {% if subject.subject_svg %}
+                                    {{ subject.subject_svg|safe }}
+                                {% else %}
+                                    <iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>
+                                {% endif %}
+                            </span>
+                            <span class="qd-option-text">
+                                <span class="qd-option-title">{{ subject.subject }}</span>
+                                <span class="qd-option-sub">Question source</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="qd-card">
+            <div class="qd-card-head">
+                <span class="qd-card-icon"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon></span>
+                <span class="qd-card-body">
+                    <span class="qd-card-title">Level</span>
+                    <span class="qd-card-text">Pick the question difficulty level.</span>
+                </span>
+            </div>
+            <div class="qd-body">
+                <div class="qd-level-grid">
+                    {% for level_value, level_label in level_choices %}
+                        <input class="qd-radio" type="radio" id="level_{{ level_value }}" name="level" value="{{ level_value }}" {% if selected_level == level_value %}checked{% endif %}>
+                        <label class="qd-option" for="level_{{ level_value }}">
+                            <span class="qd-option-mark"><iconify-icon icon="mdi:signal-cellular-{{ forloop.counter }}"></iconify-icon></span>
+                            <span class="qd-option-text">
+                                <span class="qd-option-title">{{ level_label }}</span>
+                                <span class="qd-option-sub">Level filter</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="qd-card">
+            <div class="qd-card-head">
+                <span class="qd-card-icon"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon></span>
+                <span class="qd-card-body">
+                    <span class="qd-card-title">Answer Mode</span>
+                    <span class="qd-card-text">Choose whether the source includes correct answers.</span>
+                </span>
+            </div>
+            <div class="qd-body">
+                <div class="qd-answer-grid">
+                    <input class="qd-radio" type="radio" id="answer_without" name="answer_mode" value="without" {% if answer_mode != 'with' %}checked{% endif %}>
+                    <label class="qd-option" for="answer_without">
+                        <span class="qd-option-mark"><iconify-icon icon="mdi:eye-off-outline"></iconify-icon></span>
+                        <span class="qd-option-text">
+                            <span class="qd-option-title">Without Answer</span>
+                            <span class="qd-option-sub">Question and options only</span>
+                        </span>
+                    </label>
+                    <input class="qd-radio" type="radio" id="answer_with" name="answer_mode" value="with" {% if answer_mode == 'with' %}checked{% endif %}>
+                    <label class="qd-option" for="answer_with">
+                        <span class="qd-option-mark"><iconify-icon icon="mdi:check-decagram-outline"></iconify-icon></span>
+                        <span class="qd-option-text">
+                            <span class="qd-option-title">With Answer</span>
+                            <span class="qd-option-sub">Includes correct answer</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="qd-summary">{{ question_count }} questions match the current subject and level filters.</div>
+            </div>
+        </div>
+
+        <div class="qd-card">
+            <div class="qd-card-head">
+                <span class="qd-card-icon"><iconify-icon icon="mdi:file-download-outline"></iconify-icon></span>
+                <span class="qd-card-body">
+                    <span class="qd-card-title">Download Type</span>
+                    <span class="qd-card-text">Choose the file format you want to download.</span>
+                </span>
+            </div>
+            <div class="qd-body">
+                <div class="qd-file-grid">
+                    <button class="qd-btn primary" type="submit" name="file_type" value="text"><iconify-icon icon="mdi:file-document-outline"></iconify-icon>Text</button>
+                    <button class="qd-btn primary" type="submit" name="file_type" value="json"><iconify-icon icon="mdi:code-json"></iconify-icon>JSON</button>
+                    <button class="qd-btn primary" type="submit" name="file_type" value="word"><iconify-icon icon="mdi:file-word-outline"></iconify-icon>Word</button>
+                    <button class="qd-btn primary" type="submit" name="file_type" value="csv"><iconify-icon icon="mdi:file-delimited-outline"></iconify-icon>CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="qd-actions">
+            <a href="{% url 'dashboard:quiz_list' %}" class="qd-btn secondary">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                Back to Quizs
+            </a>
+        </div>
+    </form>
+</section>
+</div>
+{% endblock %}

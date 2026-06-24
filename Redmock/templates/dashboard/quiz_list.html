@@ -16,6 +16,7 @@
     .quiz-btn.primary { border: 0; background: #03045e; color: #fff; }
     .quiz-btn.secondary { background: #e0f2fe; color: #075985; }
     .quiz-btn.danger { background: #fff1f2; color: #be123c; }
+    .quiz-heading-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .quiz-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
     .quiz-stat-card { display: grid; grid-template-columns: 58px minmax(0, 1fr); min-height: 82px; overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
     .quiz-stat-icon { display: grid; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.5rem; }
@@ -72,10 +73,16 @@
                 <p class="quiz-subtitle">Question bank analytics, filters and listing</p>
             </div>
         </div>
-        <a href="{% url 'dashboard:quiz_create' %}" class="quiz-btn primary">
-            <iconify-icon icon="mdi:plus"></iconify-icon>
-            Create Question
-        </a>
+        <div class="quiz-heading-actions">
+            <a href="{% url 'dashboard:quiz_source_download' %}" class="quiz-btn secondary">
+                <iconify-icon icon="mdi:download"></iconify-icon>
+                Source Downloade
+            </a>
+            <a href="{% url 'dashboard:quiz_create' %}" class="quiz-btn primary">
+                <iconify-icon icon="mdi:plus"></iconify-icon>
+                Create Question
+            </a>
+        </div>
     </div>
 
     <div class="quiz-stats">
