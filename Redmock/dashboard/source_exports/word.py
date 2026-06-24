@@ -5,45 +5,200 @@ from .common import answer_text, option_rows, subject_name, subtitle_name
 content_type = 'application/msword; charset=utf-8'
 extension = 'doc'
 
+OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
+
+LEVEL_COLORS = {
+    'easy':   ('#065F46', '#D1FAE5', '◆ Easy'),
+    'medium': ('#92400E', '#FEF3C7', '◆ Medium'),
+    'hard':   ('#7F1D1D', '#FEE2E2', '◆ Hard'),
+}
+
+
+def _level_badge(quiz):
+    level = quiz.get_level_display().lower()
+    bg, fg, label_map = {
+        'easy':   ('#D1FAE5', '#065F46', '◆ Easy'),
+        'medium': ('#FEF3C7', '#92400E', '◆ Medium'),
+        'hard':   ('#FEE2E2', '#7F1D1D', '◆ Hard'),
+    }.get(level, ('#E2E8F0', '#1E293B', f'◆ {quiz.get_level_display()}'))
+    return (
+        f'<span style="display:inline-block;padding:2px 10px;border-radius:20px;'
+        f'background:{bg};color:{fg};font-size:11px;font-weight:700;'
+        f'letter-spacing:.5px;font-family:Inter,Arial,sans-serif;">'
+        f'{label_map}</span>'
+    )
+
 
 def build(quizzes, include_answers=False):
     blocks = []
+
     for index, quiz in enumerate(quizzes, start=1):
-        options = ''.join(
-            f'<li><strong>{escape(option_key)}:</strong> {escape(option_value)}</li>'
-            for option_key, option_value in option_rows(quiz)
-        )
-        answer = ''
-        if include_answers:
-            answer = (
-                '<p class="answer"><strong>Answer:</strong> '
-                f'{escape(quiz.correct_answer)} - {escape(answer_text(quiz))}</p>'
+        # --- Options ---
+        options_html = ''
+        for i, (option_key, option_value) in enumerate(option_rows(quiz)):
+            label = OPTION_LABELS[i] if i < len(OPTION_LABELS) else option_key
+            is_correct = (
+                include_answers and
+                escape(option_key) == escape(quiz.correct_answer)
             )
-        context = ''
+            opt_bg    = '#F0FDF4' if is_correct else '#F8FAFC'
+            opt_border = '#10B981' if is_correct else '#E2E8F0'
+            opt_color  = '#065F46' if is_correct else '#334155'
+            tick       = ' ✓' if is_correct else ''
+            options_html += (
+                f'<div style="display:flex;align-items:flex-start;gap:10px;'
+                f'padding:9px 14px;margin-bottom:6px;border-radius:8px;'
+                f'border:1.5px solid {opt_border};background:{opt_bg};">'
+                f'<span style="min-width:24px;height:24px;border-radius:50%;'
+                f'background:{"#10B981" if is_correct else "#2563EB"};'
+                f'color:#fff;font-size:12px;font-weight:700;display:flex;'
+                f'align-items:center;justify-content:center;flex-shrink:0;">'
+                f'{label}</span>'
+                f'<span style="color:{opt_color};font-size:13.5px;line-height:1.5;'
+                f'padding-top:2px;">{escape(option_value)}{tick}</span>'
+                f'</div>'
+            )
+
+        # --- Context paragraph ---
+        context_html = ''
         if quiz.question_paragraph:
-            context = f'<p class="context">{escape(quiz.question_paragraph)}</p>'
-        blocks.append(
-            '<section class="question">'
-            f'<h2>{index}. {escape(quiz.question)}</h2>'
-            f'{context}'
-            f'<p><strong>Subject:</strong> {escape(subject_name(quiz))}</p>'
-            f'<p><strong>Sub Title:</strong> {escape(subtitle_name(quiz))}</p>'
-            f'<p><strong>Level:</strong> {escape(quiz.get_level_display())}</p>'
-            f'<ol>{options}</ol>'
-            f'{answer}'
-            '</section>'
+            context_html = (
+                '<div style="background:#EFF6FF;border-left:4px solid #2563EB;'
+                'border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;">'
+                f'<p style="margin:0;color:#1E40AF;font-size:13px;font-style:italic;'
+                f'line-height:1.6;">{escape(quiz.question_paragraph)}</p>'
+                '</div>'
+            )
+
+        # --- Answer block ---
+        answer_html = ''
+        if include_answers:
+            answer_html = (
+                '<div style="margin-top:14px;padding:10px 16px;'
+                'background:#F0FDF4;border-radius:8px;'
+                'border:1.5px solid #10B981;">'
+                '<span style="color:#065F46;font-weight:700;font-size:13px;">'
+                f'✓ Answer: {escape(quiz.correct_answer)}</span>'
+                f'<span style="color:#047857;font-size:13px;"> — '
+                f'{escape(answer_text(quiz))}</span>'
+                '</div>'
+            )
+
+        # --- Meta badges row ---
+        meta_html = (
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">'
+            f'<span style="background:#EFF6FF;color:#1E40AF;font-size:11px;'
+            f'font-weight:600;padding:3px 10px;border-radius:20px;'
+            f'border:1px solid #BFDBFE;">📚 {escape(subject_name(quiz))}</span>'
+            f'<span style="background:#F5F3FF;color:#5B21B6;font-size:11px;'
+            f'font-weight:600;padding:3px 10px;border-radius:20px;'
+            f'border:1px solid #DDD6FE;">🏷 {escape(subtitle_name(quiz))}</span>'
+            f'{_level_badge(quiz)}'
+            '</div>'
         )
 
+        # --- Question card ---
+        blocks.append(
+            '<div style="position:relative;background:#FFFFFF;border-radius:12px;'
+            'border:1px solid #E2E8F0;padding:24px 28px;margin-bottom:20px;'
+            'box-shadow:0 1px 4px rgba(0,0,0,.06);page-break-inside:avoid;">'
+
+            # Ghost number
+            f'<div style="position:absolute;top:10px;right:18px;font-size:64px;'
+            f'font-weight:900;color:#F1F5F9;font-family:Sora,Arial,sans-serif;'
+            f'line-height:1;user-select:none;">{index:02d}</div>'
+
+            # Question heading
+            f'<h2 style="margin:0 0 12px;font-size:15.5px;font-weight:700;'
+            f'color:#0F172A;font-family:Sora,Arial,sans-serif;line-height:1.5;'
+            f'padding-right:60px;">'
+            f'<span style="color:#2563EB;margin-right:6px;">Q{index}.</span>'
+            f'{escape(quiz.question)}</h2>'
+
+            f'{context_html}'
+            f'{meta_html}'
+            f'<div>{options_html}</div>'
+            f'{answer_html}'
+            '</div>'
+        )
+
+    # --- Summary bar ---
+    total = len(quizzes)
+    summary_html = (
+        '<div style="display:flex;gap:0;border-radius:10px;overflow:hidden;'
+        'border:1px solid #E2E8F0;margin-bottom:28px;">'
+        f'<div style="flex:1;background:#EFF6FF;padding:14px 20px;text-align:center;">'
+        f'<div style="font-size:26px;font-weight:800;color:#1D4ED8;'
+        f'font-family:Sora,Arial,sans-serif;">{total}</div>'
+        f'<div style="font-size:11px;color:#3B82F6;font-weight:600;'
+        f'letter-spacing:.5px;text-transform:uppercase;">Questions</div></div>'
+        f'<div style="flex:1;background:#F0FDF4;padding:14px 20px;text-align:center;">'
+        f'<div style="font-size:26px;font-weight:800;color:#059669;'
+        f'font-family:Sora,Arial,sans-serif;">{"✓" if include_answers else "—"}</div>'
+        f'<div style="font-size:11px;color:#10B981;font-weight:600;'
+        f'letter-spacing:.5px;text-transform:uppercase;">'
+        f'{"Answers Shown" if include_answers else "Answers Hidden"}</div></div>'
+        '</div>'
+    )
+
     html = (
-        '<html><head><meta charset="utf-8">'
+        '<html><head>'
+        '<meta charset="utf-8">'
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        '<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;900'
+        '&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
         '<style>'
-        'body{font-family:Arial,sans-serif;color:#03045e;}'
-        '.question{border-bottom:1px solid #90e0ef;padding:14px 0;}'
-        'h1{color:#023e8a;} h2{font-size:16px;color:#03045e;}'
-        '.context{color:#075985;} .answer{color:#0077b6;}'
-        '</style></head><body>'
-        '<h1>Question Source</h1>'
+        '* { box-sizing: border-box; margin: 0; padding: 0; }'
+        'body {'
+        '  font-family: Inter, Arial, sans-serif;'
+        '  background: #F8FAFC;'
+        '  color: #1E293B;'
+        '  padding: 0;'
+        '  margin: 0;'
+        '}'
+        '.page-wrap {'
+        '  max-width: 820px;'
+        '  margin: 0 auto;'
+        '  padding: 40px 32px 60px;'
+        '}'
+        '@media print {'
+        '  body { background: #fff; }'
+        '  .page-wrap { padding: 20px; }'
+        '}'
+        '</style>'
+        '</head><body>'
+        '<div class="page-wrap">'
+
+        # Header
+        '<div style="margin-bottom:32px;padding-bottom:20px;'
+        'border-bottom:2px solid #E2E8F0;">'
+        '<div style="display:flex;align-items:center;gap:14px;">'
+        '<div style="width:48px;height:48px;border-radius:12px;'
+        'background:linear-gradient(135deg,#2563EB,#7C3AED);'
+        'display:flex;align-items:center;justify-content:center;'
+        'font-size:22px;">📋</div>'
+        '<div>'
+        '<h1 style="font-family:Sora,Arial,sans-serif;font-size:24px;'
+        'font-weight:900;color:#0F172A;letter-spacing:-.5px;">'
+        'Question Source</h1>'
+        '<p style="font-size:13px;color:#64748B;margin-top:2px;">'
+        'Auto-generated question paper export</p>'
+        '</div>'
+        '</div>'
+        '</div>'
+
+        f'{summary_html}'
         f'{"".join(blocks)}'
+
+        # Footer
+        '<div style="margin-top:32px;padding-top:16px;border-top:1px solid #E2E8F0;'
+        'text-align:center;">'
+        '<p style="font-size:11px;color:#94A3B8;">'
+        'Generated by Question Source Export · Confidential</p>'
+        '</div>'
+
+        '</div>'
         '</body></html>'
     )
+
     return html.encode('utf-8')
