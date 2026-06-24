@@ -21,11 +21,16 @@
     .qd-body { display: grid; gap: 16px; padding: 16px; }
     .qd-subject-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .qd-level-grid, .qd-answer-grid, .qd-file-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    .qd-radio { display: none; }
-    .qd-option { position: relative; display: flex; min-height: 76px; cursor: pointer; align-items: center; gap: 12px; overflow: hidden; border: 1.5px solid #7dddf0; border-radius: 11px; background: #fff; padding: 14px; color: #03045e; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .qd-radio { position: absolute; opacity: 0; pointer-events: none; }
+    .qd-option { position: relative; display: flex; min-height: 76px; cursor: pointer; align-items: center; gap: 12px; overflow: hidden; border: 1.5px solid #7dddf0; border-radius: 11px; background: #fff; padding: 14px 46px 14px 14px; color: #03045e; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .qd-option::after { content: ""; position: absolute; top: 50%; right: 15px; width: 18px; height: 18px; transform: translateY(-50%); border: 2px solid #90e0ef; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 4px #fff; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
     .qd-option:hover { border-color: #00b4d8; background: #f0fdff; }
     .qd-radio:checked + .qd-option { border-color: #0096c7; background: #e0f7ff; box-shadow: 0 12px 24px rgba(0, 150, 199, .14); }
+    .qd-radio:checked + .qd-option::after { border-color: #0096c7; background: #0096c7; box-shadow: inset 0 0 0 4px #fff, 0 0 0 4px rgba(0, 180, 216, .14); }
+    .qd-radio:focus-visible + .qd-option { outline: 3px solid rgba(0, 180, 216, .26); outline-offset: 2px; }
     .qd-option-mark { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: #c9f5fb; color: #0096c7; font-size: 1.25rem; }
+    .qd-option-mark svg,
+    .qd-option-mark iconify-icon { display: block; width: 22px !important; height: 22px !important; max-width: 22px; max-height: 22px; }
     .qd-option-text { min-width: 0; }
     .qd-option-title { display: block; overflow: hidden; color: #03045e; font-size: .88rem; font-weight: 800; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
     .qd-option-sub { display: block; margin-top: 4px; color: #008fd1; font-size: .72rem; font-weight: 700; line-height: 1.25; }
