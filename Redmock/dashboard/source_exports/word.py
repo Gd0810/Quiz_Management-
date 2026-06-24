@@ -41,21 +41,20 @@ def build(quizzes, include_answers=False):
                 include_answers and
                 escape(option_key) == escape(quiz.correct_answer)
             )
-            opt_bg    = '#F0FDF4' if is_correct else '#F8FAFC'
+            opt_bg     = '#F0FDF4' if is_correct else 'transparent'
             opt_border = '#10B981' if is_correct else '#E2E8F0'
             opt_color  = '#065F46' if is_correct else '#334155'
-            tick       = ' ✓' if is_correct else ''
+            lbl_color  = '#10B981' if is_correct else '#2563EB'
+            tick       = '  ✓' if is_correct else ''
             options_html += (
-                f'<div style="display:flex;align-items:flex-start;gap:10px;'
-                f'padding:9px 14px;margin-bottom:6px;border-radius:8px;'
+                f'<div style="display:flex;align-items:flex-start;'
+                f'padding:8px 14px;margin-bottom:6px;border-radius:8px;'
                 f'border:1.5px solid {opt_border};background:{opt_bg};">'
-                f'<span style="min-width:24px;height:24px;border-radius:50%;'
-                f'background:{"#10B981" if is_correct else "#2563EB"};'
-                f'color:#fff;font-size:12px;font-weight:700;display:flex;'
-                f'align-items:center;justify-content:center;flex-shrink:0;">'
-                f'{label}</span>'
-                f'<span style="color:{opt_color};font-size:13.5px;line-height:1.5;'
-                f'padding-top:2px;">{escape(option_value)}{tick}</span>'
+                f'<span style="min-width:28px;font-size:13.5px;font-weight:700;'
+                f'color:{lbl_color};flex-shrink:0;padding-top:1px;">'
+                f'{label}.&nbsp;</span>'
+                f'<span style="margin-left:8px;color:{opt_color};font-size:13.5px;'
+                f'line-height:1.5;padding-top:1px;">{escape(option_value)}{tick}</span>'
                 f'</div>'
             )
 
@@ -154,10 +153,6 @@ def build(quizzes, include_answers=False):
         '<div style="margin-bottom:32px;padding-bottom:20px;'
         'border-bottom:2px solid #E2E8F0;">'
         '<div style="display:flex;align-items:center;gap:14px;">'
-        '<div style="width:48px;height:48px;border-radius:12px;'
-        'background:linear-gradient(135deg,#2563EB,#7C3AED);'
-        'display:flex;align-items:center;justify-content:center;'
-        'font-size:22px;">📋</div>'
         '<div>'
         '<h1 style="font-family:Poppins,Arial,sans-serif;font-size:24px;'
         'font-weight:900;color:#0F172A;letter-spacing:-.5px;">'
