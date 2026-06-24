@@ -387,6 +387,18 @@ def _validation_error_text(error):
     return str(error)
 
 
+def _subtitles_json_for_company(company):
+    subtitles = SubTitle.objects.filter(test_subject__company=company).select_related('test_subject')
+    return json.dumps([
+        {
+            'id': subtitle.id,
+            'subject_id': subtitle.test_subject_id,
+            'title': subtitle.title,
+        }
+        for subtitle in subtitles
+    ])
+
+
 @company_login_required
 def subject_question_upload(request):
     initial = {}
@@ -402,15 +414,7 @@ def subject_question_upload(request):
         company=request.company,
         initial=initial,
     )
-    subtitles = SubTitle.objects.filter(test_subject__company=request.company).select_related('test_subject')
-    subtitles_json = json.dumps([
-        {
-            'id': subtitle.id,
-            'subject_id': subtitle.test_subject_id,
-            'title': subtitle.title,
-        }
-        for subtitle in subtitles
-    ])
+    subtitles_json = _subtitles_json_for_company(request.company)
 
     if request.method == 'POST' and form.is_valid():
         upload = form.save()
@@ -517,11 +521,15 @@ def quiz_create(request):
         form.save()
         messages.success(request, 'Quiz question created successfully.')
         return redirect('dashboard:quiz_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Create Quiz Question',
-        cancel_url='dashboard:quiz_list',
+        'dashboard/quiz_form.html',
+        {
+            'form': form,
+            'title': 'Create Quiz Question',
+            'cancel_url': 'dashboard:quiz_list',
+            'subtitles_json': _subtitles_json_for_company(request.company),
+        },
     )
 
 
@@ -533,11 +541,15 @@ def quiz_update(request, pk):
         form.save()
         messages.success(request, 'Quiz question updated successfully.')
         return redirect('dashboard:quiz_list')
-    return render_crud_form(
+    return render(
         request,
-        form=form,
-        title='Edit Quiz Question',
-        cancel_url='dashboard:quiz_list',
+        'dashboard/quiz_form.html',
+        {
+            'form': form,
+            'title': 'Edit Quiz Question',
+            'cancel_url': 'dashboard:quiz_list',
+            'subtitles_json': _subtitles_json_for_company(request.company),
+        },
     )
 
 
@@ -548,11 +560,14 @@ def quiz_delete(request, pk):
         quiz.delete()
         messages.success(request, 'Quiz question deleted successfully.')
         return redirect('dashboard:quiz_list')
-    return render_crud_delete(
+    return render(
         request,
-        obj=quiz,
-        title='Delete Quiz Question',
-        cancel_url='dashboard:quiz_list',
+        'dashboard/quiz_delete.html',
+        {
+            'object': quiz,
+            'title': 'Delete Quiz Question',
+            'cancel_url': 'dashboard:quiz_list',
+        },
     )
 
 

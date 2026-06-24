@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .quiz-form-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2, 62, 138, .08); }
+    .quiz-form-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .quiz-form-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0, 150, 199, .22); }
+    .quiz-form-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .quiz-form-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+    .quiz-form-card { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .quiz-form-card + .quiz-form-card { margin-top: 16px; }
+    .quiz-form-card-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-form-card-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .quiz-form-card-body { min-width: 0; padding: 14px; }
+    .quiz-form-card-title { display: block; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .quiz-form-card-text { display: block; margin-top: 5px; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+    .quiz-form-body { display: grid; gap: 16px; padding: 16px; }
+    .quiz-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .quiz-form-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .quiz-form-field { border: 1px solid #7dddf0; border-radius: 11px; background: #fff; padding: 16px; }
+    .quiz-form-field label { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; color: #334155; font-size: .78rem; font-weight: 700; }
+    .quiz-form-field input,
+    .quiz-form-field select,
+    .quiz-form-field textarea { width: 100%; border: 1px solid #bae6fd; border-radius: 9px; background: #fff; padding: 10px 12px; color: #0f172a; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .quiz-form-field textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+    .quiz-form-field input:focus,
+    .quiz-form-field select:focus,
+    .quiz-form-field textarea:focus { border-color: #0096c7; box-shadow: 0 0 0 3px rgba(0, 180, 216, .14); }
+    .quiz-form-help, .quiz-form-error { margin: 8px 0 0; font-size: .78rem; line-height: 1.4; }
+    .quiz-form-help { color: #64748b; }
+    .quiz-form-error { color: #e11d48; }
+    .quiz-form-alert { margin-bottom: 18px; border: 1px solid #fecdd3; border-radius: 12px; background: #fff1f2; padding: 14px 16px; color: #be123c; font-size: .9rem; }
+    .quiz-form-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .quiz-form-btn { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+    .quiz-form-btn.primary { background: #03045e; color: #fff; }
+    .quiz-form-btn.secondary { background: #e0f2fe; color: #075985; }
+    @media (max-width: 900px) { .quiz-form-grid, .quiz-form-options { grid-template-columns: 1fr; } }
+    @media (max-width: 540px) { .quiz-form-shell { padding: 16px; } .quiz-form-card-head { grid-template-columns: 52px minmax(0, 1fr); } .quiz-form-actions { flex-direction: column; } }
+</style>
+
+<section class="quiz-form-shell">
+    <div class="quiz-form-heading">
+        <span class="quiz-form-heading-icon"><iconify-icon icon="mdi:clipboard-edit-outline"></iconify-icon></span>
+        <div>
+            <h1 class="quiz-form-title">{{ title }}</h1>
+            <p class="quiz-form-subtitle">Create and maintain questions in the same blue dashboard style</p>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" data-quiz-form>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="quiz-form-alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="quiz-form-card">
+            <div class="quiz-form-card-head">
+                <span class="quiz-form-card-icon"><iconify-icon icon="mdi:tune-variant"></iconify-icon></span>
+                <span class="quiz-form-card-body">
+                    <span class="quiz-form-card-title">Question Routing</span>
+                    <span class="quiz-form-card-text">Choose the subject, optional sub title and difficulty level.</span>
+                </span>
+            </div>
+            <div class="quiz-form-body">
+                <div class="quiz-form-grid">
+                    <div class="quiz-form-field">
+                        <label for="{{ form.test_subject.id_for_label }}"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon>{{ form.test_subject.label }}</label>
+                        {{ form.test_subject }}
+                        {% if form.test_subject.errors %}<p class="quiz-form-error">{{ form.test_subject.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="quiz-form-field">
+                        <label for="{{ form.sub_title.id_for_label }}"><iconify-icon icon="mdi:format-title"></iconify-icon>{{ form.sub_title.label }}</label>
+                        {{ form.sub_title }}
+                        <p class="quiz-form-help">Choose General when this question has no sub title.</p>
+                        {% if form.sub_title.errors %}<p class="quiz-form-error">{{ form.sub_title.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="quiz-form-field">
+                        <label for="{{ form.level.id_for_label }}"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ form.level.label }}</label>
+                        {{ form.level }}
+                        {% if form.level.errors %}<p class="quiz-form-error">{{ form.level.errors|join:", " }}</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-form-card">
+            <div class="quiz-form-card-head">
+                <span class="quiz-form-card-icon"><iconify-icon icon="mdi:help-circle-outline"></iconify-icon></span>
+                <span class="quiz-form-card-body">
+                    <span class="quiz-form-card-title">Question Details</span>
+                    <span class="quiz-form-card-text">Add optional paragraph context, image and the question text.</span>
+                </span>
+            </div>
+            <div class="quiz-form-body">
+                <div class="quiz-form-field">
+                    <label for="{{ form.question_paragraph.id_for_label }}"><iconify-icon icon="mdi:text-box-outline"></iconify-icon>{{ form.question_paragraph.label }}</label>
+                    {{ form.question_paragraph }}
+                    {% if form.question_paragraph.errors %}<p class="quiz-form-error">{{ form.question_paragraph.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div class="quiz-form-field">
+                    <label for="{{ form.question_image.id_for_label }}"><iconify-icon icon="mdi:image-outline"></iconify-icon>{{ form.question_image.label }}</label>
+                    {{ form.question_image }}
+                    {% if form.question_image.errors %}<p class="quiz-form-error">{{ form.question_image.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div class="quiz-form-field">
+                    <label for="{{ form.question.id_for_label }}"><iconify-icon icon="mdi:comment-question-outline"></iconify-icon>{{ form.question.label }}</label>
+                    {{ form.question }}
+                    {% if form.question.errors %}<p class="quiz-form-error">{{ form.question.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-form-card">
+            <div class="quiz-form-card-head">
+                <span class="quiz-form-card-icon"><iconify-icon icon="mdi:format-list-checks"></iconify-icon></span>
+                <span class="quiz-form-card-body">
+                    <span class="quiz-form-card-title">Answers</span>
+                    <span class="quiz-form-card-text">Enter four options and choose the correct answer.</span>
+                </span>
+            </div>
+            <div class="quiz-form-body">
+                <div class="quiz-form-options">
+                    {% for field in form %}
+                        {% if field.name == 'option_1' or field.name == 'option_2' or field.name == 'option_3' or field.name == 'option_4' %}
+                            <div class="quiz-form-field">
+                                <label for="{{ field.id_for_label }}"><iconify-icon icon="mdi:circle-outline"></iconify-icon>{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}<p class="quiz-form-error">{{ field.errors|join:", " }}</p>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="quiz-form-field">
+                    <label for="{{ form.correct_answer.id_for_label }}"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon>{{ form.correct_answer.label }}</label>
+                    {{ form.correct_answer }}
+                    {% if form.correct_answer.errors %}<p class="quiz-form-error">{{ form.correct_answer.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-form-actions">
+            <button type="submit" class="quiz-form-btn primary">
+                <iconify-icon icon="mdi:content-save"></iconify-icon>
+                Save Question
+            </button>
+            <a href="{% url cancel_url %}" class="quiz-form-btn secondary">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                Back to Quizs
+            </a>
+        </div>
+    </form>
+</section>
+
+<script>
+(function () {
+    var form = document.querySelector('[data-quiz-form]');
+    if (!form) return;
+
+    var subjectSelect = form.querySelector('#id_test_subject');
+    var subtitleSelect = form.querySelector('#id_sub_title');
+    var subtitles = {{ subtitles_json|safe }};
+    var selectedSubtitle = subtitleSelect ? subtitleSelect.value : '';
+
+    if (!subjectSelect || !subtitleSelect) return;
+
+    function renderSubtitles() {
+        var subjectId = parseInt(subjectSelect.value, 10);
+        var matches = subtitles.filter(function (subtitle) {
+            return subtitle.subject_id === subjectId;
+        });
+
+        subtitleSelect.innerHTML = '';
+        subtitleSelect.add(new Option('General', ''));
+
+        matches.forEach(function (subtitle) {
+            subtitleSelect.add(new Option(subtitle.title, subtitle.id));
+        });
+
+        var hasSelectedSubtitle = matches.some(function (subtitle) {
+            return String(subtitle.id) === selectedSubtitle;
+        });
+        subtitleSelect.value = hasSelectedSubtitle ? selectedSubtitle : '';
+    }
+
+    subjectSelect.addEventListener('change', function () {
+        selectedSubtitle = '';
+        renderSubtitles();
+    });
+    subtitleSelect.addEventListener('change', function () {
+        selectedSubtitle = subtitleSelect.value;
+    });
+    renderSubtitles();
+}());
+</script>
+</div>
+{% endblock %}
