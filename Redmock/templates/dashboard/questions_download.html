@@ -56,12 +56,6 @@
 
     <form method="post">
         {% csrf_token %}
-        {% if errors %}
-            <div class="qd-alert">
-                {% for error in errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
-            </div>
-        {% endif %}
-
         <div class="qd-card">
             <div class="qd-card-head">
                 <span class="qd-card-icon"><iconify-icon icon="mdi:book-open-page-variant-outline"></iconify-icon></span>
@@ -151,7 +145,9 @@
                         </span>
                     </label>
                 </div>
-                <div class="qd-summary">{{ question_count }} questions match the current subject and level filters.</div>
+                <div class="qd-summary" id="question-count-summary" aria-live="polite">
+                    {{ question_count }} questions match the current subject and level filters.
+                </div>
             </div>
         </div>
 
@@ -181,5 +177,49 @@
         </div>
     </form>
 </section>
+{{ question_count_map|json_script:"question-count-map" }}
+<script>
+    (function () {
+        function initQuestionDownloadCount() {
+            var dataElement = document.getElementById('question-count-map');
+            var summary = document.getElementById('question-count-summary');
+
+            if (!dataElement || !summary) {
+                return;
+            }
+
+            var countData = {};
+            try {
+                countData = JSON.parse(dataElement.textContent || '{}');
+            } catch (error) {
+                countData = {};
+            }
+
+            function selectedValue(name) {
+                var checked = document.querySelector('input[name="' + name + '"]:checked');
+                return checked ? checked.value : '';
+            }
+
+            function renderQuestionCount() {
+                var subject = selectedValue('subject') || 'all';
+                var level = selectedValue('level');
+                var subjectCounts = countData[subject] || countData.all || {};
+                var count = Number(subjectCounts[level] || 0);
+                var questionText = count === 1 ? 'question' : 'questions';
+                summary.textContent = count + ' ' + questionText + ' match the current subject and level filters.';
+            }
+
+            document.querySelectorAll('input[name="subject"], input[name="level"]').forEach(function (radio) {
+                radio.removeEventListener('change', renderQuestionCount);
+                radio.addEventListener('change', renderQuestionCount);
+            });
+            renderQuestionCount();
+        }
+
+        initQuestionDownloadCount();
+        document.addEventListener('DOMContentLoaded', initQuestionDownloadCount);
+        document.body.addEventListener('htmx:afterSettle', initQuestionDownloadCount);
+    })();
+</script>
 </div>
 {% endblock %}
