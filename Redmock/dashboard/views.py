@@ -582,6 +582,27 @@ def quiz_source_download(request):
     answer_mode = request.POST.get('answer_mode') or request.GET.get('answer_mode') or 'without'
     file_type = request.POST.get('file_type')
     errors = []
+    question_count_map = {
+        'all': {level_value: 0 for level_value, _label in Quiz.LEVEL_CHOICES}
+    }
+
+    for subject in subjects:
+        question_count_map[str(subject.id)] = {level_value: 0 for level_value, _label in Quiz.LEVEL_CHOICES}
+
+    count_rows = (
+        Quiz.objects.filter(test_subject__company=request.company)
+        .values('test_subject_id', 'level')
+        .annotate(total=Count('id'))
+    )
+    for row in count_rows:
+        subject_key = str(row['test_subject_id'])
+        level_key = row['level']
+        total = row['total']
+        if level_key not in question_count_map['all']:
+            continue
+        question_count_map['all'][level_key] += total
+        if subject_key in question_count_map:
+            question_count_map[subject_key][level_key] = total
 
     valid_levels = {value for value, _label in Quiz.LEVEL_CHOICES}
     if selected_level not in valid_levels:
@@ -634,6 +655,7 @@ def quiz_source_download(request):
             'selected_level': selected_level,
             'answer_mode': answer_mode,
             'question_count': len(quizzes),
+            'question_count_map': question_count_map,
             'errors': errors,
         },
     )
