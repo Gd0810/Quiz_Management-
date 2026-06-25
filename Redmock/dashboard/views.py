@@ -628,9 +628,13 @@ def quiz_source_download(request):
     if request.method == 'POST' and not errors:
         exporter = EXPORTERS.get(file_type or '')
         if not exporter:
-            errors.append('Choose a valid file type.')
+            error_message = 'Choose a valid file type.'
+            errors.append(error_message)
+            messages.error(request, error_message)
         elif not quizzes:
-            errors.append('No questions found for the selected filters.')
+            error_message = 'No questions found for the selected filters.'
+            errors.append(error_message)
+            messages.error(request, error_message)
         else:
             include_answers = answer_mode == 'with'
             payload = exporter.build(quizzes, include_answers=include_answers)

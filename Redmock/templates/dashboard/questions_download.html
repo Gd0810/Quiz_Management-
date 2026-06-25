@@ -150,9 +150,7 @@
                         </span>
                     </label>
                 </div>
-                <div class="qd-summary" id="question-count-summary" aria-live="polite">
-                    {{ question_count }} questions match the current subject and level filters.
-                </div>
+                <div class="qd-summary">{{ question_count }} questions match the current subject and level filters.</div>
             </div>
         </div>
 
@@ -182,30 +180,5 @@
         </div>
     </form>
 </section>
-{{ question_count_map|json_script:"question-count-map" }}
-<script>
-    (function () {
-        const countData = JSON.parse(document.getElementById('question-count-map').textContent || '{}');
-        const summary = document.getElementById('question-count-summary');
-        const radios = document.querySelectorAll('input[name="subject"], input[name="level"]');
-
-        function selectedValue(name) {
-            const checked = document.querySelector(`input[name="${name}"]:checked`);
-            return checked ? checked.value : '';
-        }
-
-        function renderQuestionCount() {
-            const subject = selectedValue('subject') || 'all';
-            const level = selectedValue('level');
-            const subjectCounts = countData[subject] || countData.all || {};
-            const count = Number(subjectCounts[level] || 0);
-            const questionText = count === 1 ? 'question' : 'questions';
-            summary.textContent = `${count} ${questionText} match the current subject and level filters.`;
-        }
-
-        radios.forEach((radio) => radio.addEventListener('change', renderQuestionCount));
-        renderQuestionCount();
-    })();
-</script>
 </div>
 {% endblock %}
