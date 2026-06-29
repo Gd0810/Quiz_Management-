@@ -727,24 +727,32 @@ def candidate_delete(request, pk):
 
 @company_login_required
 def attempt_list(request):
-    queryset = CandidateTestAttempt.objects.filter(company=request.company).select_related('candidate', 'company')
-    return render_crud_list(
+    queryset = (
+        CandidateTestAttempt.objects.filter(company=request.company)
+        .select_related('candidate', 'company')
+        .order_by('-created_at')
+    )
+
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    querystring = query_params.urlencode()
+    page_query_prefix = f'{querystring}&' if querystring else ''
+
+    paginator = Paginator(queryset, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    page_numbers = paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1)
+
+    return render(
         request,
-        queryset=queryset,
-        title='Candidate Test Attempts',
-        create_url='dashboard:attempt_create',
-        edit_url_name='dashboard:attempt_update',
-        delete_url_name='dashboard:attempt_delete',
-        fields=[
-            'candidate',
-            'company',
-            'session_type',
-            'level',
-            'question_count',
-            'candidate_details_json',
-            'percentage',
-            'is_submitted',
-        ],
+        'dashboard/attempt_list.html',
+        {
+            'title': 'Attempts',
+            'objects': page_obj.object_list,
+            'page_obj': page_obj,
+            'page_numbers': page_numbers,
+            'page_query_prefix': page_query_prefix,
+            'total_attempt_count': queryset.count(),
+        },
     )
 
 
