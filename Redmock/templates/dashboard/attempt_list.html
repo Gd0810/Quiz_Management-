@@ -105,7 +105,7 @@
 
                 {% for page_number in page_numbers %}
                     {% if page_number == page_obj.paginator.ELLIPSIS %}
-                        <span class="quiz-page-ellipsis">…</span>
+                        <span class=\"quiz-page-ellipsis\">{{ page_number }}</span>
                     {% elif page_number == page_obj.number %}
                         <span class="quiz-page-link is-active" aria-current="page">{{ page_number }}</span>
                     {% else %}
