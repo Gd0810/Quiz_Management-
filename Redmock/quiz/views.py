@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+import json
 import logging
 
 from django.contrib import messages
@@ -50,6 +51,42 @@ def _parse_bool(raw_value):
     if raw_value is None:
         return False
     return str(raw_value).lower() in {'1', 'true', 'on', 'yes'}
+
+
+def _get_post_list(data, key):
+    if hasattr(data, 'getlist'):
+        values = data.getlist(key)
+        if not values:
+            values = data.getlist(f'{key}[]')
+    else:
+        raw_value = data.get(key)
+        if raw_value is None:
+            raw_value = data.get(f'{key}[]')
+        values = raw_value if isinstance(raw_value, list) else [raw_value]
+
+    normalized = []
+    for value in values:
+        if value in (None, ''):
+            continue
+        if isinstance(value, (list, tuple)):
+            normalized.extend(str(item) for item in value if item not in (None, ''))
+            continue
+
+        text = str(value).strip()
+        if text.startswith('[') and text.endswith(']'):
+            try:
+                decoded = json.loads(text)
+            except json.JSONDecodeError:
+                decoded = None
+            if isinstance(decoded, list):
+                normalized.extend(str(item) for item in decoded if item not in (None, ''))
+                continue
+
+        if ',' in text:
+            normalized.extend(part.strip() for part in text.split(',') if part.strip())
+        else:
+            normalized.append(text)
+    return normalized
 
 
 def _build_security_state(company, data=None):
@@ -233,7 +270,7 @@ def _build_setup_state(request, company, data=None):
             level_by_subject[subject_id] = _normalize_level(data.get('single_level'))
             submitted_subtitles = [
                 subtitle_id
-                for subtitle_id in data.getlist('single_subtitles')
+                for subtitle_id in _get_post_list(data, 'single_subtitles')
                 if _parse_positive_int(subtitle_id) in subtitle_map
             ]
             valid_default_ids = [
@@ -246,7 +283,7 @@ def _build_setup_state(request, company, data=None):
             ]
             subtitle_ids_by_subject[subject_id] = chosen_ids or valid_default_ids
     else:
-        submitted_subject_ids = [_parse_positive_int(value) for value in data.getlist('multi_subjects')]
+        submitted_subject_ids = [_parse_positive_int(value) for value in _get_post_list(data, 'multi_subjects')]
         selected_subject_ids = [subject_id for subject_id in submitted_subject_ids if subject_id in subject_map]
         for subject_id in selected_subject_ids:
             level_by_subject[subject_id] = _normalize_level(data.get(f'multi_level_{subject_id}'))
@@ -255,7 +292,7 @@ def _build_setup_state(request, company, data=None):
             ]
             chosen_ids = [
                 _parse_positive_int(subtitle_id)
-                for subtitle_id in data.getlist(f'multi_subtitles_{subject_id}')
+                for subtitle_id in _get_post_list(data, f'multi_subtitles_{subject_id}')
                 if _parse_positive_int(subtitle_id) in valid_default_ids
             ]
             subtitle_ids_by_subject[subject_id] = chosen_ids or valid_default_ids
@@ -341,7 +378,7 @@ def _build_setup_state(request, company, data=None):
 
         selected_question_ids = [
             _parse_positive_int(value)
-            for value in data.getlist(allocation['question_select_field'])
+            for value in _get_post_list(data, allocation['question_select_field'])
             if _parse_positive_int(value)
         ]
         valid_question_ids = {question['id'] for question in allocation['available_questions']}

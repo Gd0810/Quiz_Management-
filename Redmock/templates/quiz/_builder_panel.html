@@ -852,7 +852,8 @@
     id="setup-form"
     method="post"
     hx-post="{% url 'quiz:setup_builder' %}"
-    hx-trigger="change delay:300ms"
+    hx-trigger="setup-refresh"
+    hx-sync="body:replace"
     hx-target="#builder-panel"
     hx-swap="outerHTML"
     style="display:flex;flex-direction:column;gap:1.75rem;"
@@ -888,19 +889,6 @@
                 <div class="bp-input-wrap">
                     <input id="id_question_count" type="number" min="1" name="question_count" value="{{ setup_state.question_count }}" class="bp-input" placeholder="e.g. 50">
                 </div>
-            </div>
-            <div class="bp-field">
-                <span class="bp-label">Mode</span>
-                <label class="bp-switch-wrap">
-                    <div>
-                        <div class="bp-switch-text">Custom Questions</div>
-                        <div class="bp-switch-desc">Manually pick questions</div>
-                    </div>
-                    <div class="bp-switch">
-                        <input type="checkbox" name="custom_mode" value="1" {% if setup_state.custom_mode %}checked{% endif %}>
-                        <span class="bp-switch-track"></span>
-                    </div>
-                </label>
             </div>
         </div>
     </div>
@@ -997,7 +985,7 @@
                 <p class="bp-label" style="margin-bottom:.875rem;">Sub Topics</p>
                 <div class="bp-subject-grid">
                     {% for subtitle in setup_state.subject_configs.0.all_subtitles %}
-                        <input class="bp-subject-opt" type="checkbox" id="ssub_{{ subtitle.id }}" name="single_subtitles" value="{{ subtitle.id }}" {% if subtitle.id in setup_state.subject_configs.0.selected_subtitle_ids %}checked{% endif %}>
+                        <input class="bp-subject-opt" type="checkbox" id="ssub_{{ subtitle.id }}" name="single_subtitles[]" value="{{ subtitle.id }}" {% if subtitle.id in setup_state.subject_configs.0.selected_subtitle_ids %}checked{% endif %}>
                         <label class="bp-subject-card" for="ssub_{{ subtitle.id }}">{{ subtitle.title }}</label>
                     {% endfor %}
                 </div>
@@ -1014,7 +1002,7 @@
             </div>
             <div class="bp-subject-grid">
                 {% for subject_id, subject in setup_state.subject_map.items %}
-                    <input class="bp-subject-opt" type="checkbox" id="ms_{{ subject_id }}" name="multi_subjects" value="{{ subject_id }}" {% if subject_id in setup_state.selected_subject_ids %}checked{% endif %}>
+                    <input class="bp-subject-opt" type="checkbox" id="ms_{{ subject_id }}" name="multi_subjects[]" value="{{ subject_id }}" {% if subject_id in setup_state.selected_subject_ids %}checked{% endif %}>
                     <label class="bp-subject-card" for="ms_{{ subject_id }}">
                         {{ subject.subject }}
                         {% if subject.subject_svg %}
@@ -1041,7 +1029,7 @@
                     <p class="bp-label" style="margin-bottom:.75rem;">Sub Topics</p>
                     <div class="bp-subject-grid">
                         {% for subtitle in config.all_subtitles %}
-                            <input class="bp-subject-opt" type="checkbox" id="mst_{{ config.subject.id }}_{{ subtitle.id }}" name="multi_subtitles_{{ config.subject.id }}" value="{{ subtitle.id }}" {% if subtitle.id in config.selected_subtitle_ids %}checked{% endif %}>
+                            <input class="bp-subject-opt" type="checkbox" id="mst_{{ config.subject.id }}_{{ subtitle.id }}" name="multi_subtitles_{{ config.subject.id }}[]" value="{{ subtitle.id }}" {% if subtitle.id in config.selected_subtitle_ids %}checked{% endif %}>
                             <label class="bp-subject-card" for="mst_{{ config.subject.id }}_{{ subtitle.id }}">{{ subtitle.title }}</label>
                         {% endfor %}
                     </div>
@@ -1049,6 +1037,8 @@
             </div>
         {% endfor %}
     {% endif %}
+
+    <input type="hidden" id="custom_mode_hidden" name="custom_mode" value="{% if setup_state.custom_mode %}1{% else %}0{% endif %}">
 
     {% if setup_state.summary_rows %}
         <div class="bp-tile">
@@ -1058,7 +1048,17 @@
                     <div class="bp-section-title">Question Allocation</div>
                     <div class="bp-section-sub">How questions are distributed across topics</div>
                 </div>
+                <div style="margin-left:auto;display:flex;align-items:center;flex-shrink:0;">
+                    <label class="bp-switch-pill" for="custom_mode_toggle_header">
+                        <span class="bp-switch-pill-label">Custom Questions</span>
+                        <span class="bp-switch-pill-control">
+                            <input id="custom_mode_toggle_header" type="checkbox" class="bp-custom-mode-toggle" {% if setup_state.custom_mode %}checked{% endif %}>
+                            <span class="bp-switch-pill-track"></span>
+                        </span>
+                    </label>
+                </div>
             </div>
+            
             {% if setup_state.custom_mode %}
                 <div class="bp-info-bar">
                     <span>Custom total selected</span>
@@ -1070,12 +1070,14 @@
             {% endif %}
             {% for row in setup_state.summary_rows %}
                 <div style="margin-bottom:1.5rem;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.75rem;">
                         <div>
                             <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;color:var(--c8);">{{ row.subject.subject }}</span>
                             <span style="font-size:.75rem;color:var(--c5);margin-left:.625rem;text-transform:capitalize;">{{ row.level }} level</span>
                         </div>
-                        <span class="bp-summary-badge">{{ row.total_requested }} questions</span>
+                        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+                            <span class="bp-summary-badge">{{ row.total_requested }} questions</span>
+                        </div>
                     </div>
                     <div class="bp-alloc-grid">
                         {% for allocation in row.allocations %}
@@ -1166,6 +1168,62 @@
 
 <style>
 /* Seeds are in the DOM for JS to scan, but invisible */
+.bp-switch-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .55rem .85rem;
+    border: 1.5px solid var(--c2);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(0,180,216,.08), rgba(255,255,255,.95));
+    box-shadow: 0 3px 10px rgba(0,119,182,.08);
+}
+.bp-switch-pill-label {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--c7);
+    white-space: nowrap;
+}
+.bp-switch-pill-control {
+    position: relative;
+    width: 2.9rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+}
+.bp-switch-pill-control input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.bp-switch-pill-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--c2), #d9f5fb);
+    transition: background .2s ease, box-shadow .2s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.08);
+}
+.bp-switch-pill-track::after {
+    content: '';
+    position: absolute;
+    left: .2rem;
+    top: .2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    transition: transform .2s ease;
+}
+.bp-switch-pill-control input:checked + .bp-switch-pill-track {
+    background: linear-gradient(90deg, var(--c4), var(--c7));
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
+}
+.bp-switch-pill-control input:checked + .bp-switch-pill-track::after {
+    transform: translateX(1.3rem);
+}
 .bp-toast-seed {
     position: absolute;
     width: 0; height: 0;
@@ -1182,6 +1240,43 @@
     function setProgressBar(active) {
         var bar = document.getElementById("htmx-spinner");
         if (bar) bar.classList.toggle("is-active", !!active);
+    }
+
+    function scheduleSetupRefresh() {
+        if (!window.htmx) return;
+        clearTimeout(window._setupBuilderRefreshTimer);
+        window._setupBuilderRefreshTimer = setTimeout(function () {
+            var form = document.getElementById("setup-form");
+            if (form) {
+                console.log("[builder debug] trigger setup refresh " + JSON.stringify({
+                    sessionType: form.querySelector('[name="session_type"]:checked') && form.querySelector('[name="session_type"]:checked').value,
+                    customMode: !!form.querySelector('[name="custom_mode"]:checked'),
+                    multiSubjects: Array.from(form.querySelectorAll('[name="multi_subjects"]:checked, [name="multi_subjects[]"]:checked')).map(function (input) { return input.value; }),
+                    singleSubject: form.querySelector('[name="single_subject"]:checked') && form.querySelector('[name="single_subject"]:checked').value
+                }));
+                window.htmx.trigger(form, "setup-refresh");
+            }
+        }, 300);
+    }
+
+    function bindSetupAutoRefresh() {
+        if (window._setupBuilderAutoRefreshHandler) {
+            document.removeEventListener("change", window._setupBuilderAutoRefreshHandler);
+        }
+        window._setupBuilderAutoRefreshHandler = function (e) {
+            var input = e.target;
+            var form = input && input.closest && input.closest("#setup-form");
+            if (!form) return;
+            if (input.name && input.name.indexOf("question_select_") === 0) return;
+            console.log("[builder debug] form change " + JSON.stringify({
+                name: input.name,
+                value: input.value,
+                checked: input.checked,
+                multiSubjectsNow: Array.from(form.querySelectorAll('[name="multi_subjects"]:checked, [name="multi_subjects[]"]:checked')).map(function (item) { return item.value; })
+            }));
+            scheduleSetupRefresh();
+        };
+        document.addEventListener("change", window._setupBuilderAutoRefreshHandler);
     }
 
     window.updateQuestionCount = function (fieldId, delta) {
@@ -1352,16 +1447,63 @@
         sync();
     }
 
-    document.addEventListener("htmx:beforeRequest", function () { setProgressBar(true);  });
-    document.addEventListener("htmx:afterRequest",  function () { setProgressBar(false); });
-    document.addEventListener("htmx:responseError", function () { setProgressBar(false); });
+    function syncCustomModeHiddenInput() {
+        var hidden = document.getElementById("custom_mode_hidden");
+        if (!hidden) return;
+        var hasActive = document.querySelectorAll('.bp-custom-mode-toggle:checked').length > 0;
+        hidden.value = hasActive ? "1" : "0";
+    }
 
-    document.addEventListener("htmx:afterSettle", function (evt) {
+    function setupCustomModeToggles() {
+        document.querySelectorAll('.bp-custom-mode-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                syncCustomModeHiddenInput();
+            });
+        });
+        syncCustomModeHiddenInput();
+    }
+
+    if (window._builderPanelHtmxHandlers) {
+        window._builderPanelHtmxHandlers.forEach(function (item) {
+            document.removeEventListener(item.event, item.handler);
+        });
+    }
+    window._builderPanelHtmxHandlers = [];
+
+    function addBuilderHtmxHandler(eventName, handler) {
+        document.addEventListener(eventName, handler);
+        window._builderPanelHtmxHandlers.push({ event: eventName, handler: handler });
+    }
+
+    addBuilderHtmxHandler("htmx:beforeRequest", function () { setProgressBar(true);  });
+    addBuilderHtmxHandler("htmx:afterRequest",  function () { setProgressBar(false); });
+    addBuilderHtmxHandler("htmx:responseError", function () { setProgressBar(false); });
+
+    addBuilderHtmxHandler("htmx:configRequest", function (evt) {
+        if (!evt.detail || !evt.detail.elt || evt.detail.elt.id !== "setup-form") return;
+        console.log("[builder debug] htmx request parameters " + JSON.stringify({
+            sessionType: evt.detail.parameters.session_type,
+            customMode: evt.detail.parameters.custom_mode,
+            questionCount: evt.detail.parameters.question_count,
+            multiSubjects: evt.detail.parameters.multi_subjects || evt.detail.parameters['multi_subjects[]'],
+            singleSubject: evt.detail.parameters.single_subject
+        }));
+    });
+
+    addBuilderHtmxHandler("htmx:afterSettle", function (evt) {
         if (evt.detail && evt.detail.target && evt.detail.target.id === "builder-panel") {
+            var settledForm = document.getElementById("setup-form");
+            console.log("[builder debug] panel settled " + JSON.stringify({
+                checkedMultiSubjects: settledForm ? Array.from(settledForm.querySelectorAll('[name="multi_subjects"]:checked, [name="multi_subjects[]"]:checked')).map(function (input) { return input.value; }) : [],
+                renderedSubjectBlocks: document.querySelectorAll("#builder-panel .bp-subject-block").length,
+                renderedSummaryRows: document.querySelectorAll("#builder-panel .bp-summary-badge").length
+            }));
             refreshCustomTotal();
             setupAccordionBehavior();
             setupFilterButtons();
             setupSecurityControls();
+            setupCustomModeToggles();
+            bindSetupAutoRefresh();
             setProgressBar(false);
             /* drainToastData is called by toaster.html's own htmx:afterSettle listener */
         }
@@ -1371,6 +1513,8 @@
         setupAccordionBehavior();
         setupFilterButtons();
         setupSecurityControls();
+        setupCustomModeToggles();
+        bindSetupAutoRefresh();
 
         var placeholders = {
             candidate_name:   'Enter your full name',
