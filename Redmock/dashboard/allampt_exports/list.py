@@ -169,12 +169,12 @@ def generate_attempts_pdf(queryset, company, response):
     story.append(HRFlowable(width=PAGE_W, thickness=1.5,
                              color=C_MID, spaceAfter=16))
 
-    # Stat cards
-    total_count = queryset.count()
-    passed = queryset.filter(percentage__gte=50).count()
-    failed = total_count - passed
-    story.append(_stat_cards(total_count, passed, failed))
-    story.append(Spacer(1, 20))
+    # # Stat cards
+    # total_count = queryset.count()
+    # passed = queryset.filter(percentage__gte=50).count()
+    # failed = total_count - passed
+    # story.append(_stat_cards(total_count, passed, failed))
+    # story.append(Spacer(1, 20))
 
     # Section label
     story.append(Paragraph("Attempt Details", section_style))
