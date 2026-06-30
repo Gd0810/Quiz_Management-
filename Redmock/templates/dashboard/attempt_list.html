@@ -29,6 +29,15 @@
     .attempt-btn.secondary { background: #e0f2fe; color: #075985; }
     .attempt-btn.danger { background: #fff1f2; color: #be123c; }
     .attempt-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
+    .attempt-controls { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(150px, 1fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .attempt-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
+    .attempt-control-field input,
+    .attempt-control-field select { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .attempt-control-field select { cursor: pointer; }
+    .attempt-control-submit { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: #03045e; padding: 10px 16px; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .attempt-control-submit:hover { background: #0077b6; }
+    .attempt-control-actions { display: flex; gap: 8px; align-items: center; }
+    .attempt-control-actions .attempt-btn { min-height: 44px; box-sizing: border-box; }
     .quiz-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 22px 16px 16px; padding-top: 14px; border-top: 1px solid #e0f2fe; flex-wrap: wrap; }
     .quiz-page-link, .quiz-page-ellipsis { position: relative; display: inline-flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; border-radius: 8px; color: #023e8a; font-size: .88rem; font-weight: 800; text-decoration: none; transition: background .18s ease, color .18s ease; }
     .quiz-page-link:hover { background: #e0f2fe; color: #0077b6; }
@@ -36,6 +45,7 @@
     .quiz-page-link.is-active::after { position: absolute; right: 6px; bottom: -8px; left: 6px; height: 4px; border-radius: 999px; background: #00b4d8; content: ""; box-shadow: 0 4px 10px rgba(0, 180, 216, .35); }
     .quiz-page-link.is-disabled { color: #90a4b8; pointer-events: none; }
     .quiz-page-ellipsis { color: #0077b6; }
+    @media (max-width: 960px) { .attempt-controls { grid-template-columns: 1fr; } }
     @media (max-width: 720px) { .attempt-card { grid-template-columns: 1fr; } }
 </style>
 
@@ -59,12 +69,44 @@
             </div>
         </div>
 
+        <form method="get" class="attempt-controls">
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:magnify"></iconify-icon>
+                <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="Search email or name">
+            </label>
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>
+                <select name="level">
+                    <option value="all" {% if level_filter == 'all' or not level_filter %}selected{% endif %}>All Levels</option>
+                    <option value="basic" {% if level_filter == 'basic' %}selected{% endif %}>Basic</option>
+                    <option value="intermediate" {% if level_filter == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                    <option value="experienced" {% if level_filter == 'experienced' %}selected{% endif %}>Experience</option>
+                    <option value="mixed" {% if level_filter == 'mixed' %}selected{% endif %}>Mixed</option>
+                </select>
+            </label>
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:percent-outline"></iconify-icon>
+                <input type="number" name="percentage" value="{{ percentage_filter|default:'' }}" min="0" max="100" step="any" placeholder="Min Percentage (e.g., 50)">
+            </label>
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:calendar-range"></iconify-icon>
+                <input type="date" name="date" value="{{ date_filter|default:'' }}">
+            </label>
+            <div class="attempt-control-actions">
+                <button type="submit" class="attempt-control-submit">
+                    <iconify-icon icon="mdi:tune"></iconify-icon>
+                    Apply
+                </button>
+                <a href="{% url 'dashboard:attempt_list' %}" class="attempt-btn secondary">Clear</a>
+            </div>
+        </form>
+
         <div class="attempt-table-wrap">
             {% if objects %}
                 <table class="attempt-table">
                     <thead>
                         <tr>
-                            <th>Email</th>
+                            <th>Candidate</th>
                             <th>Level</th>
                             <th>Percentage</th>
                             <th>Date</th>
@@ -74,7 +116,10 @@
                     <tbody>
                         {% for object in objects %}
                             <tr>
-                                <td><strong>{{ object.candidate.email }}</strong></td>
+                                <td>
+                                    <strong>{{ object.candidate.name }}</strong>
+                                    <div style="font-size: .78rem; color: #008fd1; margin-top: 2px;">{{ object.candidate.email }}</div>
+                                </td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ object.level }}</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:percent-outline"></iconify-icon>{{ object.percentage }}%</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:calendar-range"></iconify-icon>{{ object.created_at|date:"M d, Y" }}</span></td>

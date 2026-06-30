@@ -733,6 +733,40 @@ def attempt_list(request):
         .order_by('-created_at')
     )
 
+    # Filter by candidate name or email
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(candidate__name__icontains=search_query) |
+            Q(candidate__email__icontains=search_query)
+        )
+
+    # Filter by level
+    level_filter = request.GET.get('level', '').strip()
+    if level_filter and level_filter != 'all':
+        if level_filter in ['experienced', 'experience']:
+            queryset = queryset.filter(level__in=['experienced', 'experience'])
+        else:
+            queryset = queryset.filter(level__iexact=level_filter)
+
+    # Filter by minimum percentage
+    percentage_str = request.GET.get('percentage', '').strip()
+    min_percentage = None
+    if percentage_str:
+        try:
+            min_percentage = float(percentage_str)
+            queryset = queryset.filter(percentage__gte=min_percentage)
+        except ValueError:
+            pass
+
+    # Filter by date
+    date_str = request.GET.get('date', '').strip()
+    if date_str:
+        from django.utils.dateparse import parse_date
+        parsed_date = parse_date(date_str)
+        if parsed_date:
+            queryset = queryset.filter(created_at__date=parsed_date)
+
     query_params = request.GET.copy()
     query_params.pop('page', None)
     querystring = query_params.urlencode()
@@ -752,8 +786,13 @@ def attempt_list(request):
             'page_numbers': page_numbers,
             'page_query_prefix': page_query_prefix,
             'total_attempt_count': queryset.count(),
+            'search_query': search_query,
+            'level_filter': level_filter,
+            'percentage_filter': percentage_str,
+            'date_filter': date_str,
         },
     )
+
 
 
 @company_login_required
