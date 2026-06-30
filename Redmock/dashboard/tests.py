@@ -149,3 +149,97 @@ class SubjectQuestionUploadViewTests(TestCase):
         self.assertIsNone(quiz.sub_title)
         self.assertEqual(quiz.question, 'What is type(10.5)?')
         self.assertEqual(quiz.correct_answer, 'option_2')
+
+
+class AttemptListViewAndPDFTests(TestCase):
+    def setUp(self):
+        from quiz.models import Candidate, CandidateTestAttempt
+        self.company = Company.objects.create(
+            name='Acme Corp',
+            email='acme@example.com',
+            password='hashed-password',
+        )
+        session = self.client.session
+        session['company_id'] = self.company.id
+        session.save()
+
+        # Create candidates
+        self.candidate1 = Candidate.objects.create(name='Alice Smith', email='alice@example.com')
+        self.candidate2 = Candidate.objects.create(name='Bob Jones', email='bob@example.com')
+
+        # Create test attempts
+        self.attempt1 = CandidateTestAttempt.objects.create(
+            candidate=self.candidate1,
+            company=self.company,
+            session_type='single',
+            level='basic',
+            question_count=10,
+            duration_minutes=30,
+            percentage=80.00
+        )
+        self.attempt2 = CandidateTestAttempt.objects.create(
+            candidate=self.candidate2,
+            company=self.company,
+            session_type='single',
+            level='experienced',
+            question_count=10,
+            duration_minutes=30,
+            percentage=45.00
+        )
+
+    def test_attempt_list_filter_search(self):
+        # Search by candidate name 'Alice'
+        url = reverse('dashboard:attempt_list')
+        response = self.client.get(url, {'q': 'Alice'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Alice Smith')
+        self.assertNotContains(response, 'Bob Jones')
+
+        # Search by email domain
+        response = self.client.get(url, {'q': 'bob@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bob Jones')
+        self.assertNotContains(response, 'Alice Smith')
+
+    def test_attempt_list_filter_level(self):
+        url = reverse('dashboard:attempt_list')
+        # Filter basic level
+        response = self.client.get(url, {'level': 'basic'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Alice Smith')
+        self.assertNotContains(response, 'Bob Jones')
+
+        # Filter experienced level
+        response = self.client.get(url, {'level': 'experienced'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bob Jones')
+        self.assertNotContains(response, 'Alice Smith')
+
+    def test_attempt_list_filter_percentage(self):
+        url = reverse('dashboard:attempt_list')
+        # Filter minimum percentage 50% (alice 80% should be shown, bob 45% should not)
+        response = self.client.get(url, {'percentage': '50'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Alice Smith')
+        self.assertNotContains(response, 'Bob Jones')
+
+        # Filter minimum percentage 40% (both should show)
+        response = self.client.get(url, {'percentage': '40'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Alice Smith')
+        self.assertContains(response, 'Bob Jones')
+
+    def test_attempt_pdf_download(self):
+        url = reverse('dashboard:attempt_pdf')
+        # Request full list as PDF
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertTrue(response.has_header('Content-Disposition'))
+        self.assertIn('attachment;', response['Content-Disposition'])
+
+        # Request filtered list as PDF (search for Bob only)
+        response = self.client.get(url, {'q': 'Bob'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+

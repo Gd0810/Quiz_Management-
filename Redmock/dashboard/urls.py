@@ -30,6 +30,7 @@ urlpatterns = [
     path('candidates/<int:pk>/edit/', views.candidate_update, name='candidate_update'),
     path('candidates/<int:pk>/delete/', views.candidate_delete, name='candidate_delete'),
     path('attempts/', views.attempt_list, name='attempt_list'),
+    path('attempts/pdf/', views.attempt_pdf, name='attempt_pdf'),
     path('attempts/create/', views.attempt_create, name='attempt_create'),
     path('attempts/<int:pk>/edit/', views.attempt_update, name='attempt_update'),
     path('attempts/<int:pk>/delete/', views.attempt_delete, name='attempt_delete'),

@@ -13,7 +13,8 @@
     .quiz-title { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
     .quiz-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
     .quiz-list-panel { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
-    .quiz-list-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-list-head { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-list-actions { padding-right: 16px; }
     .quiz-list-icon { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
     .quiz-list-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
     .quiz-list-text { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
@@ -66,6 +67,12 @@
             <div class="quiz-card-body" style="padding-left:10px">
                 <p class="quiz-list-title">Attempt Listing</p>
                 <p class="quiz-list-text">Showing {{ page_obj.object_list|length }} of {{ total_attempt_count }} attempts</p>
+            </div>
+            <div class="quiz-list-actions">
+                <a href="{% url 'dashboard:attempt_pdf' %}?{{ page_query_prefix }}" class="attempt-btn secondary" style="min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    <iconify-icon icon="mdi:file-pdf-box" style="font-size: 1.25rem; color: #be123c;"></iconify-icon>
+                    Download PDF
+                </a>
             </div>
         </div>
 
