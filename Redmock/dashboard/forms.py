@@ -103,13 +103,33 @@ class CompanySecurityForm(forms.ModelForm):
         return instance
 
 
-class CompanyInstructionsForm(forms.ModelForm):
+class CompanyProfileForm(forms.ModelForm):
+    old_password = forms.CharField(
+        label='Old password',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        help_text='Required only if you want to change your password.',
+    )
+    new_password = forms.CharField(
+        label='New password',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+    )
+    new_password_confirm = forms.CharField(
+        label='Confirm new password',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+    )
+
     class Meta:
         model = Company
-        fields = ['test_instructions']
-        labels = {
-            'test_instructions': 'Online test instructions',
-        }
+        fields = [
+            'name',
+            'image',
+            'email',
+            'pass_persantage',
+            'test_instructions',
+        ]
         widgets = {
             'test_instructions': forms.Textarea(
                 attrs={
@@ -118,6 +138,39 @@ class CompanyInstructionsForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        old_pwd = cleaned_data.get('old_password')
+        new_pwd = cleaned_data.get('new_password')
+        confirm_pwd = cleaned_data.get('new_password_confirm')
+
+        if old_pwd or new_pwd or confirm_pwd:
+            if not old_pwd:
+                self.add_error('old_password', 'Old password is required to change password.')
+            if not new_pwd:
+                self.add_error('new_password', 'New password is required to change password.')
+            if not confirm_pwd:
+                self.add_error('new_password_confirm', 'Confirm new password is required.')
+            
+            if old_pwd:
+                from django.contrib.auth.hashers import check_password
+                if not check_password(old_pwd, self.instance.password):
+                    self.add_error('old_password', 'Incorrect old password.')
+            
+            if new_pwd and confirm_pwd and new_pwd != confirm_pwd:
+                self.add_error('new_password_confirm', 'New passwords do not match.')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        new_pwd = self.cleaned_data.get('new_password')
+        if new_pwd:
+            instance.password = make_password(new_pwd)
+        if commit:
+            instance.save()
+        return instance
 
 
 class CompanyMailSettingsForm(forms.ModelForm):

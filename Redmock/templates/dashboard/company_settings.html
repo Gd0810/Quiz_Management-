@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    .settings-shell {
+        max-width: 100%;
+        margin: 0 auto;
+        border-radius: 16px;
+        background: #E4F6FC;
+        padding: 28px;
+        box-shadow: 0 18px 50px rgba(2, 62, 138, .08);
+    }
+
+    .settings-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .settings-heading-icon {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border-radius: 10px;
+        background: #0096c7;
+        color: #ffffff;
+        font-size: 1.35rem;
+        box-shadow: 0 10px 20px rgba(0, 150, 199, .22);
+    }
+
+    .settings-title {
+        margin: 0;
+        color: #03045e;
+        font-size: 1.12rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .settings-subtitle {
+        margin: 4px 0 0;
+        color: #008fd1;
+        font-size: .86rem;
+        line-height: 1.35;
+    }
+
+    .settings-card {
+        overflow: hidden;
+        border: 1px solid #7dddf0;
+        border-radius: 11px;
+        background: #ffffff;
+        margin-bottom: 24px;
+    }
+
+    .settings-card-head {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        min-height: 70px;
+        align-items: center;
+        border-bottom: 1px solid #e0f2fe;
+    }
+
+    .settings-card-icon {
+        display: grid;
+        align-self: stretch;
+        place-items: center;
+        background: #c9f5fb;
+        color: #0096c7;
+        font-size: 1.55rem;
+    }
+
+    .settings-card-body {
+        min-width: 0;
+        padding: 14px 14px;
+    }
+
+    .settings-card-title {
+        display: block;
+        color: #03045e;
+        font-size: .91rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .settings-card-text {
+        display: block;
+        margin-top: 5px;
+        color: #008fd1;
+        font-size: .77rem;
+        line-height: 1.35;
+    }
+
+    .settings-form-body {
+        padding: 20px;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .settings-field-group {
+        margin-bottom: 16px;
+    }
+
+    .settings-field-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #03045e;
+        font-size: .84rem;
+        font-weight: 700;
+    }
+
+    .settings-input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #bae6fd;
+        border-radius: 9px;
+        background: #ffffff;
+        padding: 0 12px;
+        color: #03045e;
+        font: 600 .86rem 'Poppins', sans-serif;
+        outline: 0;
+        box-sizing: border-box;
+    }
+
+    .settings-input:focus {
+        border-color: #0096c7;
+        box-shadow: 0 0 0 3px rgba(0, 180, 216, .14);
+    }
+
+    .settings-textarea {
+        width: 100%;
+        min-height: 420px;
+        border: 1px solid #bae6fd;
+        border-radius: 9px;
+        background: #ffffff;
+        padding: 12px;
+        color: #0f172a;
+        outline: 0;
+        box-sizing: border-box;
+    }
+
+    .settings-textarea:focus {
+        border-color: #0096c7;
+        box-shadow: 0 0 0 3px rgba(0, 180, 216, .14);
+    }
+
+    .tox.tox-tinymce {
+        border-color: #bae6fd;
+        border-radius: 9px;
+    }
+
+    .settings-image-preview {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 8px;
+    }
+
+    .settings-image-preview img {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #7dddf0;
+    }
+
+    .settings-help,
+    .settings-error {
+        margin: 6px 0 0;
+        font-size: .78rem;
+        line-height: 1.4;
+    }
+
+    .settings-help {
+        color: #64748b;
+    }
+
+    .settings-error {
+        color: #e11d48;
+    }
+
+    .settings-alert {
+        margin-bottom: 18px;
+        border: 1px solid #fecdd3;
+        border-radius: 12px;
+        background: #fff1f2;
+        padding: 14px 16px;
+        color: #be123c;
+        font-size: .9rem;
+    }
+
+    .settings-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .settings-btn {
+        display: inline-flex;
+        min-height: 42px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: .9rem;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .settings-btn.primary {
+        border: 0;
+        background: #03045e;
+        color: #ffffff;
+    }
+
+    .settings-btn.secondary {
+        background: #e0f2fe;
+        color: #075985;
+    }
+
+    @media (max-width: 960px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 820px) {
+        .settings-shell {
+            padding: 20px;
+        }
+    }
+
+    @media (max-width: 540px) {
+        .settings-shell {
+            padding: 16px;
+        }
+
+        .settings-card-head {
+            grid-template-columns: 52px minmax(0, 1fr);
+        }
+
+        .settings-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<section class="settings-shell">
+    <div class="settings-heading">
+        <span class="settings-heading-icon"><iconify-icon icon="mdi:cog-outline"></iconify-icon></span>
+        <div>
+            <h1 class="settings-title">Company Settings</h1>
+            <p class="settings-subtitle">Manage company details, password updates, pass criteria, and test instructions</p>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="settings-alert">
+                {{ form.non_field_errors|join:", " }}
+            </div>
+        {% endif %}
+
+        <!-- Card 1: Company Profile Info -->
+        <div class="settings-card">
+            <div class="settings-card-head">
+                <span class="settings-card-icon"><iconify-icon icon="mdi:office-building-outline"></iconify-icon></span>
+                <span class="settings-card-body">
+                    <span class="settings-card-title">Company Details</span>
+                    <span class="settings-card-text">Update company name, email, brand logo, and pass percentage settings</span>
+                </span>
+            </div>
+            <div class="settings-form-body">
+                <div class="settings-grid">
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_name">Company Name</label>
+                        <input type="text" name="name" id="id_name" class="settings-input" value="{{ form.name.value|default:'' }}" required>
+                        {% if form.name.errors %}
+                            <p class="settings-error">{{ form.name.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_email">Email Address</label>
+                        <input type="email" name="email" id="id_email" class="settings-input" value="{{ form.email.value|default:'' }}" required>
+                        {% if form.email.errors %}
+                            <p class="settings-error">{{ form.email.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_pass_persantage">Pass Percentage (%)</label>
+                        <input type="number" name="pass_persantage" id="id_pass_persantage" class="settings-input" value="{{ form.pass_persantage.value|stringformat:".2f" }}" min="0" max="100" step="any" required>
+                        {% if form.pass_persantage.errors %}
+                            <p class="settings-error">{{ form.pass_persantage.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_image">Brand Logo (Image)</label>
+                        <input type="file" name="image" id="id_image" class="settings-input" style="padding-top: 8px;">
+                        {% if form.image.errors %}
+                            <p class="settings-error">{{ form.image.errors|join:", " }}</p>
+                        {% endif %}
+                        {% if form.instance.image %}
+                            <div class="settings-image-preview">
+                                <img src="{{ form.instance.image.url }}" alt="Company Logo">
+                                <span class="settings-help">Current Logo</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Password Update Gated Option -->
+        <div class="settings-card">
+            <div class="settings-card-head">
+                <span class="settings-card-icon"><iconify-icon icon="mdi:lock-outline"></iconify-icon></span>
+                <span class="settings-card-body">
+                    <span class="settings-card-title">Change Password</span>
+                    <span class="settings-card-text">Enter your old password to update your current login password</span>
+                </span>
+            </div>
+            <div class="settings-form-body">
+                <div class="settings-field-group">
+                    <label class="settings-field-label" for="id_old_password">Old Password</label>
+                    <input type="password" name="old_password" id="id_old_password" class="settings-input" placeholder="Enter old password to verify">
+                    {% if form.old_password.errors %}
+                        <p class="settings-error">{{ form.old_password.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div class="settings-grid">
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_new_password">New Password</label>
+                        <input type="password" name="new_password" id="id_new_password" class="settings-input" placeholder="Enter new password">
+                        {% if form.new_password.errors %}
+                            <p class="settings-error">{{ form.new_password.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="settings-field-group">
+                        <label class="settings-field-label" for="id_new_password_confirm">Confirm New Password</label>
+                        <input type="password" name="new_password_confirm" id="id_new_password_confirm" class="settings-input" placeholder="Confirm new password">
+                        {% if form.new_password_confirm.errors %}
+                            <p class="settings-error">{{ form.new_password_confirm.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Test Instructions Editor -->
+        <div class="settings-card">
+            <div class="settings-card-head">
+                <span class="settings-card-icon"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
+                <span class="settings-card-body">
+                    <span class="settings-card-title">Test Instructions</span>
+                    <span class="settings-card-text">These rules are shown in the online test instructions drawer</span>
+                </span>
+            </div>
+            <div class="settings-form-body" style="padding: 16px;">
+                {{ form.test_instructions }}
+                {% if form.test_instructions.help_text %}
+                    <p class="settings-help">{{ form.test_instructions.help_text }}</p>
+                {% endif %}
+                {% if form.test_instructions.errors %}
+                    <p class="settings-error">{{ form.test_instructions.errors|join:", " }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="settings-actions">
+            <button type="submit" class="settings-btn primary">
+                <iconify-icon icon="mdi:content-save"></iconify-icon>
+                Save Settings
+            </button>
+            <a href="{% url 'dashboard:home' %}" class="settings-btn secondary">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+
+<script>
+(function () {
+    var tinyMceSrc = "{% static 'tinymce/tinymce.min.js' %}";
+    var tinyMceBaseUrl = "{% static 'tinymce' %}";
+
+    function initDashboardTinyMce() {
+        if (!document.querySelector('textarea[data-tinymce="true"]') || !window.tinymce) return;
+
+        tinymce.remove('textarea[data-tinymce="true"]');
+        tinymce.init({
+            selector: 'textarea[data-tinymce="true"]',
+            base_url: tinyMceBaseUrl,
+            suffix: '.min',
+            height: 420,
+            license_key: 'gpl',
+            menubar: false,
+            branding: false,
+            promotion: false,
+            plugins: 'advlist lists link table code preview fullscreen wordcount',
+            toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link table | alignleft aligncenter alignright | code preview fullscreen',
+            content_style: 'body { font-family: Poppins, sans-serif; font-size: 14px; line-height: 1.7; color: #1e293b; }',
+            setup: function (editor) {
+                editor.on('change keyup', function () {
+                    editor.save();
+                });
+            }
+        });
+    }
+
+    function loadTinyMce(callback) {
+        var existingScript;
+
+        if (window.tinymce) {
+            callback();
+            return;
+        }
+
+        existingScript = document.querySelector('script[data-dashboard-tinymce]');
+        if (existingScript) {
+            existingScript.addEventListener('load', callback, { once: true });
+            return;
+        }
+
+        existingScript = document.createElement('script');
+        existingScript.src = tinyMceSrc;
+        existingScript.dataset.dashboardTinymce = 'true';
+        existingScript.addEventListener('load', callback, { once: true });
+        document.head.appendChild(existingScript);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            loadTinyMce(initDashboardTinyMce);
+        });
+    } else {
+        loadTinyMce(initDashboardTinyMce);
+    }
+}());
+</script>
+</div>
+{% endblock %}

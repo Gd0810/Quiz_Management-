@@ -19,7 +19,7 @@ from .forms import (
     CandidateFormFieldForm,
     CandidateTestAttemptForm,
     BulkQuestionUploadForm,
-    CompanyInstructionsForm,
+    CompanyProfileForm,
     CompanyMailSettingsForm,
     CompanySecurityForm,
     QuizForm,
@@ -122,17 +122,21 @@ def dashboard_home(request):
 
 
 @company_login_required
-def company_instructions(request):
-    form = CompanyInstructionsForm(request.POST or None, instance=request.company)
+def company_profile(request):
+    form = CompanyProfileForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=request.company,
+    )
     if request.method == 'POST' and form.is_valid():
         form.save()
-        messages.success(request, 'Test instructions updated successfully.')
-        return redirect('dashboard:company_instructions')
+        messages.success(request, 'Company settings updated successfully.')
+        return redirect('dashboard:company_profile')
 
     return render(
         request,
-        'dashboard/instructions_settings.html',
-        {'form': form, 'title': 'Test Instructions', 'cancel_url': 'dashboard:home'},
+        'dashboard/company_settings.html',
+        {'form': form, 'title': 'Company Settings'},
     )
 
 
