@@ -122,7 +122,7 @@
                     </thead>
                     <tbody>
                         {% for object in objects %}
-                            <tr>
+                            <tr style="cursor:pointer;" onclick="window.location='{% url 'dashboard:attempt_detail' object.pk %}'">
                                 <td>
                                     <strong>{{ object.candidate.name }}</strong>
                                     <div style="font-size: .78rem; color: #008fd1; margin-top: 2px;">{{ object.candidate.email }}</div>
@@ -131,7 +131,8 @@
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:percent-outline"></iconify-icon>{{ object.percentage }}%</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:calendar-range"></iconify-icon>{{ object.created_at|date:"M d, Y" }}</span></td>
                                 <td>
-                                    <div class="attempt-actions">
+                                    <div class="attempt-actions" onclick="event.stopPropagation();">
+                                        <a href="{% url 'dashboard:attempt_detail' object.pk %}" class="attempt-btn secondary">View</a>
                                         <a href="{% url 'dashboard:attempt_update' object.pk %}" class="attempt-btn secondary">Edit</a>
                                         <a href="{% url 'dashboard:attempt_delete' object.pk %}" class="attempt-btn danger">Delete</a>
                                     </div>

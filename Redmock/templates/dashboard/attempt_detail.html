@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    /* ── Shell ───────────────────────────────────────────────── */
+    .adet-shell {
+        max-width: 100%;
+        margin: 0 auto;
+        border-radius: 16px;
+        background: #E4F6FC;
+        padding: 28px;
+        box-shadow: 0 18px 50px rgba(2,62,138,.08);
+    }
+
+    /* ── Heading ─────────────────────────────────────────────── */
+    .adet-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 26px;
+        flex-wrap: wrap;
+    }
+    .adet-heading-main { display: flex; align-items: center; gap: 12px; }
+    .adet-heading-icon {
+        display: grid; width: 38px; height: 38px; place-items: center;
+        border-radius: 10px; background: #0096c7; color: #fff;
+        font-size: 1.4rem; box-shadow: 0 8px 20px rgba(0,150,199,.25);
+    }
+    .adet-title  { margin:0; color:#03045e; font-size:1.12rem; font-weight:800; }
+    .adet-sub    { margin:3px 0 0; color:#008fd1; font-size:.84rem; }
+    .adet-back-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border-radius: 10px; background: #e0f2fe; color: #075985;
+        padding: 9px 14px; font-size: .84rem; font-weight: 700;
+        text-decoration: none; transition: background .18s;
+    }
+    .adet-back-btn:hover { background: #bae6fd; }
+
+    /* ── Info pills row ──────────────────────────────────────── */
+    .adet-info-row {
+        display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;
+    }
+    .adet-info-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        border: 1px solid #7dddf0; border-radius: 999px;
+        background: #fff; padding: 6px 14px;
+        color: #03045e; font-size: .8rem; font-weight: 700;
+    }
+    .adet-info-pill iconify-icon { color: #0096c7; font-size: 1rem; }
+    .adet-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        border-radius: 999px; padding: 6px 16px;
+        font-size: .82rem; font-weight: 800;
+    }
+    .adet-badge.pass { background: #d1fae5; color: #065f46; }
+    .adet-badge.fail { background: #ffe4e6; color: #9f1239; }
+
+    /* ── Chart grid (2 equal cols) ───────────────────────────── */
+    .adet-chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    /* ── Card shared ─────────────────────────────────────────── */
+    .adet-card {
+        overflow: hidden;
+        border: 1px solid #7dddf0;
+        border-radius: 14px;
+        background: #fff;
+    }
+    .adet-card-head {
+        display: grid;
+        grid-template-columns: 64px minmax(0,1fr);
+        min-height: 66px;
+        align-items: center;
+        border-bottom: 1px solid #e0f2fe;
+    }
+    .adet-card-ico {
+        display: grid; align-self: stretch; place-items: center;
+        background: #c9f5fb; color: #0096c7; font-size: 1.5rem;
+    }
+    .adet-card-lbl  { padding: 12px 14px; }
+    .adet-card-name { display:block; color:#03045e; font-size:.9rem; font-weight:800; }
+    .adet-card-hint { display:block; margin-top:4px; color:#008fd1; font-size:.75rem; }
+    .adet-card-body { padding: 24px; }
+
+    /* ── ❶ Horizontal Bar Chart (chevron style, matches reference) ──
+       The "arrow" is the badge itself (chevron clip-path), pushed flush
+       against the flat-edged fill with zero gap and a matching solid
+       colour — so fill + badge read as ONE continuous bar that tapers
+       to a point with the % sitting inside the tip, exactly like the
+       reference image. Original project colours kept unchanged. */
+    .hbar-wrap { display: flex; flex-direction: column; gap: 34px; }
+
+    .hbar-row { display: flex; flex-direction: column; gap: 8px; }
+    .hbar-label { color:#03045e; font-size:.85rem; font-weight:800; margin-bottom:2px; }
+
+    /* Track: grey background, right margin reserves room for the
+       arrow-tip badge so it never clips the card edge */
+    .hbar-track {
+        position: relative;
+        height: 46px;
+        border-radius: 8px;
+        background: #dbeafe;
+        margin-right: 90px;
+    }
+
+    /* Flat-edged fill (no clip-path here anymore) — rounded only on the
+       left, flush/square on the right where the badge attaches */
+    .hbar-fill {
+        position: absolute;
+        top: 0; left: 0;
+        height: 100%;
+        border-radius: 8px 0 0 8px;
+        transition: width .8s cubic-bezier(.4,0,.2,1);
+        min-width: 0;
+    }
+    .hbar-fill.pass-bar { background: linear-gradient(90deg,#0077b6,#0096c7); }
+    .hbar-fill.att-pass { background: linear-gradient(90deg,#0096c7,#00b4d8); }
+    .hbar-fill.att-fail { background: linear-gradient(90deg,#e11d48,#fb7185); }
+
+    /* Badge = the arrow tip. Same height as the track, chevron-shaped,
+       coloured to match the fill's leading edge, positioned with
+       left = fill's pixel width so it touches with zero gap. */
+    .hbar-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 22px 0 12px;
+        clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+        font-size: .88rem; font-weight: 800; color: #fff;
+        white-space: nowrap;
+        transition: left .8s cubic-bezier(.4,0,.2,1);
+        z-index: 2;
+        pointer-events: none;
+    }
+    /* solid colour = the fill gradient's trailing (right-hand) stop,
+       so the join between fill and badge is seamless */
+    .hbar-badge.pass-bar { background: #0096c7; }
+    .hbar-badge.att-pass { background: #00b4d8; }
+    .hbar-badge.att-fail { background: #fb7185; }
+
+    .hbar-legend {
+        display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px;
+    }
+    .hbar-legend-item {
+        display: flex; align-items: center; gap: 6px;
+        font-size:.76rem; font-weight:700; color:#475569;
+    }
+    .hbar-legend-dot {
+        width: 10px; height: 10px; border-radius: 999px;
+    }
+
+    /* ── ❷ Analog Clock ─────────────────────────────────────── */
+    .clock-wrap {
+        display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .clock-svg-wrap {
+        position: relative; display: flex; justify-content: center;
+    }
+    .clock-inner-text {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .clock-inner-pct {
+        display: block;
+        color: #03045e; font-size: 1.4rem; font-weight: 900;
+        line-height: 1;
+    }
+    .clock-inner-sub {
+        display: block;
+        color: #008fd1; font-size: .7rem; font-weight: 700;
+        margin-top: 2px;
+    }
+    .clock-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        width: 100%;
+    }
+    .clock-stat {
+        background: #f0fdff;
+        border: 1px solid #bae6fd;
+        border-radius: 10px;
+        padding: 10px 12px;
+        text-align: center;
+    }
+    .clock-stat-val {
+        display: block; color: #03045e; font-size:.95rem; font-weight:800;
+    }
+    .clock-stat-lbl {
+        display: block; color: #0096c7; font-size:.7rem; font-weight:700; margin-top:2px;
+    }
+    .clock-tick-marks text { font-family: 'Poppins', sans-serif; }
+
+    /* ── Stats strip ─────────────────────────────────────────── */
+    .adet-stats {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    .adet-stat {
+        display: grid;
+        grid-template-columns: 52px minmax(0,1fr);
+        min-height: 72px;
+        overflow: hidden;
+        border: 1px solid #7dddf0;
+        border-radius: 11px;
+        background: #fff;
+    }
+    .adet-stat-ico {
+        display: grid; place-items: center;
+        background: #c9f5fb; color: #0096c7; font-size: 1.35rem;
+    }
+    .adet-stat-body { padding: 10px 12px; min-width:0; }
+    .adet-stat-lbl  { color:#008fd1; font-size:.72rem; font-weight:700; }
+    .adet-stat-val  { color:#03045e; font-size:1.2rem; font-weight:900; margin-top:2px; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 900px) {
+        .adet-chart-grid { grid-template-columns: 1fr; }
+        .adet-stats      { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 540px) {
+        .adet-shell { padding: 16px; }
+        .adet-stats { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+<section class="adet-shell">
+
+    <!-- ── Heading ── -->
+    <div class="adet-heading">
+        <div class="adet-heading-main">
+            <span class="adet-heading-icon"><iconify-icon icon="mdi:clipboard-account-outline"></iconify-icon></span>
+            <div>
+                <h1 class="adet-title">{{ attempt.candidate.name }}</h1>
+                <p class="adet-sub">{{ attempt.candidate.email }} &nbsp;·&nbsp; {{ attempt.created_at|date:"M d, Y, g:i A" }}</p>
+            </div>
+        </div>
+        <a href="{% url 'dashboard:attempt_list' %}" class="adet-back-btn">
+            <iconify-icon icon="mdi:arrow-left"></iconify-icon> Back to List
+        </a>
+    </div>
+
+    <!-- ── Info pills ── -->
+    <div class="adet-info-row">
+        <span class="adet-info-pill"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ attempt.level|capfirst }}</span>
+        <span class="adet-info-pill"><iconify-icon icon="mdi:help-circle-outline"></iconify-icon>{{ attempt.question_count }} Questions</span>
+        <span class="adet-info-pill"><iconify-icon icon="mdi:timer-outline"></iconify-icon>{{ attempt.duration_minutes }} min allotted</span>
+        <span class="adet-info-pill"><iconify-icon icon="mdi:format-list-bulleted-type"></iconify-icon>{{ attempt.session_type|capfirst }} session</span>
+        {% if attempt.is_submitted %}
+            <span class="adet-badge pass"><iconify-icon icon="mdi:check-circle-outline"></iconify-icon>Submitted</span>
+        {% else %}
+            <span class="adet-badge fail"><iconify-icon icon="mdi:clock-alert-outline"></iconify-icon>Not Submitted</span>
+        {% endif %}
+        {% if is_passed %}
+            <span class="adet-badge pass"><iconify-icon icon="mdi:trophy-outline"></iconify-icon>Passed</span>
+        {% else %}
+            <span class="adet-badge fail"><iconify-icon icon="mdi:close-circle-outline"></iconify-icon>Failed</span>
+        {% endif %}
+    </div>
+
+    <!-- ── Quick stats strip ── -->
+    <div class="adet-stats">
+        <div class="adet-stat">
+            <span class="adet-stat-ico"><iconify-icon icon="mdi:check-bold"></iconify-icon></span>
+            <div class="adet-stat-body">
+                <div class="adet-stat-lbl">Correct</div>
+                <div class="adet-stat-val">{{ attempt.correct_count }}</div>
+            </div>
+        </div>
+        <div class="adet-stat">
+            <span class="adet-stat-ico"><iconify-icon icon="mdi:close-thick"></iconify-icon></span>
+            <div class="adet-stat-body">
+                <div class="adet-stat-lbl">Wrong</div>
+                <div class="adet-stat-val">{{ attempt.wrong_count }}</div>
+            </div>
+        </div>
+        <div class="adet-stat">
+            <span class="adet-stat-ico"><iconify-icon icon="mdi:percent-outline"></iconify-icon></span>
+            <div class="adet-stat-body">
+                <div class="adet-stat-lbl">Score</div>
+                <div class="adet-stat-val">{{ attempt.percentage }}%</div>
+            </div>
+        </div>
+        <div class="adet-stat">
+            <span class="adet-stat-ico"><iconify-icon icon="mdi:timer-check-outline"></iconify-icon></span>
+            <div class="adet-stat-body">
+                <div class="adet-stat-lbl">Time Taken</div>
+                <div class="adet-stat-val">{{ time_taken_display }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Two charts side by side ── -->
+    <div class="adet-chart-grid">
+
+        <!-- ❶ Pass % vs Attempt % horizontal bar chart -->
+        <div class="adet-card">
+            <div class="adet-card-head">
+                <span class="adet-card-ico"><iconify-icon icon="mdi:poll"></iconify-icon></span>
+                <div class="adet-card-lbl">
+                    <span class="adet-card-name">Score vs Pass Threshold</span>
+                    <span class="adet-card-hint">Pass mark: {{ pass_pct }}% &nbsp;·&nbsp; Attempt score: {{ attempt_pct }}%</span>
+                </div>
+            </div>
+            <div class="adet-card-body">
+                <div class="hbar-wrap">
+
+                    <!-- Row 1 – Pass threshold -->
+                    <div class="hbar-row">
+                        <span class="hbar-label">Pass Threshold</span>
+                        <!-- track wraps fill; badge is a sibling OUTSIDE the track -->
+                        <div style="position:relative;">
+                            <div class="hbar-track">
+                                <div class="hbar-fill pass-bar" id="bar-pass" style="width:0%"></div>
+                            </div>
+                            <span class="hbar-badge pass-bar" id="badge-pass" style="left:0;">{{ pass_pct }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 – Attempt score -->
+                    <div class="hbar-row">
+                        <span class="hbar-label">Candidate Score</span>
+                        <div style="position:relative;">
+                            <div class="hbar-track">
+                                <div class="hbar-fill {% if is_passed %}att-pass{% else %}att-fail{% endif %}" id="bar-att" style="width:0%"></div>
+                            </div>
+                            <span class="hbar-badge {% if is_passed %}att-pass{% else %}att-fail{% endif %}" id="badge-att" style="left:0;">{{ attempt_pct }}%</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Legend -->
+                <div class="hbar-legend" style="margin-top:18px;">
+                    <div class="hbar-legend-item">
+                        <span class="hbar-legend-dot" style="background:#0077b6;"></span>
+                        Pass Threshold ({{ pass_pct }}%)
+                    </div>
+                    <div class="hbar-legend-item">
+                        <span class="hbar-legend-dot" style="background:{% if is_passed %}#0096c7{% else %}#e11d48{% endif %};"></span>
+                        Candidate Score ({{ attempt_pct }}%) – {% if is_passed %}Pass{% else %}Fail{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ❷ Analog Clock – Time taken vs allotted -->
+        <div class="adet-card">
+            <div class="adet-card-head">
+                <span class="adet-card-ico"><iconify-icon icon="mdi:clock-time-eight-outline"></iconify-icon></span>
+                <div class="adet-card-lbl">
+                    <span class="adet-card-name">Time Usage</span>
+                    <span class="adet-card-hint">Taken: {{ time_taken_display }} of {{ duration_minutes }} min allotted</span>
+                </div>
+            </div>
+            <div class="adet-card-body">
+                <div class="clock-wrap">
+
+                    <div class="clock-svg-wrap">
+                        <svg id="clockSvg" width="220" height="220" viewBox="0 0 220 220">
+                            <!-- bg ring -->
+                            <circle cx="110" cy="110" r="90" fill="none" stroke="#e0f2fe" stroke-width="18"/>
+                            <!-- elapsed arc – drawn by JS -->
+                            <circle id="clockArc" cx="110" cy="110" r="90" fill="none"
+                                stroke="#0096c7" stroke-width="18"
+                                stroke-linecap="round"
+                                stroke-dasharray="0 566"
+                                transform="rotate(-90 110 110)"/>
+                            <!-- face fill -->
+                            <circle cx="110" cy="110" r="71" fill="#f0fdff"/>
+                            <!-- tick marks group built by JS -->
+                            <g id="clockTicks"></g>
+                            <!-- hour hand -->
+                            <line id="clockHour" x1="110" y1="110" x2="110" y2="62"
+                                stroke="#03045e" stroke-width="5" stroke-linecap="round"/>
+                            <!-- minute hand -->
+                            <line id="clockMin" x1="110" y1="110" x2="110" y2="46"
+                                stroke="#0096c7" stroke-width="3.5" stroke-linecap="round"/>
+                            <!-- second hand / needle showing fraction -->
+                            <line id="clockFrac" x1="110" y1="110" x2="110" y2="50"
+                                stroke="#e11d48" stroke-width="2" stroke-linecap="round"
+                                opacity="0.75"/>
+                            <circle cx="110" cy="110" r="5" fill="#03045e"/>
+                            <circle cx="110" cy="110" r="2.5" fill="#fff"/>
+                        </svg>
+
+                        <div class="clock-inner-text">
+                            <span class="clock-inner-pct" id="clockPct">0%</span>
+                            <span class="clock-inner-sub">used</span>
+                        </div>
+                    </div>
+
+                    <div class="clock-stats">
+                        <div class="clock-stat">
+                            <span class="clock-stat-val">{{ time_taken_display }}</span>
+                            <span class="clock-stat-lbl">Time Taken</span>
+                        </div>
+                        <div class="clock-stat">
+                            <span class="clock-stat-val">{{ duration_minutes }} min</span>
+                            <span class="clock-stat-lbl">Total Allotted</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /chart-grid -->
+
+</section>
+
+<script>
+(function () {
+    /* ── Bar chart animation ────────────────────────────────── */
+    var passPct  = {{ pass_pct|floatformat:2 }};
+    var attPct   = {{ attempt_pct|floatformat:2 }};
+
+    var barPass  = document.getElementById('bar-pass');
+    var barAtt   = document.getElementById('bar-att');
+    var badgePass = document.getElementById('badge-pass');
+    var badgeAtt  = document.getElementById('badge-att');
+
+    /* Map a 0-100 score to a fill width as % of the track. Track already
+       reserves 90px of margin-right for the badge/arrow-tip, so the fill
+       can safely use the full 100% of its own (narrower) box. */
+    function scoreToFillPct(pct) {
+        return Math.max(Math.min(pct, 100), 0);
+    }
+
+    /* Position badge flush against the fill's right edge — left = fill's
+       pixel width, zero gap, zero offset — so fill + badge look like one
+       continuous bar tapering to a point. Called every animation frame. */
+    function syncBadge(barEl, badgeEl) {
+        var fillW = barEl.offsetWidth;
+        badgeEl.style.left = fillW + 'px';
+    }
+
+    var duration  = 800; /* animation ms */
+    var startTs   = null;
+    var targetPass = scoreToFillPct(passPct);
+    var targetAtt  = scoreToFillPct(attPct);
+
+    function barFrame(ts) {
+        if (!startTs) startTs = ts;
+        var progress = Math.min((ts - startTs) / duration, 1);
+        var eased    = 1 - Math.pow(1 - progress, 3); /* ease-out cubic */
+
+        barPass.style.width = (eased * targetPass) + '%';
+        barAtt.style.width  = (eased * targetAtt)  + '%';
+
+        syncBadge(barPass, badgePass);
+        syncBadge(barAtt,  badgeAtt);
+
+        if (progress < 1) {
+            requestAnimationFrame(barFrame);
+        } else {
+            barPass.style.width = targetPass + '%';
+            barAtt.style.width  = targetAtt  + '%';
+            syncBadge(barPass, badgePass);
+            syncBadge(barAtt,  badgeAtt);
+        }
+    }
+
+    setTimeout(function () { requestAnimationFrame(barFrame); }, 150);
+
+    /* ── Analog Clock ───────────────────────────────────────── */
+    var totalSec = {{ total_seconds_allotted }};
+    var takenSec = {{ time_taken_seconds }};
+    var timePct  = {{ time_pct|floatformat:2 }};
+
+    var arcEl    = document.getElementById('clockArc');
+    var pctEl    = document.getElementById('clockPct');
+    var hourEl   = document.getElementById('clockHour');
+    var minEl    = document.getElementById('clockMin');
+    var fracEl   = document.getElementById('clockFrac');
+    var ticksEl  = document.getElementById('clockTicks');
+
+    var R        = 90;
+    var CX = 110, CY = 110;
+    var circumference = 2 * Math.PI * R; // ≈ 565.49
+
+    /* Draw tick marks */
+    for (var i = 0; i < 60; i++) {
+        var ang   = (i / 60) * 2 * Math.PI - Math.PI / 2;
+        var isMaj = i % 5 === 0;
+        var r1    = isMaj ? 68 : 71;
+        var r2    = 80;
+        var x1    = CX + r1 * Math.cos(ang);
+        var y1    = CY + r1 * Math.sin(ang);
+        var x2    = CX + r2 * Math.cos(ang);
+        var y2    = CY + r2 * Math.sin(ang);
+        var line  = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+        line.setAttribute('stroke', isMaj ? '#0077b6' : '#bae6fd');
+        line.setAttribute('stroke-width', isMaj ? '2.5' : '1.2');
+        line.setAttribute('stroke-linecap', 'round');
+        ticksEl.appendChild(line);
+
+        if (isMaj) {
+            var hr    = i / 5 === 0 ? 12 : i / 5;
+            var tr    = 60;
+            var tx    = CX + tr * Math.cos(ang);
+            var ty    = CY + tr * Math.sin(ang) + 4;
+            var txt   = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            txt.setAttribute('x', tx); txt.setAttribute('y', ty);
+            txt.setAttribute('text-anchor', 'middle');
+            txt.setAttribute('font-size', '8');
+            txt.setAttribute('font-weight', '700');
+            txt.setAttribute('fill', '#0077b6');
+            txt.textContent = hr;
+            ticksEl.appendChild(txt);
+        }
+    }
+
+    /* Animate arc + hands */
+    var durationTotal = totalSec > 0 ? totalSec : 1;
+
+    /* Map taken seconds to a 12-hour clock position:
+       full allotted time = 1 full revolution */
+    function setClockHands(fraction) {
+        /* fraction 0–1 maps to 0–360 degrees (full revolution = all time used) */
+        var deg     = fraction * 360;
+        var radians = (deg - 90) * (Math.PI / 180);
+
+        /* hour hand – slower (1/12 of full arc) */
+        var hourDeg = deg / 12;
+        var hourRad = (hourDeg - 90) * Math.PI / 180;
+        var hx = CX + 48 * Math.cos(hourRad);
+        var hy = CY + 48 * Math.sin(hourRad);
+        hourEl.setAttribute('x2', hx);
+        hourEl.setAttribute('y2', hy);
+
+        /* minute hand – full arc */
+        var mx = CX + 64 * Math.cos(radians);
+        var my = CY + 64 * Math.sin(radians);
+        minEl.setAttribute('x2', mx);
+        minEl.setAttribute('y2', my);
+
+        /* red fraction needle */
+        var fx = CX + 60 * Math.cos(radians);
+        var fy = CY + 60 * Math.sin(radians);
+        fracEl.setAttribute('x2', fx);
+        fracEl.setAttribute('y2', fy);
+    }
+
+    var elapsed = 0;
+    var duration = 900; // animation ms
+    var startTs = null;
+    var targetFrac = Math.min(takenSec / durationTotal, 1);
+
+    /* Arc color: blue if under 80% time, amber if 80-95%, red if >95% */
+    var arcColor = '#0096c7';
+    if (timePct > 95) arcColor = '#e11d48';
+    else if (timePct > 80) arcColor = '#f59e0b';
+    arcEl.setAttribute('stroke', arcColor);
+
+    function animFrame(ts) {
+        if (!startTs) startTs = ts;
+        var progress = Math.min((ts - startTs) / duration, 1);
+        var eased    = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        var frac     = eased * targetFrac;
+
+        /* Arc */
+        var dash = frac * circumference;
+        arcEl.setAttribute('stroke-dasharray', dash + ' ' + (circumference - dash));
+
+        /* Hands */
+        setClockHands(frac);
+
+        /* Counter */
+        pctEl.textContent = Math.round(frac * 100) + '%';
+
+        if (progress < 1) requestAnimationFrame(animFrame);
+        else {
+            pctEl.textContent = Math.round(targetFrac * 100) + '%';
+            setClockHands(targetFrac);
+        }
+    }
+
+    /* start after brief delay so user sees the animation */
+    setTimeout(function () { requestAnimationFrame(animFrame); }, 250);
+}());
+</script>
+
+</div>
+{% endblock %}

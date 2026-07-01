@@ -799,6 +799,58 @@ def attempt_list(request):
 
 
 @company_login_required
+def attempt_detail(request, pk):
+    from django.utils import timezone
+
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('candidate', 'company'),
+        pk=pk,
+        company=request.company,
+    )
+
+    # ── Time calculations ────────────────────────────────────────────
+    total_seconds_allotted = attempt.duration_minutes * 60
+
+    if attempt.started_at and attempt.submitted_at:
+        raw_elapsed = int((attempt.submitted_at - attempt.started_at).total_seconds())
+        time_taken_seconds = max(raw_elapsed - attempt.total_paused_seconds, 0)
+        time_taken_seconds = min(time_taken_seconds, total_seconds_allotted)
+    elif attempt.started_at:
+        raw_elapsed = int((timezone.now() - attempt.started_at).total_seconds())
+        time_taken_seconds = max(raw_elapsed - attempt.total_paused_seconds, 0)
+        time_taken_seconds = min(time_taken_seconds, total_seconds_allotted)
+    else:
+        time_taken_seconds = 0
+
+    time_taken_minutes = time_taken_seconds / 60
+    time_pct = round((time_taken_seconds / total_seconds_allotted * 100), 2) if total_seconds_allotted else 0
+
+    taken_h = int(time_taken_seconds // 3600)
+    taken_m = int((time_taken_seconds % 3600) // 60)
+    taken_s = int(time_taken_seconds % 60)
+    time_taken_display = f'{taken_h}h {taken_m}m {taken_s}s' if taken_h else f'{taken_m}m {taken_s}s'
+
+    # ── Pass / Fail ──────────────────────────────────────────────────
+    pass_pct = float(request.company.pass_persantage)
+    attempt_pct = float(attempt.percentage)
+    is_passed = attempt_pct >= pass_pct
+
+    return render(request, 'dashboard/attempt_detail.html', {
+        'title': f'Attempt – {attempt.candidate.name}',
+        'attempt': attempt,
+        'pass_pct': pass_pct,
+        'attempt_pct': attempt_pct,
+        'is_passed': is_passed,
+        'total_seconds_allotted': total_seconds_allotted,
+        'time_taken_seconds': time_taken_seconds,
+        'time_pct': time_pct,
+        'time_taken_display': time_taken_display,
+        'duration_minutes': attempt.duration_minutes,
+        'time_taken_minutes': round(time_taken_minutes, 2),
+    })
+
+
+@company_login_required
 def attempt_pdf(request):
     queryset = (
         CandidateTestAttempt.objects.filter(company=request.company)
