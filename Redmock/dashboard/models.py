@@ -37,6 +37,7 @@ class Company(models.Model):
     right_click_disable_enabled = models.BooleanField(default=False)
     max_violation_warnings = models.PositiveIntegerField(default=3)
     exam_control_password = models.CharField(max_length=128, blank=True)
+    pass_persantage = models.DecimalField(max_digits=5, decimal_places=2, default=50.00)
     mail_sender_enabled = models.BooleanField(default=False)
     smtp_host = models.CharField(max_length=255, blank=True)
     smtp_port = models.PositiveIntegerField(default=587)
