@@ -801,6 +801,7 @@ def attempt_list(request):
 @company_login_required
 def attempt_detail(request, pk):
     from django.utils import timezone
+    from .models import Quiz
 
     attempt = get_object_or_404(
         CandidateTestAttempt.objects.select_related('candidate', 'company'),
@@ -835,6 +836,101 @@ def attempt_detail(request, pk):
     attempt_pct = float(attempt.percentage)
     is_passed = attempt_pct >= pass_pct
 
+    # ── Load questions for breakdown and longest-question analysis ───
+    answer_rows = attempt.answers_json or []
+    question_ids = [row['question_id'] for row in answer_rows]
+    questions_qs = (
+        Quiz.objects
+        .filter(id__in=question_ids, test_subject__company=attempt.company)
+        .select_related('test_subject', 'sub_title')
+    )
+    question_map = {q.id: q for q in questions_qs}
+
+    # Build answered-set for quick lookup
+    answered_set = {
+        row['question_id']
+        for row in answer_rows
+        if row.get('selected_answer', '').strip()
+    }
+    correct_set = {
+        row['question_id']
+        for row in answer_rows
+        if row.get('selected_answer') and
+        question_map.get(row['question_id']) and
+        row['selected_answer'] == question_map[row['question_id']].correct_answer
+    }
+
+    # ── Session / Subject breakdown ──────────────────────────────────
+    # Group questions by subject → gives per-subject stats
+    from collections import OrderedDict
+    subject_stats = OrderedDict()
+    total_q = len(question_ids)
+
+    for qid in question_ids:
+        q = question_map.get(qid)
+        if not q:
+            continue
+        subj = q.test_subject.subject
+        if subj not in subject_stats:
+            subject_stats[subj] = {
+                'name': subj,
+                'total': 0,
+                'attended': 0,
+                'correct': 0,
+                'wrong': 0,
+                'skipped': 0,
+                'level': q.level,
+            }
+        s = subject_stats[subj]
+        s['total'] += 1
+        if qid in answered_set:
+            s['attended'] += 1
+            if qid in correct_set:
+                s['correct'] += 1
+            else:
+                s['wrong'] += 1
+        else:
+            s['skipped'] += 1
+
+    # Compute each session's proportional time share
+    # (total_time / total_questions) × subject_questions
+    time_per_q = time_taken_seconds / max(total_q, 1)
+    for s in subject_stats.values():
+        secs = int(time_per_q * s['total'])
+        m, sec = divmod(secs, 60)
+        h, m = divmod(m, 60)
+        s['time_display'] = f'{h}h {m}m {sec}s' if h else f'{m}m {sec}s'
+        s['time_seconds'] = secs
+        s['pct'] = round((s['correct'] / s['total'] * 100), 1) if s['total'] else 0
+
+    session_list = list(subject_stats.values())
+
+    # ── Longest question (by question text length as proxy) ──────────
+    longest_question = None
+    if question_map:
+        longest_q_obj = max(question_map.values(), key=lambda q: len(q.question or ''))
+        lq_row = next(
+            (r for r in answer_rows if r['question_id'] == longest_q_obj.id), None
+        )
+        lq_answered = lq_row and bool(lq_row.get('selected_answer', '').strip())
+        lq_correct = lq_row and lq_row.get('selected_answer') == longest_q_obj.correct_answer
+        # Estimate time: proportional to question length vs average length
+        avg_len = sum(len(q.question or '') for q in question_map.values()) / max(len(question_map), 1)
+        lq_len = len(longest_q_obj.question or '')
+        lq_secs = int(time_per_q * (lq_len / max(avg_len, 1)) * 1.2)
+        lq_m, lq_s = divmod(lq_secs, 60)
+        longest_question = {
+            'subject': longest_q_obj.test_subject.subject,
+            'subtitle': longest_q_obj.sub_title.title if longest_q_obj.sub_title else 'General',
+            'level': longest_q_obj.get_level_display(),
+            'question_text': (longest_q_obj.question or '')[:220],
+            'question_full': longest_q_obj.question or '',
+            'is_answered': lq_answered,
+            'is_correct': lq_correct,
+            'est_time_display': f'{lq_m}m {lq_s}s',
+            'char_count': lq_len,
+        }
+
     return render(request, 'dashboard/attempt_detail.html', {
         'title': f'Attempt – {attempt.candidate.name}',
         'attempt': attempt,
@@ -847,6 +943,8 @@ def attempt_detail(request, pk):
         'time_taken_display': time_taken_display,
         'duration_minutes': attempt.duration_minutes,
         'time_taken_minutes': round(time_taken_minutes, 2),
+        'session_list': session_list,
+        'longest_question': longest_question,
     })
 
 

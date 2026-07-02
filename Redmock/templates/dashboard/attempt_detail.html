@@ -91,68 +91,57 @@
     .adet-card-hint { display:block; margin-top:4px; color:#008fd1; font-size:.75rem; }
     .adet-card-body { padding: 24px; }
 
-    /* ── ❶ Horizontal Bar Chart (chevron style, matches reference) ──
-       The "arrow" is the badge itself (chevron clip-path), pushed flush
-       against the flat-edged fill with zero gap and a matching solid
-       colour — so fill + badge read as ONE continuous bar that tapers
-       to a point with the % sitting inside the tip, exactly like the
-       reference image. Original project colours kept unchanged. */
-    .hbar-wrap { display: flex; flex-direction: column; gap: 34px; }
+    /* ── ❶ Horizontal Bar Chart ───────────────────────────────
+       Layout: [fill bar (grows)][badge pill (fixed width)]
+       The badge is a separate flex-child NEXT to the track, NOT inside
+       or overlapping it. This means 100% fill = truly full track. */
+    .hbar-wrap { display: flex; flex-direction: column; gap: 28px; }
+    .hbar-row  { display: flex; flex-direction: column; gap: 7px; }
+    .hbar-label{ color:#03045e; font-size:.84rem; font-weight:800; }
 
-    .hbar-row { display: flex; flex-direction: column; gap: 8px; }
-    .hbar-label { color:#03045e; font-size:.85rem; font-weight:800; margin-bottom:2px; }
-
-    /* Track: grey background, right margin reserves room for the
-       arrow-tip badge so it never clips the card edge */
-    .hbar-track {
-        position: relative;
-        height: 46px;
-        border-radius: 8px;
-        background: #dbeafe;
-        margin-right: 90px;
-    }
-
-    /* Flat-edged fill (no clip-path here anymore) — rounded only on the
-       left, flush/square on the right where the badge attaches */
-    .hbar-fill {
-        position: absolute;
-        top: 0; left: 0;
-        height: 100%;
-        border-radius: 8px 0 0 8px;
-        transition: width .8s cubic-bezier(.4,0,.2,1);
-        min-width: 0;
-    }
-    .hbar-fill.pass-bar { background: linear-gradient(90deg,#0077b6,#0096c7); }
-    .hbar-fill.att-pass { background: linear-gradient(90deg,#0096c7,#00b4d8); }
-    .hbar-fill.att-fail { background: linear-gradient(90deg,#e11d48,#fb7185); }
-
-    /* Badge = the arrow tip. Same height as the track, chevron-shaped,
-       coloured to match the fill's leading edge, positioned with
-       left = fill's pixel width so it touches with zero gap. */
-    .hbar-badge {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
+    /* Row that holds [track | badge] side-by-side */
+    .hbar-bar-row {
         display: flex;
         align-items: center;
-        justify-content: center;
-        padding: 0 22px 0 12px;
-        clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+        gap: 0;
+    }
+    /* Track occupies all remaining width */
+    .hbar-track {
+        flex: 1 1 0;
+        position: relative;
+        height: 42px;
+        border-radius: 6px;
+        background: #dbeafe;
+        overflow: hidden;   /* clip fill inside rounded corners */
+    }
+    /* Animated fill: clip-path gives the forward-pointing chevron */
+    .hbar-fill {
+        position: absolute;
+        top: 0; left: 0; height: 100%;
+        clip-path: polygon(0 0, calc(100% - 0px) 0, 100% 50%, calc(100% - 0px) 100%, 0 100%);
+        transition: width .85s cubic-bezier(.4,0,.2,1);
+    }
+    .hbar-fill.pass-bar { background: linear-gradient(90deg,#0077b6,#0096c7); }
+    .hbar-fill.att-pass { background: linear-gradient(90deg,#0077b6,#00b4d8); }
+    .hbar-fill.att-fail { background: linear-gradient(90deg,#c81d4e,#fb7185); }
+
+    /* Badge pill: fixed-width flex-child, chevron pointing LEFT into the bar */
+    .hbar-badge {
+        flex: 0 0 auto;
+        display: flex; align-items: center; justify-content: center;
+        height: 42px;
+        min-width: 78px;
+        padding: 0 14px;
+        clip-path: polygon(16px 0, 100% 0, 100% 100%, 16px 100%, 0 50%);
         font-size: .88rem; font-weight: 800; color: #fff;
         white-space: nowrap;
-        transition: left .8s cubic-bezier(.4,0,.2,1);
-        z-index: 2;
-        pointer-events: none;
     }
-    /* solid colour = the fill gradient's trailing (right-hand) stop,
-       so the join between fill and badge is seamless */
-    .hbar-badge.pass-bar { background: #0096c7; }
-    .hbar-badge.att-pass { background: #00b4d8; }
-    .hbar-badge.att-fail { background: #fb7185; }
+    .hbar-badge.pass-bar { background: #005f8e; }
+    .hbar-badge.att-pass { background: #007ab3; }
+    .hbar-badge.att-fail { background: #c81d4e; }
 
     .hbar-legend {
-        display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px;
+        display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px;
     }
     .hbar-legend-item {
         display: flex; align-items: center; gap: 6px;
@@ -230,14 +219,115 @@
     .adet-stat-lbl  { color:#008fd1; font-size:.72rem; font-weight:700; }
     .adet-stat-val  { color:#03045e; font-size:1.2rem; font-weight:900; margin-top:2px; }
 
+    /* ── Session Detail List (sdet) ─────────────────────────── */
+    .sdet-list { display: flex; flex-direction: column; gap: 18px; }
+    .sdet-item {
+        border: 1px solid #e0f2fe;
+        border-radius: 10px;
+        padding: 14px 16px;
+        background: #f8fdff;
+    }
+    .sdet-item-head {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+    }
+    .sdet-name { color:#03045e; font-size:.88rem; font-weight:800; }
+    .sdet-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sdet-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        border-radius: 999px; padding: 3px 10px;
+        font-size:.72rem; font-weight:700;
+    }
+    .sdet-pill.level { background:#dbeafe; color:#1d4ed8; }
+    .sdet-pill.time  { background:#e0f2fe; color:#0369a1; }
+
+    /* mini score bar inside each session */
+    .sdet-mini-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .sdet-mini-track {
+        flex:1; height:8px; border-radius:999px;
+        background:#dbeafe; overflow:hidden;
+    }
+    .sdet-mini-fill {
+        height:100%; border-radius:999px;
+        background:linear-gradient(90deg,#0077b6,#0096c7);
+        transition:width .8s ease;
+    }
+    .sdet-mini-pct { font-size:.74rem; font-weight:800; color:#0077b6; white-space:nowrap; }
+
+    /* stat chips row */
+    .sdet-stats { display:flex; flex-wrap:wrap; gap:8px; }
+    .sdet-stat {
+        display:flex; flex-direction:column; align-items:center;
+        background:#fff; border:1px solid #e0f2fe; border-radius:8px;
+        padding:6px 12px; font-size:.72rem; color:#64748b;
+        min-width:56px; text-align:center;
+    }
+    .sdet-stat iconify-icon { font-size:1rem; color:#0096c7; margin-bottom:2px; }
+    .sdet-stat span { font-size:.88rem; font-weight:800; color:#03045e; }
+    .sdet-stat em   { font-style:normal; }
+    .sdet-stat.correct iconify-icon { color:#059669; }
+    .sdet-stat.correct span          { color:#059669; }
+    .sdet-stat.wrong   iconify-icon { color:#e11d48; }
+    .sdet-stat.wrong   span          { color:#e11d48; }
+    .sdet-stat.skip    iconify-icon { color:#94a3b8; }
+
+    /* ── Longest Question card (lq) ─────────────────────────── */
+    .lq-wrap  { display:flex; flex-direction:column; gap:16px; }
+    .lq-meta  { display:flex; flex-wrap:wrap; gap:8px; }
+    .lq-pill  {
+        display:inline-flex; align-items:center; gap:5px;
+        border-radius:999px; padding:4px 12px;
+        font-size:.76rem; font-weight:700;
+    }
+    .lq-pill.subject { background:#dbeafe; color:#1e40af; }
+    .lq-pill.sub     { background:#e0f2fe; color:#0369a1; }
+    .lq-pill.level   { background:#f0fdf4; color:#166534; }
+
+    .lq-text-box {
+        background:#f0fdff; border:1px solid #bae6fd; border-radius:10px;
+        padding:14px 16px;
+    }
+    .lq-text {
+        margin:0; color:#03045e; font-size:.84rem; line-height:1.65;
+        word-break:break-word;
+    }
+    .lq-toggle {
+        display:inline-block; margin-top:8px;
+        background:none; border:none; color:#0096c7;
+        font-size:.78rem; font-weight:700; cursor:pointer; padding:0;
+    }
+    .lq-toggle:hover { text-decoration:underline; }
+
+    .lq-outcome-row {
+        display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+    }
+    .lq-outcome-stat {
+        display:flex; align-items:center; gap:10px;
+        background:#f8fdff; border:1px solid #e0f2fe;
+        border-radius:10px; padding:10px 12px;
+    }
+    .lq-stat-ico {
+        display:grid; place-items:center;
+        width:34px; height:34px; border-radius:8px;
+        background:#c9f5fb; color:#0096c7; font-size:1.1rem;
+        flex-shrink:0;
+    }
+    .lq-stat-ico.correct { background:#d1fae5; color:#059669; }
+    .lq-stat-ico.wrong   { background:#ffe4e6; color:#e11d48; }
+    .lq-stat-ico.skip    { background:#f1f5f9; color:#94a3b8; }
+    .lq-stat-val { display:block; color:#03045e; font-size:.9rem; font-weight:800; }
+    .lq-stat-sub { display:block; color:#64748b; font-size:.7rem; margin-top:1px; }
+
     /* ── Responsive ──────────────────────────────────────────── */
     @media (max-width: 900px) {
         .adet-chart-grid { grid-template-columns: 1fr; }
         .adet-stats      { grid-template-columns: repeat(2,1fr); }
+        .lq-outcome-row  { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 540px) {
         .adet-shell { padding: 16px; }
         .adet-stats { grid-template-columns: 1fr 1fr; }
+        .lq-outcome-row { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -325,36 +415,35 @@
                     <!-- Row 1 – Pass threshold -->
                     <div class="hbar-row">
                         <span class="hbar-label">Pass Threshold</span>
-                        <!-- track wraps fill; badge is a sibling OUTSIDE the track -->
-                        <div style="position:relative;">
+                        <div class="hbar-bar-row">
                             <div class="hbar-track">
                                 <div class="hbar-fill pass-bar" id="bar-pass" style="width:0%"></div>
                             </div>
-                            <span class="hbar-badge pass-bar" id="badge-pass" style="left:0;">{{ pass_pct }}%</span>
+                            <span class="hbar-badge pass-bar" id="badge-pass">{{ pass_pct }}%</span>
                         </div>
                     </div>
 
-                    <!-- Row 2 – Attempt score -->
+                    <!-- Row 2 – Candidate score -->
                     <div class="hbar-row">
                         <span class="hbar-label">Candidate Score</span>
-                        <div style="position:relative;">
+                        <div class="hbar-bar-row">
                             <div class="hbar-track">
                                 <div class="hbar-fill {% if is_passed %}att-pass{% else %}att-fail{% endif %}" id="bar-att" style="width:0%"></div>
                             </div>
-                            <span class="hbar-badge {% if is_passed %}att-pass{% else %}att-fail{% endif %}" id="badge-att" style="left:0;">{{ attempt_pct }}%</span>
+                            <span class="hbar-badge {% if is_passed %}att-pass{% else %}att-fail{% endif %}" id="badge-att">{{ attempt_pct }}%</span>
                         </div>
                     </div>
 
                 </div>
 
                 <!-- Legend -->
-                <div class="hbar-legend" style="margin-top:18px;">
+                <div class="hbar-legend" style="margin-top:16px;">
                     <div class="hbar-legend-item">
-                        <span class="hbar-legend-dot" style="background:#0077b6;"></span>
+                        <span style="width:10px;height:10px;border-radius:999px;background:#0077b6;display:inline-block;"></span>
                         Pass Threshold ({{ pass_pct }}%)
                     </div>
                     <div class="hbar-legend-item">
-                        <span class="hbar-legend-dot" style="background:{% if is_passed %}#0096c7{% else %}#e11d48{% endif %};"></span>
+                        <span style="width:10px;height:10px;border-radius:999px;background:{% if is_passed %}#0096c7{% else %}#e11d48{% endif %};display:inline-block;"></span>
                         Candidate Score ({{ attempt_pct }}%) – {% if is_passed %}Pass{% else %}Fail{% endif %}
                     </div>
                 </div>
@@ -385,19 +474,16 @@
                                 transform="rotate(-90 110 110)"/>
                             <!-- face fill -->
                             <circle cx="110" cy="110" r="71" fill="#f0fdff"/>
-                            <!-- tick marks group built by JS -->
+                            <!-- tick marks + minute labels group, built by JS from duration_minutes -->
                             <g id="clockTicks"></g>
-                            <!-- hour hand -->
-                            <line id="clockHour" x1="110" y1="110" x2="110" y2="62"
-                                stroke="#03045e" stroke-width="5" stroke-linecap="round"/>
-                            <!-- minute hand -->
+                            <!-- single needle showing real elapsed-time position on the dial -->
                             <line id="clockMin" x1="110" y1="110" x2="110" y2="46"
-                                stroke="#0096c7" stroke-width="3.5" stroke-linecap="round"/>
-                            <!-- second hand / needle showing fraction -->
-                            <line id="clockFrac" x1="110" y1="110" x2="110" y2="50"
-                                stroke="#e11d48" stroke-width="2" stroke-linecap="round"
-                                opacity="0.75"/>
-                            <circle cx="110" cy="110" r="5" fill="#03045e"/>
+                                stroke="#0096c7" stroke-width="4" stroke-linecap="round"/>
+                            <!-- short accent tip on the same needle, for a bit of visual weight -->
+                            <line id="clockFrac" x1="110" y1="110" x2="110" y2="58"
+                                stroke="#03045e" stroke-width="6" stroke-linecap="round"
+                                opacity="0.9"/>
+                            <circle cx="110" cy="110" r="6" fill="#03045e"/>
                             <circle cx="110" cy="110" r="2.5" fill="#fff"/>
                         </svg>
 
@@ -423,70 +509,201 @@
 
     </div><!-- /chart-grid -->
 
+
+    <!-- ── Bottom row: Session details (left) + Longest Question (right) ── -->
+    <div class="adet-chart-grid" style="margin-top:20px;">
+
+        <!-- ❶ Session / Subject breakdown -->
+        <div class="adet-card">
+            <div class="adet-card-head">
+                <span class="adet-card-ico"><iconify-icon icon="mdi:view-list-outline"></iconify-icon></span>
+                <div class="adet-card-lbl">
+                    <span class="adet-card-name">
+                        {% if attempt.session_type == 'single' %}Single Session Details{% else %}Multi-Session Breakdown{% endif %}
+                    </span>
+                    <span class="adet-card-hint">
+                        {% if attempt.session_type == 'single' %}{{ session_list|length }} subject{{ session_list|length|pluralize }} &nbsp;·&nbsp; {{ attempt.question_count }} questions{% else %}{{ session_list|length }} session{{ session_list|length|pluralize }} · {{ attempt.question_count }} total questions{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="adet-card-body" style="padding:16px 20px;">
+                {% if session_list %}
+                <div class="sdet-list">
+                    {% for s in session_list %}
+                    <div class="sdet-item">
+                        <!-- header row -->
+                        <div class="sdet-item-head">
+                            <span class="sdet-name">{{ s.name }}</span>
+                            <div class="sdet-badges">
+                                <span class="sdet-pill level">{{ s.level|capfirst }}</span>
+                                <span class="sdet-pill time"><iconify-icon icon="mdi:timer-outline"></iconify-icon>{{ s.time_display }}</span>
+                            </div>
+                        </div>
+                        <!-- mini horizontal bar -->
+                        <div class="sdet-mini-bar-row">
+                            <div class="sdet-mini-track">
+                                <div class="sdet-mini-fill" style="width:{{ s.pct }}%"></div>
+                            </div>
+                            <span class="sdet-mini-pct">{{ s.pct }}%</span>
+                        </div>
+                        <!-- stat grid -->
+                        <div class="sdet-stats">
+                            <span class="sdet-stat">
+                                <iconify-icon icon="mdi:help-circle-outline"></iconify-icon>
+                                <span>{{ s.total }} Q</span>
+                                <em>Total</em>
+                            </span>
+                            <span class="sdet-stat">
+                                <iconify-icon icon="mdi:pencil-outline"></iconify-icon>
+                                <span>{{ s.attended }}</span>
+                                <em>Attended</em>
+                            </span>
+                            <span class="sdet-stat correct">
+                                <iconify-icon icon="mdi:check-circle-outline"></iconify-icon>
+                                <span>{{ s.correct }}</span>
+                                <em>Correct</em>
+                            </span>
+                            <span class="sdet-stat wrong">
+                                <iconify-icon icon="mdi:close-circle-outline"></iconify-icon>
+                                <span>{{ s.wrong }}</span>
+                                <em>Wrong</em>
+                            </span>
+                            <span class="sdet-stat skip">
+                                <iconify-icon icon="mdi:minus-circle-outline"></iconify-icon>
+                                <span>{{ s.skipped }}</span>
+                                <em>Skipped</em>
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color:#94a3b8;text-align:center;padding:24px 0;">No question data available.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ❷ Longest question card -->
+        <div class="adet-card">
+            <div class="adet-card-head">
+                <span class="adet-card-ico"><iconify-icon icon="mdi:text-long"></iconify-icon></span>
+                <div class="adet-card-lbl">
+                    <span class="adet-card-name">Longest Question</span>
+                    <span class="adet-card-hint">The most detailed question in this test</span>
+                </div>
+            </div>
+            <div class="adet-card-body">
+                {% if longest_question %}
+                <div class="lq-wrap">
+                    <!-- meta pills -->
+                    <div class="lq-meta">
+                        <span class="lq-pill subject"><iconify-icon icon="mdi:book-outline"></iconify-icon>{{ longest_question.subject }}</span>
+                        <span class="lq-pill sub"><iconify-icon icon="mdi:bookmark-outline"></iconify-icon>{{ longest_question.subtitle }}</span>
+                        <span class="lq-pill level"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ longest_question.level }}</span>
+                    </div>
+
+                    <!-- question text preview -->
+                    <div class="lq-text-box">
+                        <p class="lq-text" id="lqText">{{ longest_question.question_text }}{% if longest_question.question_full|length > 220 %}…{% endif %}</p>
+                        {% if longest_question.question_full|length > 220 %}
+                        <button class="lq-toggle" onclick="
+                            var el=document.getElementById('lqText');
+                            var full={{ longest_question.question_full|length }};
+                            if(this.dataset.open==='1'){
+                                el.textContent='{{ longest_question.question_text|escapejs }}…';
+                                this.textContent='Read more'; this.dataset.open='0';
+                            } else {
+                                el.textContent='{{ longest_question.question_full|escapejs }}';
+                                this.textContent='Show less'; this.dataset.open='1';
+                            }" data-open="0">Read more</button>
+                        {% endif %}
+                    </div>
+
+                    <!-- outcome + estimated time -->
+                    <div class="lq-outcome-row">
+                        <div class="lq-outcome-stat">
+                            <span class="lq-stat-ico"><iconify-icon icon="mdi:format-letter-case"></iconify-icon></span>
+                            <div>
+                                <span class="lq-stat-val">{{ longest_question.char_count }} chars</span>
+                                <span class="lq-stat-sub">Question length</span>
+                            </div>
+                        </div>
+                        <div class="lq-outcome-stat">
+                            <span class="lq-stat-ico"><iconify-icon icon="mdi:timer-sand"></iconify-icon></span>
+                            <div>
+                                <span class="lq-stat-val">~{{ longest_question.est_time_display }}</span>
+                                <span class="lq-stat-sub">Est. time spent</span>
+                            </div>
+                        </div>
+                        <div class="lq-outcome-stat">
+                            {% if not longest_question.is_answered %}
+                            <span class="lq-stat-ico skip"><iconify-icon icon="mdi:minus-circle-outline"></iconify-icon></span>
+                            <div><span class="lq-stat-val">Skipped</span><span class="lq-stat-sub">Not answered</span></div>
+                            {% elif longest_question.is_correct %}
+                            <span class="lq-stat-ico correct"><iconify-icon icon="mdi:check-circle"></iconify-icon></span>
+                            <div><span class="lq-stat-val">Correct</span><span class="lq-stat-sub">Right answer</span></div>
+                            {% else %}
+                            <span class="lq-stat-ico wrong"><iconify-icon icon="mdi:close-circle"></iconify-icon></span>
+                            <div><span class="lq-stat-val">Wrong</span><span class="lq-stat-sub">Incorrect</span></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color:#94a3b8;text-align:center;padding:24px 0;">No question data available.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div><!-- /bottom-grid -->
+
 </section>
 
 <script>
 (function () {
-    /* ── Bar chart animation ────────────────────────────────── */
+    /* ── Bar chart animation ───────────────────────────────
+       Badge is now a plain flex-sibling (CSS-only chevron),
+       so we only need to animate the fill widths. */
     var passPct  = {{ pass_pct|floatformat:2 }};
     var attPct   = {{ attempt_pct|floatformat:2 }};
 
     var barPass  = document.getElementById('bar-pass');
     var barAtt   = document.getElementById('bar-att');
-    var badgePass = document.getElementById('badge-pass');
-    var badgeAtt  = document.getElementById('badge-att');
 
-    /* Map a 0-100 score to a fill width as % of the track. Track already
-       reserves 90px of margin-right for the badge/arrow-tip, so the fill
-       can safely use the full 100% of its own (narrower) box. */
-    function scoreToFillPct(pct) {
-        return Math.max(Math.min(pct, 100), 0);
-    }
-
-    /* Position badge flush against the fill's right edge — left = fill's
-       pixel width, zero gap, zero offset — so fill + badge look like one
-       continuous bar tapering to a point. Called every animation frame. */
-    function syncBadge(barEl, badgeEl) {
-        var fillW = barEl.offsetWidth;
-        badgeEl.style.left = fillW + 'px';
-    }
-
-    var duration  = 800; /* animation ms */
-    var startTs   = null;
-    var targetPass = scoreToFillPct(passPct);
-    var targetAtt  = scoreToFillPct(attPct);
+    var duration = 850;
+    var startTs  = null;
 
     function barFrame(ts) {
         if (!startTs) startTs = ts;
         var progress = Math.min((ts - startTs) / duration, 1);
-        var eased    = 1 - Math.pow(1 - progress, 3); /* ease-out cubic */
+        var eased    = 1 - Math.pow(1 - progress, 3);
 
-        barPass.style.width = (eased * targetPass) + '%';
-        barAtt.style.width  = (eased * targetAtt)  + '%';
-
-        syncBadge(barPass, badgePass);
-        syncBadge(barAtt,  badgeAtt);
+        barPass.style.width = (eased * passPct) + '%';
+        barAtt.style.width  = (eased * attPct)  + '%';
 
         if (progress < 1) {
             requestAnimationFrame(barFrame);
         } else {
-            barPass.style.width = targetPass + '%';
-            barAtt.style.width  = targetAtt  + '%';
-            syncBadge(barPass, badgePass);
-            syncBadge(barAtt,  badgeAtt);
+            barPass.style.width = passPct + '%';
+            barAtt.style.width  = attPct  + '%';
         }
     }
 
     setTimeout(function () { requestAnimationFrame(barFrame); }, 150);
 
-    /* ── Analog Clock ───────────────────────────────────────── */
+
+    /* ── Analog Clock (real duration dial) ─────────────────────
+       The dial's full 360° sweep = duration_minutes (not 12 hours).
+       Tick labels show real elapsed minutes: 0, interval, 2×interval...
+       so a 30-min test shows 0/5/10/15/20/25, a 60-min test shows
+       0/10/20/30/40/50, etc. */
     var totalSec = {{ total_seconds_allotted }};
     var takenSec = {{ time_taken_seconds }};
     var timePct  = {{ time_pct|floatformat:2 }};
+    var durationMinutes = {{ duration_minutes }};
 
     var arcEl    = document.getElementById('clockArc');
     var pctEl    = document.getElementById('clockPct');
-    var hourEl   = document.getElementById('clockHour');
     var minEl    = document.getElementById('clockMin');
     var fracEl   = document.getElementById('clockFrac');
     var ticksEl  = document.getElementById('clockTicks');
@@ -495,10 +712,28 @@
     var CX = 110, CY = 110;
     var circumference = 2 * Math.PI * R; // ≈ 565.49
 
-    /* Draw tick marks */
-    for (var i = 0; i < 60; i++) {
-        var ang   = (i / 60) * 2 * Math.PI - Math.PI / 2;
-        var isMaj = i % 5 === 0;
+    /* Pick a "nice" major-tick interval (in minutes) based on how long
+       the test is, so the dial never gets cluttered with labels. */
+    function pickMajorInterval(mins) {
+        if (mins <= 10)  return 1;
+        if (mins <= 20)  return 2;
+        if (mins <= 40)  return 5;
+        if (mins <= 90)  return 10;
+        if (mins <= 180) return 15;
+        return 30;
+    }
+
+    var majorInterval = pickMajorInterval(durationMinutes);
+    /* 5 minor ticks inside every major segment, like a real clock's
+       second-marks between the numbers */
+    var minorStep = majorInterval / 5;
+
+    /* Draw tick marks + minute-value labels around the dial.
+       0 minutes sits at the top (12 o'clock position) and the full
+       lap back to the top represents durationMinutes elapsed. */
+    for (var m = 0; m < durationMinutes; m += minorStep) {
+        var ang   = (m / durationMinutes) * 2 * Math.PI - Math.PI / 2;
+        var isMaj = Math.round(m % majorInterval * 100) / 100 === 0;
         var r1    = isMaj ? 68 : 71;
         var r2    = 80;
         var x1    = CX + r1 * Math.cos(ang);
@@ -514,7 +749,6 @@
         ticksEl.appendChild(line);
 
         if (isMaj) {
-            var hr    = i / 5 === 0 ? 12 : i / 5;
             var tr    = 60;
             var tx    = CX + tr * Math.cos(ang);
             var ty    = CY + tr * Math.sin(ang) + 4;
@@ -524,38 +758,47 @@
             txt.setAttribute('font-size', '8');
             txt.setAttribute('font-weight', '700');
             txt.setAttribute('fill', '#0077b6');
-            txt.textContent = hr;
+            txt.textContent = Math.round(m);
             ticksEl.appendChild(txt);
         }
     }
+    /* label the final tick (full duration) at the top position too,
+       e.g. "30" alongside "0" for a 30-min test, so the top of the
+       dial reads unambiguously as both start and end */
+    (function drawFinalLabel() {
+        var ang = -Math.PI / 2;
+        var tr  = 60;
+        var tx  = CX + tr * Math.cos(ang);
+        var ty  = CY + tr * Math.sin(ang) - 10;
+        var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', tx); txt.setAttribute('y', ty);
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('font-size', '7');
+        txt.setAttribute('font-weight', '700');
+        txt.setAttribute('fill', '#94c9e0');
+        txt.textContent = durationMinutes + 'm';
+        ticksEl.appendChild(txt);
+    })();
 
     /* Animate arc + hands */
     var durationTotal = totalSec > 0 ? totalSec : 1;
 
-    /* Map taken seconds to a 12-hour clock position:
-       full allotted time = 1 full revolution */
+    /* Rotate the needle to point at the real elapsed-time position on
+       the dial. fraction 0–1 = 0 minutes elapsed → durationMinutes
+       elapsed, one full lap = the whole allotted duration (not 12hrs). */
     function setClockHands(fraction) {
-        /* fraction 0–1 maps to 0–360 degrees (full revolution = all time used) */
         var deg     = fraction * 360;
         var radians = (deg - 90) * (Math.PI / 180);
 
-        /* hour hand – slower (1/12 of full arc) */
-        var hourDeg = deg / 12;
-        var hourRad = (hourDeg - 90) * Math.PI / 180;
-        var hx = CX + 48 * Math.cos(hourRad);
-        var hy = CY + 48 * Math.sin(hourRad);
-        hourEl.setAttribute('x2', hx);
-        hourEl.setAttribute('y2', hy);
-
-        /* minute hand – full arc */
+        /* main needle */
         var mx = CX + 64 * Math.cos(radians);
         var my = CY + 64 * Math.sin(radians);
         minEl.setAttribute('x2', mx);
         minEl.setAttribute('y2', my);
 
-        /* red fraction needle */
-        var fx = CX + 60 * Math.cos(radians);
-        var fy = CY + 60 * Math.sin(radians);
+        /* short accent segment on the same needle for visual weight */
+        var fx = CX + 40 * Math.cos(radians);
+        var fy = CY + 40 * Math.sin(radians);
         fracEl.setAttribute('x2', fx);
         fracEl.setAttribute('y2', fy);
     }
