@@ -948,6 +948,160 @@ def attempt_detail(request, pk):
     })
 
 
+def _build_attempt_context(attempt, company):
+    """
+    Shared helper: compute all detail context for a given attempt.
+    Used by both attempt_detail and attempt_detail_pdf.
+    """
+    from django.utils import timezone
+    from .models import Quiz
+    from collections import OrderedDict
+
+    total_seconds_allotted = attempt.duration_minutes * 60
+
+    if attempt.started_at and attempt.submitted_at:
+        raw_elapsed = int((attempt.submitted_at - attempt.started_at).total_seconds())
+        time_taken_seconds = max(raw_elapsed - attempt.total_paused_seconds, 0)
+        time_taken_seconds = min(time_taken_seconds, total_seconds_allotted)
+    elif attempt.started_at:
+        raw_elapsed = int((timezone.now() - attempt.started_at).total_seconds())
+        time_taken_seconds = max(raw_elapsed - attempt.total_paused_seconds, 0)
+        time_taken_seconds = min(time_taken_seconds, total_seconds_allotted)
+    else:
+        time_taken_seconds = 0
+
+    time_pct = round((time_taken_seconds / total_seconds_allotted * 100), 2) if total_seconds_allotted else 0
+    taken_h  = int(time_taken_seconds // 3600)
+    taken_m  = int((time_taken_seconds % 3600) // 60)
+    taken_s  = int(time_taken_seconds % 60)
+    time_taken_display = f'{taken_h}h {taken_m}m {taken_s}s' if taken_h else f'{taken_m}m {taken_s}s'
+
+    pass_pct    = float(company.pass_persantage)
+    attempt_pct = float(attempt.percentage)
+    is_passed   = attempt_pct >= pass_pct
+
+    answer_rows  = attempt.answers_json or []
+    question_ids = [row['question_id'] for row in answer_rows]
+    questions_qs = (
+        Quiz.objects
+        .filter(id__in=question_ids, test_subject__company=company)
+        .select_related('test_subject', 'sub_title')
+    )
+    question_map = {q.id: q for q in questions_qs}
+
+    answered_set = {
+        row['question_id'] for row in answer_rows
+        if row.get('selected_answer', '').strip()
+    }
+    correct_set = {
+        row['question_id'] for row in answer_rows
+        if row.get('selected_answer') and
+        question_map.get(row['question_id']) and
+        row['selected_answer'] == question_map[row['question_id']].correct_answer
+    }
+
+    subject_stats = OrderedDict()
+    total_q = len(question_ids)
+
+    for qid in question_ids:
+        q = question_map.get(qid)
+        if not q:
+            continue
+        subj = q.test_subject.subject
+        if subj not in subject_stats:
+            subject_stats[subj] = {
+                'name': subj, 'total': 0, 'attended': 0,
+                'correct': 0, 'wrong': 0, 'skipped': 0, 'level': q.level,
+            }
+        s = subject_stats[subj]
+        s['total'] += 1
+        if qid in answered_set:
+            s['attended'] += 1
+            if qid in correct_set:
+                s['correct'] += 1
+            else:
+                s['wrong'] += 1
+        else:
+            s['skipped'] += 1
+
+    time_per_q = time_taken_seconds / max(total_q, 1)
+    for s in subject_stats.values():
+        secs = int(time_per_q * s['total'])
+        m, sec = divmod(secs, 60)
+        h, m = divmod(m, 60)
+        s['time_display'] = f'{h}h {m}m {sec}s' if h else f'{m}m {sec}s'
+        s['time_seconds'] = secs
+        s['pct'] = round((s['correct'] / s['total'] * 100), 1) if s['total'] else 0
+
+    session_list = list(subject_stats.values())
+
+    longest_question = None
+    if question_map:
+        longest_q_obj = max(question_map.values(), key=lambda q: len(q.question or ''))
+        lq_row = next((r for r in answer_rows if r['question_id'] == longest_q_obj.id), None)
+        lq_answered = lq_row and bool(lq_row.get('selected_answer', '').strip())
+        lq_correct  = lq_row and lq_row.get('selected_answer') == longest_q_obj.correct_answer
+        avg_len  = sum(len(q.question or '') for q in question_map.values()) / max(len(question_map), 1)
+        lq_len   = len(longest_q_obj.question or '')
+        lq_secs  = int(time_per_q * (lq_len / max(avg_len, 1)) * 1.2)
+        lq_m, lq_s = divmod(lq_secs, 60)
+        longest_question = {
+            'subject': longest_q_obj.test_subject.subject,
+            'subtitle': longest_q_obj.sub_title.title if longest_q_obj.sub_title else 'General',
+            'level': longest_q_obj.get_level_display(),
+            'question_text': (longest_q_obj.question or '')[:220],
+            'question_full': longest_q_obj.question or '',
+            'is_answered': lq_answered,
+            'is_correct': lq_correct,
+            'est_time_display': f'{lq_m}m {lq_s}s',
+            'char_count': lq_len,
+        }
+
+    return {
+        'pass_pct': pass_pct,
+        'attempt_pct': attempt_pct,
+        'is_passed': is_passed,
+        'time_taken_seconds': time_taken_seconds,
+        'time_taken_display': time_taken_display,
+        'time_pct': time_pct,
+        'total_seconds_allotted': total_seconds_allotted,
+        'session_list': session_list,
+        'longest_question': longest_question,
+    }
+
+
+@company_login_required
+def attempt_detail_pdf(request, pk):
+    from .allampt_exports.details import generate_attempt_detail_pdf
+
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('candidate', 'company'),
+        pk=pk,
+        company=request.company,
+    )
+    ctx = _build_attempt_context(attempt, request.company)
+
+    safe_name = attempt.candidate.name.replace(' ', '_')[:40]
+    filename  = f'attempt_{pk}_{safe_name}.pdf'
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    generate_attempt_detail_pdf(
+        attempt          = attempt,
+        company          = request.company,
+        pass_pct         = ctx['pass_pct'],
+        attempt_pct      = ctx['attempt_pct'],
+        is_passed        = ctx['is_passed'],
+        time_taken_display = ctx['time_taken_display'],
+        time_pct         = ctx['time_pct'],
+        session_list     = ctx['session_list'],
+        longest_question = ctx['longest_question'],
+        response         = response,
+    )
+    return response
+
+
 @company_login_required
 def attempt_pdf(request):
     queryset = (

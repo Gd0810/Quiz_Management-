@@ -40,6 +40,15 @@
         text-decoration: none; transition: background .18s;
     }
     .adet-back-btn:hover { background: #bae6fd; }
+    .adet-pdf-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border-radius: 10px; background: #0077b6; color: #fff;
+        padding: 9px 14px; font-size: .84rem; font-weight: 700;
+        text-decoration: none; transition: background .18s, box-shadow .18s;
+        box-shadow: 0 4px 14px rgba(0,119,182,.3);
+    }
+    .adet-pdf-btn:hover { background: #005f92; box-shadow: 0 6px 20px rgba(0,119,182,.4); }
+    .adet-btn-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
     /* ── Info pills row ──────────────────────────────────────── */
     .adet-info-row {
@@ -342,9 +351,14 @@
                 <p class="adet-sub">{{ attempt.candidate.email }} &nbsp;·&nbsp; {{ attempt.created_at|date:"M d, Y, g:i A" }}</p>
             </div>
         </div>
-        <a href="{% url 'dashboard:attempt_list' %}" class="adet-back-btn">
-            <iconify-icon icon="mdi:arrow-left"></iconify-icon> Back to List
-        </a>
+        <div class="adet-btn-group">
+            <a href="{% url 'dashboard:attempt_list' %}" class="adet-back-btn">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon> Back to List
+            </a>
+            <a href="{% url 'dashboard:attempt_detail_pdf' attempt.pk %}" class="adet-pdf-btn">
+                <iconify-icon icon="mdi:file-download-outline"></iconify-icon> Download PDF
+            </a>
+        </div>
     </div>
 
     <!-- ── Info pills ── -->

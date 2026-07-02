@@ -33,6 +33,7 @@ urlpatterns = [
     path('attempts/pdf/', views.attempt_pdf, name='attempt_pdf'),
     path('attempts/create/', views.attempt_create, name='attempt_create'),
     path('attempts/<int:pk>/', views.attempt_detail, name='attempt_detail'),
+    path('attempts/<int:pk>/pdf/', views.attempt_detail_pdf, name='attempt_detail_pdf'),
     path('attempts/<int:pk>/edit/', views.attempt_update, name='attempt_update'),
     path('attempts/<int:pk>/delete/', views.attempt_delete, name='attempt_delete'),
 ]
