@@ -671,16 +671,42 @@ def quiz_source_download(request):
 
 @company_login_required
 def candidate_list(request):
-    queryset = Candidate.objects.all()
-    return render_crud_list(
-        request,
-        queryset=queryset,
-        title='Candidates',
-        create_url='dashboard:candidate_create',
-        edit_url_name='dashboard:candidate_update',
-        delete_url_name='dashboard:candidate_delete',
-        fields=['name', 'email', 'designation_tech', 'candidate_details_summary', 'created_at'],
+    queryset = Candidate.objects.all().order_by('-created_at')
+
+    # ── Search filter ────────────────────────────────────────────────
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    total_count = queryset.count()
+
+    # ── Pagination ───────────────────────────────────────────────────
+    paginator  = Paginator(queryset, 20)
+    page_num   = request.GET.get('page', 1)
+    page_obj   = paginator.get_page(page_num)
+
+    # Build page_query_prefix (all GET params except 'page', ending with '&')
+    params = request.GET.copy()
+    params.pop('page', None)
+    page_query_prefix = (params.urlencode() + '&') if params else ''
+
+    # Smart page number list
+    page_numbers = list(
+        paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1)
     )
+
+    return render(request, 'dashboard/candidate_list.html', {
+        'title': 'Candidates',
+        'objects': page_obj.object_list,
+        'page_obj': page_obj,
+        'page_numbers': page_numbers,
+        'page_query_prefix': page_query_prefix,
+        'total_count': total_count,
+        'search_query': search_query,
+    })
 
 
 @company_login_required

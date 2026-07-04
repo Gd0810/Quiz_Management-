@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    /* ── Identical design tokens to attempt_list.html ── */
+    .quiz-shell { max-width: 100%; margin: 0 auto; border-radius: 16px; background: #E4F6FC; padding: 28px; box-shadow: 0 18px 50px rgba(2,62,138,.08); }
+    .quiz-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .quiz-heading-main { display: flex; align-items: center; gap: 12px; }
+    .quiz-heading-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: #0096c7; color: #fff; font-size: 1.35rem; box-shadow: 0 10px 20px rgba(0,150,199,.22); }
+    .quiz-title    { margin: 0; color: #03045e; font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+    .quiz-subtitle { margin: 4px 0 0; color: #008fd1; font-size: .86rem; line-height: 1.35; }
+
+    /* Panel */
+    .quiz-list-panel { overflow: hidden; border: 1px solid #7dddf0; border-radius: 11px; background: #fff; }
+    .quiz-list-head  { display: grid; grid-template-columns: 64px minmax(0,1fr) auto; min-height: 70px; align-items: center; border-bottom: 1px solid #e0f2fe; }
+    .quiz-list-actions { padding-right: 16px; }
+    .quiz-list-icon  { display: grid; align-self: stretch; place-items: center; background: #c9f5fb; color: #0096c7; font-size: 1.55rem; }
+    .quiz-list-title { margin: 0; color: #03045e; font-size: .91rem; font-weight: 800; line-height: 1.25; }
+    .quiz-list-text  { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
+
+    /* Filter bar — single search field */
+    .attempt-controls { display: grid; grid-template-columns: minmax(220px,1fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .attempt-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
+    .attempt-control-field input { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .attempt-control-submit { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: #03045e; padding: 10px 16px; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .attempt-control-submit:hover { background: #0077b6; }
+    .attempt-control-actions { display: flex; gap: 8px; align-items: center; }
+    .attempt-control-actions .attempt-btn { min-height: 44px; box-sizing: border-box; }
+
+    /* Table */
+    .attempt-table-wrap { padding: 16px; }
+    .attempt-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 11px; background: #fff; }
+    .attempt-table thead th { background: linear-gradient(90deg,#0096c7,#0077b6); color: #fff; text-align: left; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 12px 14px; }
+    .attempt-table tbody td { padding: 13px 14px; border-top: 1px solid #e0f2fe; color: #03045e; font-size: .9rem; }
+    .attempt-table tbody tr:nth-child(even) { background: #f4fdff; }
+    .attempt-table tbody tr:hover { background: #ebfbff; }
+    .attempt-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; background: #e0f2fe; padding: 5px 9px; color: #075985; font-size: .76rem; font-weight: 700; }
+    .attempt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .attempt-btn { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 8px 12px; font-size: .82rem; font-weight: 700; text-decoration: none; }
+    .attempt-btn.secondary { background: #e0f2fe; color: #075985; }
+    .attempt-btn.danger    { background: #fff1f2; color: #be123c; }
+    .attempt-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
+
+    /* Pagination — identical to attempt_list */
+    .quiz-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 22px 16px 16px; padding-top: 14px; border-top: 1px solid #e0f2fe; flex-wrap: wrap; }
+    .quiz-page-link, .quiz-page-ellipsis { position: relative; display: inline-flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; border-radius: 8px; color: #023e8a; font-size: .88rem; font-weight: 800; text-decoration: none; transition: background .18s, color .18s; }
+    .quiz-page-link:hover { background: #e0f2fe; color: #0077b6; }
+    .quiz-page-link.is-active { color: #03045e; }
+    .quiz-page-link.is-active::after { position: absolute; right: 6px; bottom: -8px; left: 6px; height: 4px; border-radius: 999px; background: #00b4d8; content: ""; box-shadow: 0 4px 10px rgba(0,180,216,.35); }
+    .quiz-page-link.is-disabled { color: #90a4b8; pointer-events: none; }
+    .quiz-page-ellipsis { color: #0077b6; }
+
+    @media (max-width: 640px) {
+        .attempt-controls { grid-template-columns: 1fr; }
+        .quiz-list-head   { grid-template-columns: 50px 1fr auto; }
+    }
+</style>
+
+<section class="quiz-shell">
+
+    <!-- Heading -->
+    <div class="quiz-heading">
+        <div class="quiz-heading-main">
+            <span class="quiz-heading-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></span>
+            <div>
+                <h1 class="quiz-title">Candidates</h1>
+                <p class="quiz-subtitle">All registered candidates with name, email and date</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-list-panel">
+
+        <!-- Panel header -->
+        <div class="quiz-list-head">
+            <span class="quiz-list-icon"><iconify-icon icon="mdi:account-multiple-outline"></iconify-icon></span>
+            <div style="padding-left:10px;">
+                <p class="quiz-list-title">Candidate Listing</p>
+                <p class="quiz-list-text">Showing {{ objects|length }} of {{ total_count }} candidate{{ total_count|pluralize }}</p>
+            </div>
+            <div class="quiz-list-actions">
+                <a href="{% url 'dashboard:candidate_create' %}" class="attempt-btn secondary" style="min-height:38px;display:inline-flex;align-items:center;gap:8px;">
+                    <iconify-icon icon="mdi:plus-circle-outline" style="font-size:1.2rem;color:#0096c7;"></iconify-icon>
+                    Add Candidate
+                </a>
+            </div>
+        </div>
+
+        <!-- Search filter -->
+        <form method="get" class="attempt-controls">
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:magnify"></iconify-icon>
+                <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="Search by name or email">
+            </label>
+            <div class="attempt-control-actions">
+                <button type="submit" class="attempt-control-submit">
+                    <iconify-icon icon="mdi:tune"></iconify-icon>
+                    Apply
+                </button>
+                <a href="{% url 'dashboard:candidate_list' %}" class="attempt-btn secondary">Clear</a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="attempt-table-wrap">
+            {% if objects %}
+                <table class="attempt-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in objects %}
+                            <tr>
+                                <td>
+                                    <strong>{{ candidate.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="attempt-pill">
+                                        <iconify-icon icon="mdi:email-outline"></iconify-icon>
+                                        {{ candidate.email }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="attempt-pill">
+                                        <iconify-icon icon="mdi:calendar-range"></iconify-icon>
+                                        {{ candidate.created_at|date:"M d, Y" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="attempt-actions">
+                                        <a href="{% url 'dashboard:candidate_update' candidate.pk %}" class="attempt-btn secondary">Edit</a>
+                                        <a href="{% url 'dashboard:candidate_delete' candidate.pk %}" class="attempt-btn danger">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="attempt-empty">
+                    {% if search_query %}
+                        No candidates match "<strong>{{ search_query }}</strong>". <a href="{% url 'dashboard:candidate_list' %}" style="color:#0077b6;">Clear filter</a>
+                    {% else %}
+                        No candidates found. <a href="{% url 'dashboard:candidate_create' %}" style="color:#0077b6;">Add the first candidate →</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="quiz-pagination">
+                {% if page_obj.has_previous %}
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page=1" aria-label="First page"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></a>
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.previous_page_number }}" aria-label="Previous page"><iconify-icon icon="mdi:chevron-left"></iconify-icon></a>
+                {% else %}
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-left"></iconify-icon></span>
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-left"></iconify-icon></span>
+                {% endif %}
+
+                {% for page_number in page_numbers %}
+                    {% if page_number == page_obj.paginator.ELLIPSIS %}
+                        <span class="quiz-page-ellipsis">{{ page_number }}</span>
+                    {% elif page_number == page_obj.number %}
+                        <span class="quiz-page-link is-active" aria-current="page">{{ page_number }}</span>
+                    {% else %}
+                        <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_number }}">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.next_page_number }}" aria-label="Next page"><iconify-icon icon="mdi:chevron-right"></iconify-icon></a>
+                    <a class="quiz-page-link" href="?{{ page_query_prefix }}page={{ page_obj.paginator.num_pages }}" aria-label="Last page"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></a>
+                {% else %}
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-right"></iconify-icon></span>
+                    <span class="quiz-page-link is-disabled"><iconify-icon icon="mdi:chevron-double-right"></iconify-icon></span>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    </div>
+</section>
+</div>
+{% endblock %}
