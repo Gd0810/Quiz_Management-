@@ -710,6 +710,58 @@ def candidate_list(request):
 
 
 @company_login_required
+def candidate_detail(request, pk):
+    candidate = get_object_or_404(Candidate, pk=pk)
+
+    # Only show attempts for this company
+    attempts = (
+        CandidateTestAttempt.objects
+        .filter(candidate=candidate, company=request.company)
+        .order_by('-created_at')
+    )
+
+    # ── Quick stats ──────────────────────────────────────────────────
+    total_attempts = attempts.count()
+    submitted_attempts = attempts.filter(is_submitted=True)
+    submitted_count = submitted_attempts.count()
+    pass_pct = float(request.company.pass_persantage)
+
+    passed_count  = sum(1 for a in submitted_attempts if float(a.percentage) >= pass_pct)
+    failed_count  = submitted_count - passed_count
+    avg_score     = (
+        round(sum(float(a.percentage) for a in submitted_attempts) / submitted_count, 1)
+        if submitted_count else 0
+    )
+    best_score    = (
+        max(float(a.percentage) for a in submitted_attempts)
+        if submitted_count else 0
+    )
+
+    # ── Candidate details from latest attempt's candidate_details_json ──
+    latest = attempts.first()
+    extra_details = {}
+    if latest and latest.candidate_details_json:
+        details = latest.candidate_details_json
+        values  = details.get('values') or {}
+        labels  = details.get('labels') or {}
+        extra_details = {labels.get(k, k): v for k, v in values.items()}
+
+    return render(request, 'dashboard/candidate_detail.html', {
+        'title': f'Candidate – {candidate.name}',
+        'candidate': candidate,
+        'attempts': attempts,
+        'total_attempts': total_attempts,
+        'submitted_count': submitted_count,
+        'passed_count': passed_count,
+        'failed_count': failed_count,
+        'avg_score': avg_score,
+        'best_score': best_score,
+        'pass_pct': pass_pct,
+        'extra_details': extra_details,
+    })
+
+
+@company_login_required
 def candidate_create(request):
     form = CandidateForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():

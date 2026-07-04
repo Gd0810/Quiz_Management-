@@ -119,7 +119,7 @@
                     </thead>
                     <tbody>
                         {% for candidate in objects %}
-                            <tr>
+                            <tr style="cursor:pointer;" onclick="window.location='{% url 'dashboard:candidate_detail' candidate.pk %}'">
                                 <td>
                                     <strong>{{ candidate.name }}</strong>
                                 </td>
@@ -136,7 +136,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="attempt-actions">
+                                    <div class="attempt-actions" onclick="event.stopPropagation();">
+                                        <a href="{% url 'dashboard:candidate_detail' candidate.pk %}" class="attempt-btn secondary">View</a>
                                         <a href="{% url 'dashboard:candidate_update' candidate.pk %}" class="attempt-btn secondary">Edit</a>
                                         <a href="{% url 'dashboard:candidate_delete' candidate.pk %}" class="attempt-btn danger">Delete</a>
                                     </div>

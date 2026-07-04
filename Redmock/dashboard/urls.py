@@ -27,6 +27,7 @@ urlpatterns = [
     path('quizzes/<int:pk>/delete/', views.quiz_delete, name='quiz_delete'),
     path('candidates/', views.candidate_list, name='candidate_list'),
     path('candidates/create/', views.candidate_create, name='candidate_create'),
+    path('candidates/<int:pk>/', views.candidate_detail, name='candidate_detail'),
     path('candidates/<int:pk>/edit/', views.candidate_update, name='candidate_update'),
     path('candidates/<int:pk>/delete/', views.candidate_delete, name='candidate_delete'),
     path('attempts/', views.attempt_list, name='attempt_list'),

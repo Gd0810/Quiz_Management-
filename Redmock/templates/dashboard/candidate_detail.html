@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Redmock{% endblock %}
+
+{% block content %}
+{% include 'dashboard/header.html' %}
+<div id="dashboard-page-content">
+<style>
+    /* ── Shared tokens (same as attempt_detail & attempt_list) ── */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; }
+
+    .cdet-shell {
+        max-width: 100%;
+        margin: 0 auto;
+        border-radius: 16px;
+        background: #E4F6FC;
+        padding: 28px;
+        box-shadow: 0 18px 50px rgba(2,62,138,.08);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* ── Heading row ── */
+    .cdet-heading {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .cdet-heading-main { display: flex; align-items: center; gap: 14px; }
+    .cdet-avatar {
+        width: 56px; height: 56px; border-radius: 14px;
+        background: linear-gradient(135deg, #0077b6, #0096c7);
+        color: #fff; display: grid; place-items: center;
+        font-size: 1.6rem; font-weight: 900;
+        box-shadow: 0 10px 24px rgba(0,119,182,.3);
+        flex-shrink: 0;
+        letter-spacing: -1px;
+    }
+    .cdet-title { margin: 0; color: #03045e; font-size: 1.25rem; font-weight: 900; }
+    .cdet-sub   { margin: 4px 0 0; color: #008fd1; font-size: .86rem; }
+
+    .cdet-btn-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .cdet-back-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border-radius: 10px; background: #e0f2fe; color: #075985;
+        padding: 9px 14px; font-size: .84rem; font-weight: 700;
+        text-decoration: none; transition: background .18s;
+    }
+    .cdet-back-btn:hover { background: #bae6fd; }
+    .cdet-edit-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border-radius: 10px; background: #0077b6; color: #fff;
+        padding: 9px 14px; font-size: .84rem; font-weight: 700;
+        text-decoration: none; transition: background .18s, box-shadow .18s;
+        box-shadow: 0 4px 14px rgba(0,119,182,.28);
+    }
+    .cdet-edit-btn:hover { background: #005f92; }
+
+    /* ── Stat cards strip ── */
+    .cdet-stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0,1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    .cdet-stat {
+        display: grid;
+        grid-template-columns: 48px minmax(0,1fr);
+        min-height: 72px;
+        overflow: hidden;
+        border: 1px solid #7dddf0;
+        border-radius: 12px;
+        background: #fff;
+    }
+    .cdet-stat-ico {
+        display: grid; place-items: center;
+        background: #c9f5fb; color: #0096c7; font-size: 1.3rem;
+    }
+    .cdet-stat-body  { padding: 10px 12px; }
+    .cdet-stat-lbl   { color: #008fd1; font-size: .7rem; font-weight: 700; }
+    .cdet-stat-val   { color: #03045e; font-size: 1.15rem; font-weight: 900; margin-top: 2px; }
+    .cdet-stat-val.pass  { color: #059669; }
+    .cdet-stat-val.fail  { color: #e11d48; }
+
+    /* ── Two-column main grid ── */
+    .cdet-grid {
+        display: grid;
+        grid-template-columns: 320px minmax(0,1fr);
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+
+    /* ── Card base ── */
+    .cdet-card {
+        border: 1px solid #7dddf0;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+    }
+    .cdet-card-head {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid #e0f2fe;
+        background: linear-gradient(90deg, #f0fdff, #e0f2fe);
+    }
+    .cdet-card-ico {
+        display: grid; place-items: center;
+        width: 34px; height: 34px; border-radius: 8px;
+        background: #0096c7; color: #fff; font-size: 1.1rem;
+    }
+    .cdet-card-name { color: #03045e; font-size: .9rem; font-weight: 800; }
+    .cdet-card-hint { color: #008fd1; font-size: .74rem; margin-top: 1px; }
+    .cdet-card-body { padding: 18px; }
+
+    /* ── Info rows inside left card ── */
+    .cdet-info-list { display: flex; flex-direction: column; gap: 12px; }
+    .cdet-info-row  { display: flex; gap: 10px; align-items: flex-start; }
+    .cdet-info-ico  {
+        flex-shrink: 0; width: 30px; height: 30px; border-radius: 7px;
+        background: #e0f2fe; color: #0096c7;
+        display: grid; place-items: center; font-size: .95rem;
+    }
+    .cdet-info-inner { min-width: 0; }
+    .cdet-info-label { color: #008fd1; font-size: .7rem; font-weight: 700; }
+    .cdet-info-value { color: #03045e; font-size: .86rem; font-weight: 700; margin-top: 1px; word-break: break-word; }
+
+    /* Divider */
+    .cdet-divider { border: 0; border-top: 1px solid #e0f2fe; margin: 12px 0; }
+
+    /* Extra details tag cloud */
+    .cdet-tag-grid { display: flex; flex-direction: column; gap: 8px; }
+    .cdet-tag-row  { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+    .cdet-tag-key  { color: #008fd1; font-size: .74rem; font-weight: 700; white-space: nowrap; min-width: 80px; }
+    .cdet-tag-val  { color: #03045e; font-size: .82rem; font-weight: 600; }
+
+    /* ── Attempts table (right card) ── */
+    .cdet-table-wrap { padding: 0; }
+    .cdet-table { width: 100%; border-collapse: collapse; }
+    .cdet-table thead th {
+        background: linear-gradient(90deg, #0096c7, #0077b6);
+        color: #fff; text-align: left;
+        font-size: .78rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em;
+        padding: 11px 14px;
+    }
+    .cdet-table tbody td {
+        padding: 11px 14px; border-top: 1px solid #e0f2fe;
+        color: #03045e; font-size: .86rem; vertical-align: middle;
+    }
+    .cdet-table tbody tr:nth-child(even) { background: #f4fdff; }
+    .cdet-table tbody tr:hover { background: #ebfbff; cursor: pointer; }
+
+    .cdet-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        border-radius: 999px; padding: 4px 9px;
+        font-size: .74rem; font-weight: 700;
+    }
+    .cdet-pill.level   { background: #e0f2fe; color: #075985; }
+    .cdet-pill.pct     { background: #f0fdff; color: #03045e; }
+    .cdet-pill.passed  { background: #d1fae5; color: #065f46; }
+    .cdet-pill.failed  { background: #ffe4e6; color: #9f1239; }
+    .cdet-pill.pending { background: #fef9c3; color: #78350f; }
+    .cdet-pill.date    { background: #f1f5f9; color: #475569; }
+
+    .cdet-empty {
+        padding: 32px; text-align: center;
+        color: #94a3b8; font-size: .9rem;
+    }
+    .cdet-empty iconify-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; color: #7dddf0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+        .cdet-grid  { grid-template-columns: 1fr; }
+        .cdet-stats { grid-template-columns: repeat(3,1fr); }
+    }
+    @media (max-width: 540px) {
+        .cdet-stats { grid-template-columns: 1fr 1fr; }
+        .cdet-shell { padding: 16px; }
+    }
+</style>
+
+<section class="cdet-shell">
+
+    <!-- ── Heading ── -->
+    <div class="cdet-heading">
+        <div class="cdet-heading-main">
+            <div class="cdet-avatar">{{ candidate.name|slice:":1"|upper }}</div>
+            <div>
+                <h1 class="cdet-title">{{ candidate.name }}</h1>
+                <p class="cdet-sub">{{ candidate.email }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ candidate.designation_tech }}</p>
+            </div>
+        </div>
+        <div class="cdet-btn-group">
+            <a href="{% url 'dashboard:candidate_list' %}" class="cdet-back-btn">
+                <iconify-icon icon="mdi:arrow-left"></iconify-icon> Back
+            </a>
+            <a href="{% url 'dashboard:candidate_update' candidate.pk %}" class="cdet-edit-btn">
+                <iconify-icon icon="mdi:pencil-outline"></iconify-icon> Edit
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Quick-stat strip ── -->
+    <div class="cdet-stats">
+        <div class="cdet-stat">
+            <span class="cdet-stat-ico"><iconify-icon icon="mdi:clipboard-list-outline"></iconify-icon></span>
+            <div class="cdet-stat-body">
+                <div class="cdet-stat-lbl">Total Attempts</div>
+                <div class="cdet-stat-val">{{ total_attempts }}</div>
+            </div>
+        </div>
+        <div class="cdet-stat">
+            <span class="cdet-stat-ico"><iconify-icon icon="mdi:check-decagram-outline"></iconify-icon></span>
+            <div class="cdet-stat-body">
+                <div class="cdet-stat-lbl">Submitted</div>
+                <div class="cdet-stat-val">{{ submitted_count }}</div>
+            </div>
+        </div>
+        <div class="cdet-stat">
+            <span class="cdet-stat-ico" style="background:#d1fae5;color:#059669;"><iconify-icon icon="mdi:trophy-outline"></iconify-icon></span>
+            <div class="cdet-stat-body">
+                <div class="cdet-stat-lbl">Passed</div>
+                <div class="cdet-stat-val pass">{{ passed_count }}</div>
+            </div>
+        </div>
+        <div class="cdet-stat">
+            <span class="cdet-stat-ico" style="background:#ffe4e6;color:#e11d48;"><iconify-icon icon="mdi:close-circle-outline"></iconify-icon></span>
+            <div class="cdet-stat-body">
+                <div class="cdet-stat-lbl">Failed</div>
+                <div class="cdet-stat-val fail">{{ failed_count }}</div>
+            </div>
+        </div>
+        <div class="cdet-stat">
+            <span class="cdet-stat-ico" style="background:#fef3c7;color:#d97706;"><iconify-icon icon="mdi:star-outline"></iconify-icon></span>
+            <div class="cdet-stat-body">
+                <div class="cdet-stat-lbl">Best Score</div>
+                <div class="cdet-stat-val">{{ best_score }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Main two-col grid ── -->
+    <div class="cdet-grid">
+
+        <!-- LEFT: Candidate profile card -->
+        <div class="cdet-card">
+            <div class="cdet-card-head">
+                <span class="cdet-card-ico"><iconify-icon icon="mdi:account-circle-outline"></iconify-icon></span>
+                <div>
+                    <div class="cdet-card-name">Candidate Profile</div>
+                    <div class="cdet-card-hint">Basic info &amp; form details</div>
+                </div>
+            </div>
+            <div class="cdet-card-body">
+                <div class="cdet-info-list">
+
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:account-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Full Name</div>
+                            <div class="cdet-info-value">{{ candidate.name }}</div>
+                        </div>
+                    </div>
+
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:email-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Email Address</div>
+                            <div class="cdet-info-value">{{ candidate.email }}</div>
+                        </div>
+                    </div>
+
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:briefcase-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Designation / Tech</div>
+                            <div class="cdet-info-value">{{ candidate.designation_tech|default:"—" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:calendar-account-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Registered On</div>
+                            <div class="cdet-info-value">{{ candidate.created_at|date:"M d, Y · g:i A" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Extra form fields from candidate_details_json -->
+                    {% if extra_details %}
+                    <hr class="cdet-divider">
+                    <div class="cdet-info-label" style="margin-bottom:8px;">
+                        <iconify-icon icon="mdi:form-textbox"></iconify-icon>&nbsp; Additional Details
+                    </div>
+                    <div class="cdet-tag-grid">
+                        {% for label, value in extra_details.items %}
+                        <div class="cdet-tag-row">
+                            <span class="cdet-tag-key">{{ label }}</span>
+                            <span class="cdet-tag-val">{{ value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Summary line -->
+                    {% with candidate.candidate_details_summary as summary %}
+                    {% if summary and summary != '-' %}
+                    <hr class="cdet-divider">
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:text-box-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Details Summary</div>
+                            <div class="cdet-info-value" style="font-size:.78rem;font-weight:600;line-height:1.6;">{{ summary }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <!-- Avg score -->
+                    {% if submitted_count %}
+                    <hr class="cdet-divider">
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:chart-bar"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Average Score</div>
+                            <div class="cdet-info-value">{{ avg_score }}%  <span style="font-weight:600;color:#008fd1;font-size:.76rem;">(pass mark: {{ pass_pct }}%)</span></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Attempts table -->
+        <div class="cdet-card">
+            <div class="cdet-card-head">
+                <span class="cdet-card-ico"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
+                <div>
+                    <div class="cdet-card-name">Test Attempts</div>
+                    <div class="cdet-card-hint">
+                        {{ total_attempts }} attempt{{ total_attempts|pluralize }}
+                        &nbsp;·&nbsp;
+                        {{ submitted_count }} submitted
+                    </div>
+                </div>
+            </div>
+
+            {% if attempts %}
+            <div class="cdet-table-wrap">
+                <table class="cdet-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Level</th>
+                            <th>Score</th>
+                            <th>Result</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in attempts %}
+                        <tr onclick="window.location='{% url 'dashboard:attempt_detail' attempt.pk %}'">
+                            <td style="color:#008fd1;font-weight:800;">{{ forloop.counter }}</td>
+                            <td>
+                                <span class="cdet-pill level">
+                                    <iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>
+                                    {{ attempt.level|capfirst }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cdet-pill pct">
+                                    <iconify-icon icon="mdi:percent-outline"></iconify-icon>
+                                    {{ attempt.percentage }}%
+                                </span>
+                            </td>
+                            <td>
+                                {% if not attempt.is_submitted %}
+                                    <span class="cdet-pill pending">
+                                        <iconify-icon icon="mdi:clock-outline"></iconify-icon> Pending
+                                    </span>
+                                {% elif attempt.percentage >= pass_pct %}
+                                    <span class="cdet-pill passed">
+                                        <iconify-icon icon="mdi:check-circle-outline"></iconify-icon> Passed
+                                    </span>
+                                {% else %}
+                                    <span class="cdet-pill failed">
+                                        <iconify-icon icon="mdi:close-circle-outline"></iconify-icon> Failed
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="color:#475569;font-size:.82rem;">{{ attempt.duration_minutes }} min</td>
+                            <td>
+                                <span class="cdet-pill date">
+                                    <iconify-icon icon="mdi:calendar-range"></iconify-icon>
+                                    {{ attempt.created_at|date:"M d, Y" }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="cdet-empty">
+                <iconify-icon icon="mdi:clipboard-off-outline"></iconify-icon>
+                No test attempts for this candidate yet.
+            </div>
+            {% endif %}
+        </div>
+
+    </div><!-- /cdet-grid -->
+
+</section>
+</div>
+{% endblock %}
