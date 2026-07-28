@@ -18,6 +18,7 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         'company',
         'public_slug',
         'session_type',
+        'test_category',
         'level',
         'question_count',
         'candidate_details_preview',
@@ -37,6 +38,7 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'session_type',
+        'test_category',
         'level',
         'full_screen_lock_enabled',
         'pause_lock_enabled',

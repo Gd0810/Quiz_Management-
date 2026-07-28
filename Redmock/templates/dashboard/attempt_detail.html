@@ -364,6 +364,7 @@
     <!-- ── Info pills ── -->
     <div class="adet-info-row">
         <span class="adet-info-pill"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ attempt.level|capfirst }}</span>
+        <span class="adet-info-pill"><iconify-icon icon="mdi:shape-outline"></iconify-icon>{{ attempt.get_test_category_display }}</span>
         <span class="adet-info-pill"><iconify-icon icon="mdi:help-circle-outline"></iconify-icon>{{ attempt.question_count }} Questions</span>
         <span class="adet-info-pill"><iconify-icon icon="mdi:timer-outline"></iconify-icon>{{ attempt.duration_minutes }} min allotted</span>
         <span class="adet-info-pill"><iconify-icon icon="mdi:format-list-bulleted-type"></iconify-icon>{{ attempt.session_type|capfirst }} session</span>

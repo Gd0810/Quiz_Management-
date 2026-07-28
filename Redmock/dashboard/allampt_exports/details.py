@@ -343,6 +343,7 @@ def _info_block(attempt, pass_pct, usable_w):
 
     left_rows  = [
         row('Email',    attempt.candidate.email),
+        row('Category', attempt.get_test_category_display()),
         row('Level',    attempt.level.capitalize()),
         row('Session',  attempt.session_type.capitalize()),
         row('Duration', f'{attempt.duration_minutes} min'),

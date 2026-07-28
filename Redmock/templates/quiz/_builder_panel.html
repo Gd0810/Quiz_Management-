@@ -726,6 +726,10 @@
                 <div class="bp-stat-value">{{ pending_setup.session_type|title }}</div>
             </div>
             <div class="bp-stat">
+                <div class="bp-stat-label">Category</div>
+                <div class="bp-stat-value">{{ pending_setup.test_category_label|default:"General Mock" }}</div>
+            </div>
+            <div class="bp-stat">
                 <div class="bp-stat-label">Questions</div>
                 <div class="bp-stat-value">{{ pending_setup.question_count }}</div>
             </div>
@@ -890,6 +894,22 @@
                     <input id="id_question_count" type="number" min="1" name="question_count" value="{{ setup_state.question_count }}" class="bp-input" placeholder="e.g. 50">
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="bp-tile">
+        <div class="bp-section">
+            <div class="bp-section-icon"><iconify-icon icon="mdi:shape-outline" width="26" height="26"></iconify-icon></div>
+            <div>
+                <div class="bp-section-title">Test Category</div>
+                <div class="bp-section-sub">Choose one category for this test</div>
+            </div>
+        </div>
+        <div class="bp-subject-grid">
+            {% for value, label in test_category_choices %}
+                <input class="bp-subject-opt bp-subject-radio" type="radio" id="tc_{{ value }}" name="test_category" value="{{ value }}" {% if setup_state.test_category == value %}checked{% endif %}>
+                <label class="bp-subject-card" for="tc_{{ value }}">{{ label }}</label>
+            {% endfor %}
         </div>
     </div>
 

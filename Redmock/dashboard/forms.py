@@ -438,6 +438,7 @@ class CandidateTestAttemptForm(forms.ModelForm):
             'candidate',
             'company',
             'session_type',
+            'test_category',
             'level',
             'question_count',
             'duration_minutes',

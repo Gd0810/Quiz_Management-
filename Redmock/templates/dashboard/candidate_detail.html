@@ -285,6 +285,14 @@
                         </div>
                     </div>
 
+                    <div class="cdet-info-row">
+                        <span class="cdet-info-ico"><iconify-icon icon="mdi:shape-outline"></iconify-icon></span>
+                        <div class="cdet-info-inner">
+                            <div class="cdet-info-label">Test Category</div>
+                            <div class="cdet-info-value">{{ latest_test_category }}</div>
+                        </div>
+                    </div>
+
                     <!-- Extra form fields from candidate_details_json -->
                     {% if extra_details %}
                     <hr class="cdet-divider">
@@ -351,6 +359,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Category</th>
                             <th>Level</th>
                             <th>Score</th>
                             <th>Result</th>
@@ -362,6 +371,12 @@
                         {% for attempt in attempts %}
                         <tr onclick="window.location='{% url 'dashboard:attempt_detail' attempt.pk %}'">
                             <td style="color:#008fd1;font-weight:800;">{{ forloop.counter }}</td>
+                            <td>
+                                <span class="cdet-pill level">
+                                    <iconify-icon icon="mdi:shape-outline"></iconify-icon>
+                                    {{ attempt.get_test_category_display }}
+                                </span>
+                            </td>
                             <td>
                                 <span class="cdet-pill level">
                                     <iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>

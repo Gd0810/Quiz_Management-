@@ -182,11 +182,12 @@ def generate_attempts_pdf(queryset, company, response):
                              color=C_RULE, spaceAfter=8))
 
     # ── Table ─────────────────────────────────────────────────────────────────
-    #  Col widths: Candidate 210 | Level 90 | Score 90 | Date 150  = 540
-    col_widths = [210, 90, 90, 150]
+    #  Col widths: Candidate 170 | Category 115 | Level 75 | Score 70 | Date 110 = 540
+    col_widths = [170, 115, 75, 70, 110]
 
     header_row = [
         Paragraph("CANDIDATE",     th_style),
+        Paragraph("CATEGORY",      th_style),
         Paragraph("LEVEL",         th_style),
         Paragraph("SCORE",         th_style),
         Paragraph("DATE ATTEMPTED",th_style),
@@ -198,7 +199,7 @@ def generate_attempts_pdf(queryset, company, response):
         candidate_cell = Table(
             [[Paragraph(attempt.candidate.name,  name_style)],
              [Paragraph(attempt.candidate.email, email_style)]],
-            colWidths=[206],
+            colWidths=[166],
         )
         candidate_cell.setStyle(TableStyle([
             ('TOPPADDING',    (0, 0), (-1, -1), 0),
@@ -227,6 +228,7 @@ def generate_attempts_pdf(queryset, company, response):
 
         data.append([
             candidate_cell,
+            Paragraph(attempt.get_test_category_display(), cell_style),
             Paragraph(attempt.level.capitalize(), cell_style),
             Paragraph(score_text, score_style),
             Paragraph(formatted_date, cell_style),

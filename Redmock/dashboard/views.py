@@ -671,7 +671,7 @@ def quiz_source_download(request):
 
 @company_login_required
 def candidate_list(request):
-    queryset = Candidate.objects.all().order_by('-created_at')
+    queryset = Candidate.objects.filter(attempts__company=request.company).distinct().order_by('-created_at')
 
     # ── Search filter ────────────────────────────────────────────────
     search_query = request.GET.get('q', '').strip()
@@ -681,12 +681,28 @@ def candidate_list(request):
             Q(email__icontains=search_query)
         )
 
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(
+                attempts__company=request.company,
+                attempts__test_category=test_category_filter,
+            ).distinct()
+        else:
+            test_category_filter = 'all'
+
     total_count = queryset.count()
 
     # ── Pagination ───────────────────────────────────────────────────
     paginator  = Paginator(queryset, 20)
     page_num   = request.GET.get('page', 1)
     page_obj   = paginator.get_page(page_num)
+    for candidate in page_obj.object_list:
+        latest_attempt = candidate.attempts.filter(company=request.company).order_by('-created_at').first()
+        candidate.latest_test_category_display = (
+            latest_attempt.get_test_category_display() if latest_attempt else '-'
+        )
 
     # Build page_query_prefix (all GET params except 'page', ending with '&')
     params = request.GET.copy()
@@ -706,6 +722,8 @@ def candidate_list(request):
         'page_query_prefix': page_query_prefix,
         'total_count': total_count,
         'search_query': search_query,
+        'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+        'test_category_filter': test_category_filter,
     })
 
 
@@ -739,6 +757,7 @@ def candidate_detail(request, pk):
 
     # ── Candidate details from latest attempt's candidate_details_json ──
     latest = attempts.first()
+    latest_test_category = latest.get_test_category_display() if latest else '-'
     extra_details = {}
     if latest and latest.candidate_details_json:
         details = latest.candidate_details_json
@@ -758,6 +777,7 @@ def candidate_detail(request, pk):
         'best_score': best_score,
         'pass_pct': pass_pct,
         'extra_details': extra_details,
+        'latest_test_category': latest_test_category,
     })
 
 
@@ -831,6 +851,14 @@ def attempt_list(request):
         else:
             queryset = queryset.filter(level__iexact=level_filter)
 
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(test_category=test_category_filter)
+        else:
+            test_category_filter = 'all'
+
     # Filter by minimum percentage
     percentage_str = request.GET.get('percentage', '').strip()
     min_percentage = None
@@ -870,6 +898,8 @@ def attempt_list(request):
             'total_attempt_count': queryset.count(),
             'search_query': search_query,
             'level_filter': level_filter,
+            'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+            'test_category_filter': test_category_filter,
             'percentage_filter': percentage_str,
             'date_filter': date_str,
         },
@@ -1203,6 +1233,14 @@ def attempt_pdf(request):
             queryset = queryset.filter(level__in=['experienced', 'experience'])
         else:
             queryset = queryset.filter(level__iexact=level_filter)
+
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(test_category=test_category_filter)
+        else:
+            test_category_filter = 'all'
 
     # Filter by minimum percentage
     percentage_str = request.GET.get('percentage', '').strip()

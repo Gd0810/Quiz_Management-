@@ -30,7 +30,7 @@
     .attempt-btn.secondary { background: #e0f2fe; color: #075985; }
     .attempt-btn.danger { background: #fff1f2; color: #be123c; }
     .attempt-empty { border: 1px dashed #7dddf0; border-radius: 12px; background: #f0fdff; padding: 18px; color: #0369a1; font-size: .9rem; }
-    .attempt-controls { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(150px, 1fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .attempt-controls { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 1fr) minmax(170px, 1fr) minmax(140px, 1fr) minmax(150px, 1fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
     .attempt-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
     .attempt-control-field input,
     .attempt-control-field select { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
@@ -92,6 +92,15 @@
                 </select>
             </label>
             <label class="attempt-control-field">
+                <iconify-icon icon="mdi:shape-outline"></iconify-icon>
+                <select name="test_category">
+                    <option value="all" {% if test_category_filter == 'all' %}selected{% endif %}>All Categories</option>
+                    {% for value, label in test_category_choices %}
+                        <option value="{{ value }}" {% if test_category_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="attempt-control-field">
                 <iconify-icon icon="mdi:percent-outline"></iconify-icon>
                 <input type="number" name="percentage" value="{{ percentage_filter|default:'' }}" min="0" max="100" step="any" placeholder="Min Percentage (e.g., 50)">
             </label>
@@ -114,6 +123,7 @@
                     <thead>
                         <tr>
                             <th>Candidate</th>
+                            <th>Test Category</th>
                             <th>Level</th>
                             <th>Percentage</th>
                             <th>Date</th>
@@ -127,6 +137,7 @@
                                     <strong>{{ object.candidate.name }}</strong>
                                     <div style="font-size: .78rem; color: #008fd1; margin-top: 2px;">{{ object.candidate.email }}</div>
                                 </td>
+                                <td><span class="attempt-pill"><iconify-icon icon="mdi:shape-outline"></iconify-icon>{{ object.get_test_category_display }}</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ object.level }}</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:percent-outline"></iconify-icon>{{ object.percentage }}%</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:calendar-range"></iconify-icon>{{ object.created_at|date:"M d, Y" }}</span></td>
@@ -179,3 +190,4 @@
 </section>
 </div>
 {% endblock %}
+

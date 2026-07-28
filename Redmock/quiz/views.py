@@ -255,6 +255,10 @@ def _build_setup_state(request, company, data=None):
     subtitle_map = _subtitle_map(company)
 
     session_type = data.get('session_type') or 'single'
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    test_category = data.get('test_category') or CandidateTestAttempt.TEST_CATEGORY_GENERAL
+    if test_category not in valid_categories:
+        test_category = CandidateTestAttempt.TEST_CATEGORY_GENERAL
     custom_mode = data.get('custom_mode') == '1'
     duration_minutes = _parse_positive_int(data.get('duration_minutes'), 30) or 30
     question_count = _parse_positive_int(data.get('question_count'), 10) or 10
@@ -428,6 +432,7 @@ def _build_setup_state(request, company, data=None):
 
     return {
         'session_type': session_type,
+        'test_category': test_category,
         'custom_mode': custom_mode,
         'duration_minutes': duration_minutes,
         'question_count': question_count,
@@ -443,6 +448,8 @@ def _build_setup_state(request, company, data=None):
 
 
 def _validate_setup_state(state):
+    if state['test_category'] not in {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}:
+        state['errors'].append('Please choose a valid test category.')
     if state['session_type'] == 'single' and len(state['selected_subject_ids']) != 1:
         state['errors'].append('Single session test must have exactly one subject.')
     if state['session_type'] == 'multi' and len(state['selected_subject_ids']) < 2:
@@ -489,8 +496,11 @@ def _select_question_ids(company, allocations):
 
 
 def _serialize_setup(state, question_ids, security_state):
+    category_labels = dict(CandidateTestAttempt.TEST_CATEGORY_CHOICES)
     return {
         'session_type': state['session_type'],
+        'test_category': state['test_category'],
+        'test_category_label': category_labels.get(state['test_category'], 'General Mock'),
         'custom_mode': state['custom_mode'],
         'duration_minutes': state['duration_minutes'],
         'question_count': state['question_count'],
@@ -736,6 +746,7 @@ def security_next(request):
             'step': 'setup',
             'setup_state': _build_setup_state(request, request.company),
             'level_choices': _level_choices(),
+            'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
         },
     )
 
@@ -758,7 +769,12 @@ def setup_builder(request):
     return render(
         request,
         'quiz/_builder_panel.html',
-        {'step': 'setup', 'setup_state': state, 'level_choices': _level_choices()},
+        {
+            'step': 'setup',
+            'setup_state': state,
+            'level_choices': _level_choices(),
+            'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+        },
     )
 
 
@@ -770,7 +786,12 @@ def setup_next(request):
         return render(
             request,
             'quiz/_builder_panel.html',
-            {'step': 'setup', 'setup_state': state, 'level_choices': _level_choices()},
+            {
+                'step': 'setup',
+                'setup_state': state,
+                'level_choices': _level_choices(),
+                'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+            },
         )
 
     try:
@@ -780,7 +801,12 @@ def setup_next(request):
         return render(
             request,
             'quiz/_builder_panel.html',
-            {'step': 'setup', 'setup_state': state, 'level_choices': _level_choices()},
+            {
+                'step': 'setup',
+                'setup_state': state,
+                'level_choices': _level_choices(),
+                'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+            },
         )
 
     request.session[PENDING_TEST_SETUP_SESSION_KEY] = _serialize_setup(state, question_ids, security_state)
@@ -800,6 +826,7 @@ def setup_back(request):
     if pending_setup:
         post_data = post_data.copy()
         post_data['session_type'] = pending_setup['session_type']
+        post_data['test_category'] = pending_setup.get('test_category', CandidateTestAttempt.TEST_CATEGORY_GENERAL)
         post_data['duration_minutes'] = str(pending_setup['duration_minutes'])
         post_data['question_count'] = str(pending_setup['question_count'])
         if pending_setup.get('custom_mode'):
@@ -838,7 +865,12 @@ def setup_back(request):
     return render(
         request,
         'quiz/_builder_panel.html',
-        {'step': 'setup', 'setup_state': state, 'level_choices': _level_choices()},
+        {
+            'step': 'setup',
+            'setup_state': state,
+            'level_choices': _level_choices(),
+            'test_category_choices': CandidateTestAttempt.TEST_CATEGORY_CHOICES,
+        },
     )
 
 
@@ -883,6 +915,7 @@ def begin_test(request):
         candidate=candidate,
         company=request.company,
         session_type=pending_setup['session_type'],
+        test_category=pending_setup.get('test_category', CandidateTestAttempt.TEST_CATEGORY_GENERAL),
         level=pending_setup['allocations'][0]['level'] if pending_setup['session_type'] == 'single' else 'mixed',
         question_count=len(pending_setup['question_ids']),
         duration_minutes=pending_setup['duration_minutes'],

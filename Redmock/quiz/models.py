@@ -38,15 +38,30 @@ class Candidate(models.Model):
 class CandidateTestAttempt(models.Model):
     SESSION_SINGLE = 'single'
     SESSION_MULTI = 'multi'
+    TEST_CATEGORY_INTERVIEW = 'interview_qizze'
+    TEST_CATEGORY_ACADEMY = 'academy_mock'
+    TEST_CATEGORY_INTERNSHIP = 'internship_mock'
+    TEST_CATEGORY_GENERAL = 'general_mock'
     SESSION_CHOICES = [
         (SESSION_SINGLE, 'Single'),
         (SESSION_MULTI, 'Multi'),
+    ]
+    TEST_CATEGORY_CHOICES = [
+        (TEST_CATEGORY_INTERVIEW, 'Interview Qizze'),
+        (TEST_CATEGORY_ACADEMY, 'Academy Mock'),
+        (TEST_CATEGORY_INTERNSHIP, 'Internship Mock'),
+        (TEST_CATEGORY_GENERAL, 'General Mock'),
     ]
 
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='attempts')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='attempts')
     public_slug = models.CharField(max_length=190, unique=True, blank=True, db_index=True)
     session_type = models.CharField(max_length=10, choices=SESSION_CHOICES)
+    test_category = models.CharField(
+        max_length=30,
+        choices=TEST_CATEGORY_CHOICES,
+        default=TEST_CATEGORY_GENERAL,
+    )
     level = models.CharField(max_length=20)
     question_count = models.PositiveIntegerField()
     duration_minutes = models.PositiveIntegerField()

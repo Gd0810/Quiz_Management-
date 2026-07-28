@@ -23,9 +23,11 @@
     .quiz-list-text  { margin: 5px 0 0; color: #008fd1; font-size: .77rem; line-height: 1.35; }
 
     /* Filter bar — single search field */
-    .attempt-controls { display: grid; grid-template-columns: minmax(220px,1fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
+    .attempt-controls { display: grid; grid-template-columns: minmax(220px,1fr) minmax(170px,.45fr) auto; gap: 12px; padding: 16px; border-bottom: 1px solid #e0f2fe; }
     .attempt-control-field { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid #bae6fd; border-radius: 10px; background: #fff; padding: 0 12px; color: #0096c7; }
-    .attempt-control-field input { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .attempt-control-field input,
+    .attempt-control-field select { width: 100%; min-height: 42px; border: 0; background: transparent; color: #03045e; font: 600 .86rem 'Poppins', sans-serif; outline: 0; }
+    .attempt-control-field select { cursor: pointer; }
     .attempt-control-submit { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: #03045e; padding: 10px 16px; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background .2s; }
     .attempt-control-submit:hover { background: #0077b6; }
     .attempt-control-actions { display: flex; gap: 8px; align-items: center; }
@@ -96,6 +98,15 @@
                 <iconify-icon icon="mdi:magnify"></iconify-icon>
                 <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="Search by name or email">
             </label>
+            <label class="attempt-control-field">
+                <iconify-icon icon="mdi:shape-outline"></iconify-icon>
+                <select name="test_category">
+                    <option value="all" {% if test_category_filter == 'all' %}selected{% endif %}>All Categories</option>
+                    {% for value, label in test_category_choices %}
+                        <option value="{{ value }}" {% if test_category_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
             <div class="attempt-control-actions">
                 <button type="submit" class="attempt-control-submit">
                     <iconify-icon icon="mdi:tune"></iconify-icon>
@@ -113,6 +124,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Test Category</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
@@ -127,6 +139,12 @@
                                     <span class="attempt-pill">
                                         <iconify-icon icon="mdi:email-outline"></iconify-icon>
                                         {{ candidate.email }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="attempt-pill">
+                                        <iconify-icon icon="mdi:shape-outline"></iconify-icon>
+                                        {{ candidate.latest_test_category_display }}
                                     </span>
                                 </td>
                                 <td>
