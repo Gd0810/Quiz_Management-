@@ -123,7 +123,6 @@
                     <thead>
                         <tr>
                             <th>Candidate</th>
-                            <th>Test Category</th>
                             <th>Level</th>
                             <th>Percentage</th>
                             <th>Date</th>
@@ -137,7 +136,7 @@
                                     <strong>{{ object.candidate.name }}</strong>
                                     <div style="font-size: .78rem; color: #008fd1; margin-top: 2px;">{{ object.candidate.email }}</div>
                                 </td>
-                                <td><span class="attempt-pill"><iconify-icon icon="mdi:shape-outline"></iconify-icon>{{ object.get_test_category_display }}</span></td>
+                                
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:signal-cellular-3"></iconify-icon>{{ object.level }}</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:percent-outline"></iconify-icon>{{ object.percentage }}%</span></td>
                                 <td><span class="attempt-pill"><iconify-icon icon="mdi:calendar-range"></iconify-icon>{{ object.created_at|date:"M d, Y" }}</span></td>
