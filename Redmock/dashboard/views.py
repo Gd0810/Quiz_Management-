@@ -1,9 +1,11 @@
 import json
+from io import BytesIO
 from collections import Counter
 
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponse
@@ -27,6 +29,7 @@ from .forms import (
     TestSubjectForm,
 )
 from .models import CandidateFormField, Company, Quiz, SubTitle, TestSubject
+from .mail_utils import smtp_connection_for_company
 from .source_exports import EXPORTERS
 
 
@@ -243,11 +246,18 @@ def render_crud_list(request, *, queryset, title, create_url, edit_url_name, del
     return render(request, 'dashboard/crud_list.html', context)
 
 
-def render_crud_form(request, *, form, title, cancel_url, use_tinymce=False):
+def render_crud_form(request, *, form, title, cancel_url, use_tinymce=False, form_theme=None, form_icon=None):
     return render(
         request,
         'dashboard/crud_form.html',
-        {'form': form, 'title': title, 'cancel_url': cancel_url, 'use_tinymce': use_tinymce},
+        {
+            'form': form,
+            'title': title,
+            'cancel_url': cancel_url,
+            'use_tinymce': use_tinymce,
+            'form_theme': form_theme,
+            'form_icon': form_icon,
+        },
     )
 
 
@@ -793,6 +803,8 @@ def candidate_create(request):
         form=form,
         title='Create Candidate',
         cancel_url='dashboard:candidate_list',
+        form_theme='dashboard',
+        form_icon='mdi:account-plus-outline',
     )
 
 
@@ -809,6 +821,8 @@ def candidate_update(request, pk):
         form=form,
         title='Edit Candidate',
         cancel_url='dashboard:candidate_list',
+        form_theme='dashboard',
+        form_icon='mdi:account-edit-outline',
     )
 
 
@@ -1211,6 +1225,69 @@ def attempt_detail_pdf(request, pk):
 
 
 @company_login_required
+def attempt_share_result_email(request, pk):
+    if request.method != 'POST':
+        return redirect('dashboard:attempt_detail', pk=pk)
+
+    attempt = get_object_or_404(
+        CandidateTestAttempt.objects.select_related('candidate', 'company'),
+        pk=pk,
+        company=request.company,
+    )
+    company = request.company
+    if not company.mail_sender_ready:
+        messages.error(request, 'Mail settings are not ready. Enable mail sender and complete SMTP settings first.')
+        return redirect('dashboard:attempt_detail', pk=attempt.pk)
+
+    from .allampt_exports.details import generate_attempt_detail_pdf
+
+    ctx = _build_attempt_context(attempt, company)
+    pdf_buffer = BytesIO()
+    generate_attempt_detail_pdf(
+        attempt=attempt,
+        company=company,
+        pass_pct=ctx['pass_pct'],
+        attempt_pct=ctx['attempt_pct'],
+        is_passed=ctx['is_passed'],
+        time_taken_display=ctx['time_taken_display'],
+        time_pct=ctx['time_pct'],
+        session_list=ctx['session_list'],
+        longest_question=ctx['longest_question'],
+        response=pdf_buffer,
+    )
+
+    safe_name = attempt.candidate.name.replace(' ', '_')[:40] or 'candidate'
+    filename = f'attempt_{attempt.pk}_{safe_name}_result.pdf'
+    result_label = 'Passed' if ctx['is_passed'] else 'Failed'
+    subject = f'{company.name} test result'
+    body = (
+        f'Hello {attempt.candidate.name},\n\n'
+        f'Your test result is attached as a PDF.\n\n'
+        f'Score: {ctx["attempt_pct"]:.1f}%\n'
+        f'Result: {result_label}\n'
+        f'Test Category: {attempt.get_test_category_display()}\n\n'
+        f'Regards,\n{company.name}'
+    )
+    connection = smtp_connection_for_company(company)
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=company.effective_smtp_from_email,
+        to=[attempt.candidate.email],
+        connection=connection,
+    )
+    message.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
+
+    try:
+        message.send(fail_silently=False)
+    except Exception as exc:
+        messages.error(request, f'Could not share the result email: {exc}')
+    else:
+        messages.success(request, f'Result PDF sent to {attempt.candidate.email}.')
+    return redirect('dashboard:attempt_detail', pk=attempt.pk)
+
+
+@company_login_required
 def attempt_pdf(request):
     queryset = (
         CandidateTestAttempt.objects.filter(company=request.company)
@@ -1284,6 +1361,8 @@ def attempt_create(request):
         form=form,
         title='Create Candidate Test Attempt',
         cancel_url='dashboard:attempt_list',
+        form_theme='dashboard',
+        form_icon='mdi:clipboard-plus-outline',
     )
 
 
@@ -1300,6 +1379,8 @@ def attempt_update(request, pk):
         form=form,
         title='Edit Candidate Test Attempt',
         cancel_url='dashboard:attempt_list',
+        form_theme='dashboard',
+        form_icon='mdi:clipboard-edit-outline',
     )
 
 

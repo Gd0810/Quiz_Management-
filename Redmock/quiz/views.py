@@ -4,7 +4,7 @@ import json
 import logging
 
 from django.contrib import messages
-from django.core.mail import EmailMessage, get_connection
+from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from dashboard.models import Quiz, SubTitle, TestSubject
+from dashboard.mail_utils import smtp_connection_for_company
 from dashboard.views import company_login_required
 
 from .forms import CandidateDetailsForm
@@ -634,14 +635,7 @@ def _send_attempt_link_email(request, attempt):
         'Please open this link in your browser to continue your test.\n\n'
         f'Regards,\n{company.name}'
     )
-    connection = get_connection(
-        host=company.smtp_host,
-        port=company.smtp_port,
-        username=company.smtp_username,
-        password=company.smtp_app_key,
-        use_tls=company.smtp_use_tls,
-        timeout=10,
-    )
+    connection = smtp_connection_for_company(company)
     message = EmailMessage(
         subject=subject,
         body=body,

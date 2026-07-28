@@ -201,6 +201,8 @@ class CompanyMailSettingsForm(forms.ModelForm):
                 raise ValidationError(
                     'Mail sender can be enabled only after setting: ' + ', '.join(missing_fields) + '.'
                 )
+            if int(cleaned_data.get('smtp_port') or 0) == 587 and not cleaned_data.get('smtp_use_tls'):
+                raise ValidationError('Use TLS must be enabled for SMTP port 587.')
 
         return cleaned_data
 
