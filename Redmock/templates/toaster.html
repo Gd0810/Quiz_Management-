@@ -344,5 +344,29 @@
         var d = (duration !== undefined) ? duration : 3000;
         if (d > 0) setTimeout(function () { removeToast(toast); }, d);
     };
+
+    window.toastFailed = function (toast, title, message, duration) {
+        if (!toast || !toast.parentNode) return;
+        /* swap to error variant in-place */
+        toast.className = 't-toast t-toast--error';
+        toast.querySelector('.t-title').textContent = title || 'Failed';
+        var strip = toast.querySelector('.t-strip');
+        strip.innerHTML = '';
+        var iw = document.createElement('div');
+        iw.className = 't-icon-wrap';
+        iw.innerHTML = ICONS.error;
+        strip.appendChild(iw);
+        var msgEl = toast.querySelector('.t-msg');
+        if (message) {
+            if (!msgEl) {
+                msgEl = document.createElement('p');
+                msgEl.className = 't-msg';
+                toast.querySelector('.t-body').appendChild(msgEl);
+            }
+            msgEl.textContent = message;
+        }
+        var d = (duration !== undefined) ? duration : 5000;
+        if (d > 0) setTimeout(function () { removeToast(toast); }, d);
+    };
 }());
 </script>

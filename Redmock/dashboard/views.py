@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.text import slugify
@@ -1235,8 +1235,13 @@ def attempt_share_result_email(request, pk):
         company=request.company,
     )
     company = request.company
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.headers.get('HX-Request') == 'true'
+
     if not company.mail_sender_ready:
-        messages.error(request, 'Mail settings are not ready. Enable mail sender and complete SMTP settings first.')
+        msg = 'Mail settings are not ready. Enable mail sender and complete SMTP settings first.'
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': msg})
+        messages.error(request, msg)
         return redirect('dashboard:attempt_detail', pk=attempt.pk)
 
     from .allampt_exports.details import generate_attempt_detail_pdf
@@ -1281,9 +1286,15 @@ def attempt_share_result_email(request, pk):
     try:
         message.send(fail_silently=False)
     except Exception as exc:
-        messages.error(request, f'Could not share the result email: {exc}')
+        msg = f'Could not share the result email: {exc}'
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': msg})
+        messages.error(request, msg)
     else:
-        messages.success(request, f'Result PDF sent to {attempt.candidate.email}.')
+        msg = f'Result PDF sent to {attempt.candidate.email}.'
+        if is_ajax:
+            return JsonResponse({'success': True, 'message': msg})
+        messages.success(request, msg)
     return redirect('dashboard:attempt_detail', pk=attempt.pk)
 
 

@@ -58,6 +58,11 @@
         font-family: inherit;
     }
     .adet-share-btn:hover { background: #0077b6; box-shadow: 0 6px 20px rgba(0,119,182,.32); }
+    .adet-share-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
     .adet-btn-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
     /* ── Info pills row ──────────────────────────────────────── */
@@ -872,6 +877,74 @@
     /* start after brief delay so user sees the animation */
     setTimeout(function () { requestAnimationFrame(animFrame); }, 250);
 }());
+</script>
+
+<script>
+(function() {
+    var shareForm = document.querySelector('.adet-share-form');
+    if (!shareForm) return;
+
+    shareForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var submitBtn = shareForm.querySelector('.adet-share-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+
+        // Show loading toaster using toaster.html's global functions
+        var loaderToast = null;
+        if (window.toastLoading) {
+            loaderToast = window.toastLoading("Sharing Result", "Sending email to candidate...");
+        }
+
+        var formData = new FormData(shareForm);
+        var url = shareForm.getAttribute('action');
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                if (window.toastDone && loaderToast) {
+                    window.toastDone(loaderToast, "Success", data.message, 4000);
+                } else if (window.toastSuccess) {
+                    window.toastSuccess("Success", data.message, 4000);
+                }
+            } else {
+                if (window.toastFailed && loaderToast) {
+                    window.toastFailed(loaderToast, "Failed", data.message, 6000);
+                } else if (window.toastError) {
+                    window.toastError("Failed", data.message, 6000);
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Error sharing result:', error);
+            var errorMsg = "Could not connect to SMTP server or process email dispatch.";
+            if (window.toastFailed && loaderToast) {
+                window.toastFailed(loaderToast, "Failed", errorMsg, 6000);
+            } else if (window.toastError) {
+                window.toastError("Failed", errorMsg, 6000);
+            }
+        })
+        .finally(function() {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+        });
+    });
+})();
 </script>
 
 </div>
