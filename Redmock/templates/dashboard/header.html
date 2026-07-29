@@ -726,6 +726,102 @@
                 barChart.data.datasets[1].data = passeds;
                 barChart.update();
             }, 180);
+
+            // ❸ Combo Chart — Test Categories: Attempts (bar blue) + Passed (line green) + Failed (line red)
+            var comboCanvas = document.getElementById("dashboardCategoryComboChart");
+            if (comboCanvas && data.categories && data.categories.length) {
+                var existingCombo = Chart.getChart ? Chart.getChart(comboCanvas) : null;
+                if (existingCombo) existingCombo.destroy();
+
+                var catLabels = data.categories.map(function (c) { return c.label; });
+                var catTotals = data.categories.map(function (c) { return c.total; });
+                var catPassed = data.categories.map(function (c) { return c.passed; });
+                var catFailed = data.categories.map(function (c) { return c.failed; });
+
+                var comboChart = new Chart(comboCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: catLabels,
+                        datasets: [
+                            {
+                                label: "Total Attempts",
+                                type: "bar",
+                                data: catTotals.map(function () { return 0; }),
+                                backgroundColor: "rgba(0, 119, 182, 0.6)",
+                                borderColor: "#0077b6",
+                                borderWidth: 1.5,
+                                borderRadius: 6,
+                                barPercentage: 0.52,
+                                order: 2
+                            },
+                            {
+                                label: "Passed",
+                                type: "line",
+                                data: catPassed.map(function () { return 0; }),
+                                borderColor: "#059669",
+                                backgroundColor: "rgba(5, 150, 105, 0.08)",
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: false,
+                                pointRadius: 5,
+                                pointBackgroundColor: "#059669",
+                                order: 1
+                            },
+                            {
+                                label: "Failed",
+                                type: "line",
+                                data: catFailed.map(function () { return 0; }),
+                                borderColor: "#e11d48",
+                                backgroundColor: "rgba(225, 29, 72, 0.08)",
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: false,
+                                pointRadius: 5,
+                                pointBackgroundColor: "#e11d48",
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 950, easing: "easeOutQuart" },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: "top",
+                                labels: { color: "#023e8a", font: { size: 11, weight: 700 } }
+                            },
+                            tooltip: {
+                                backgroundColor: "#03045e",
+                                titleColor: "#caf0f8",
+                                bodyColor: "#ffffff",
+                                borderColor: "#90e0ef",
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: "#023e8a", font: { size: 11, weight: 700 } }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                precision: 0,
+                                grid: { color: "rgba(2,62,138,.12)", borderDash: [3, 3] },
+                                ticks: { color: "#0077b6", font: { size: 11, weight: 600 } }
+                            }
+                        }
+                    }
+                });
+
+                window.setTimeout(function () {
+                    comboChart.data.datasets[0].data = catTotals;
+                    comboChart.data.datasets[1].data = catPassed;
+                    comboChart.data.datasets[2].data = catFailed;
+                    comboChart.update();
+                }, 180);
+            }
         }
 
         function scheduleDashboardHomeCharts() {

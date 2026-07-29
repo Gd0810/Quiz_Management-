@@ -119,6 +119,19 @@ def dashboard_home(request):
             'passed': passed_lvl,
         })
         
+    categories_data = []
+    for cat_value, cat_label in CandidateTestAttempt.TEST_CATEGORY_CHOICES:
+        total_cat = CandidateTestAttempt.objects.filter(company=company, test_category=cat_value).count()
+        passed_cat = CandidateTestAttempt.objects.filter(company=company, test_category=cat_value, is_submitted=True, percentage__gte=pass_pct).count()
+        failed_cat = total_cat - passed_cat
+        categories_data.append({
+            'category': cat_value,
+            'label': cat_label,
+            'total': total_cat,
+            'passed': passed_cat,
+            'failed': failed_cat,
+        })
+
     category_count = CandidateTestAttempt.objects.filter(company=company).values('test_category').distinct().count()
     home_chart_data = {
         'candidateCount': Candidate.objects.filter(attempts__company=company).distinct().count(),
@@ -127,6 +140,7 @@ def dashboard_home(request):
         'attemptCount': CandidateTestAttempt.objects.filter(company=company).count(),
         'categoryCount': category_count,
         'levels': levels_data,
+        'categories': categories_data,
     }
 
     context = {
