@@ -1215,6 +1215,7 @@ def attempt_detail(request, pk):
         'time_taken_minutes': round(time_taken_minutes, 2),
         'session_list': session_list,
         'longest_question': longest_question,
+        'right_click_count': sum(1 for v in (attempt.violation_log_json or []) if isinstance(v, dict) and v.get('type') == 'right_click'),
     })
 
 
@@ -1337,6 +1338,7 @@ def _build_attempt_context(attempt, company):
         'total_seconds_allotted': total_seconds_allotted,
         'session_list': session_list,
         'longest_question': longest_question,
+        'right_click_count': sum(1 for v in (attempt.violation_log_json or []) if isinstance(v, dict) and v.get('type') == 'right_click'),
     }
 
 
@@ -1368,6 +1370,7 @@ def attempt_detail_pdf(request, pk):
         session_list     = ctx['session_list'],
         longest_question = ctx['longest_question'],
         response         = response,
+        right_click_count = ctx.get('right_click_count', 0),
     )
     return response
 
@@ -1407,6 +1410,7 @@ def attempt_share_result_email(request, pk):
         session_list=ctx['session_list'],
         longest_question=ctx['longest_question'],
         response=pdf_buffer,
+        right_click_count=ctx.get('right_click_count', 0),
     )
 
     safe_name = attempt.candidate.name.replace(' ', '_')[:40] or 'candidate'

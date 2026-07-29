@@ -524,6 +524,61 @@ def _longest_q_card(lq, page_w):
     return card
 
 
+def _security_breach_block(attempt, right_click_count, width):
+    from reportlab.platypus import Table, TableStyle
+    
+    rows = []
+    
+    # Header row
+    rows.append([
+        Paragraph("SECURITY MONITORING FEATURE", LABEL_S),
+        Paragraph("STATUS", LABEL_S),
+        Paragraph("BREACH ATTEMPTED", LABEL_S),
+        Paragraph("COUNT", LABEL_S),
+    ])
+    
+    if attempt.tab_switch_guard_enabled:
+        tab_breached = "TRUE" if attempt.tab_switch_count > 0 else "FALSE"
+        tab_col = C_FAIL if attempt.tab_switch_count > 0 else C_PASS
+        rows.append([
+            Paragraph("<b>Tab Switch Guard</b>", CELL_S),
+            Paragraph("ENABLED", CELL_S),
+            Paragraph(f"<b>{tab_breached}</b>", _s('TB', fontName='Helvetica-Bold', fontSize=8.5, textColor=tab_col)),
+            Paragraph(f"{attempt.tab_switch_count} times", CELL_S),
+        ])
+        
+    if attempt.right_click_disable_enabled:
+        rc_breached = "TRUE" if right_click_count > 0 else "FALSE"
+        rc_col = C_FAIL if right_click_count > 0 else C_PASS
+        rows.append([
+            Paragraph("<b>Right Click Disable</b>", CELL_S),
+            Paragraph("ENABLED", CELL_S),
+            Paragraph(f"<b>{rc_breached}</b>", _s('RCB', fontName='Helvetica-Bold', fontSize=8.5, textColor=rc_col)),
+            Paragraph(f"{right_click_count} times", CELL_S),
+        ])
+        
+    col_w = [width * 0.35, width * 0.20, width * 0.25, width * 0.20]
+    tbl = Table(rows, colWidths=col_w)
+    
+    ts = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#fff1f2')),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#fecdd3')),
+        ('LINEBELOW', (0, 1), (-1, -1), 0.5, C_RULE),
+        ('BOX', (0, 0), (-1, -1), 0.8, colors.HexColor('#fecdd3')),
+    ])
+    
+    for i in range(1, len(rows)):
+        ts.add('BACKGROUND', (0, i), (-1, i), colors.HexColor('#fff8f8'))
+        
+    tbl.setStyle(ts)
+    return tbl
+
+
 # ── Public entry point ────────────────────────────────────────────────────────
 def generate_attempt_detail_pdf(
     attempt,
@@ -536,6 +591,7 @@ def generate_attempt_detail_pdf(
     session_list: list,
     longest_question: dict | None,
     response,
+    right_click_count: int = 0,
 ):
     from django.utils import timezone
 
@@ -619,6 +675,13 @@ def generate_attempt_detail_pdf(
     ]))
     story.append(charts)
     story.append(Spacer(1, 16))
+
+    # ── 4.5 Security Breach Analysis ───────────────────────────────────────
+    if attempt.tab_switch_guard_enabled or attempt.right_click_disable_enabled:
+        story.append(_SectionHeader('Security Breach Analysis', UW))
+        story.append(Spacer(1, 8))
+        story.append(_security_breach_block(attempt, right_click_count, UW))
+        story.append(Spacer(1, 16))
 
     # ── 5. Session breakdown ───────────────────────────────────────────────
     if session_list:

@@ -1721,12 +1721,19 @@ function currentAnswerParams() {
 }
 
 function recordViolation(violationType) {
-    if (!tabSwitchGuardEnabled || isPaused || submittedByTimer) return;
+    if (isPaused || submittedByTimer) return;
+    if (violationType === 'right_click') {
+        if (!rightClickDisableEnabled) return;
+    } else {
+        if (!tabSwitchGuardEnabled) return;
+    }
     if (violationExitActive || violationAlertOpen) return;
     var now = Date.now();
     if (now - lastViolationPingAt < 1200) return;
     lastViolationPingAt = now;
-    violationExitActive = true;
+    if (violationType !== 'right_click') {
+        violationExitActive = true;
+    }
 
     var body = currentAnswerParams();
     body.append('violation_type', violationType);
@@ -1752,7 +1759,7 @@ function recordViolation(violationType) {
                 window.location.href = data.redirect_url;
                 return;
             }
-            if (typeof data.warning_limit === 'number') {
+            if (violationType !== 'right_click' && typeof data.warning_limit === 'number') {
                 violationAlertOpen = true;
                 window.alert(
                     'Warning ' + warningCount + ' of ' + data.warning_limit + ': tab switching or leaving the test window is not allowed.'
@@ -1767,7 +1774,11 @@ function recordViolation(violationType) {
 }
 
 function maybeRecordViolation(violationType) {
-    if (!tabSwitchGuardEnabled) return;
+    if (violationType === 'right_click') {
+        if (!rightClickDisableEnabled) return;
+    } else {
+        if (!tabSwitchGuardEnabled) return;
+    }
     recordViolation(violationType);
 }
 
@@ -1819,6 +1830,7 @@ if (rightClickDisableEnabled) {
         if (isSecurityPasswordTarget(e.target)) return;
         e.preventDefault();
         showBrowserProtectionNotice('Right click is disabled for this test.');
+        maybeRecordViolation('right_click');
     });
 }
 

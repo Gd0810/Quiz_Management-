@@ -1121,10 +1121,18 @@ def record_violation(request, attempt_slug):
     if attempt.is_submitted:
         return JsonResponse({'ok': True, 'already_submitted': True})
 
-    if not attempt.tab_switch_guard_enabled:
+    violation_type = (request.POST.get('violation_type') or 'focus_lost').strip()[:50]
+    
+    # Check if the appropriate guard is enabled
+    guard_enabled = False
+    if violation_type == 'right_click':
+        guard_enabled = attempt.right_click_disable_enabled
+    else:
+        guard_enabled = attempt.tab_switch_guard_enabled
+
+    if not guard_enabled:
         return JsonResponse({'ok': True, 'guard_enabled': False, 'warning_count': attempt.warning_count})
 
-    violation_type = (request.POST.get('violation_type') or 'focus_lost').strip()[:50]
     answers = _answers_from_request(request, attempt.answers_json or [])
     violation_log = list(attempt.violation_log_json or [])
     now = timezone.now()
@@ -1135,59 +1143,79 @@ def record_violation(request, attempt_slug):
         }
     )
 
-    attempt.tab_switch_count += 1
-    attempt.warning_count += 1
+    if violation_type != 'right_click':
+        attempt.tab_switch_count += 1
+        attempt.warning_count += 1
     attempt.last_violation_at = now
     attempt.violation_log_json = violation_log
 
-    warning_limit = max(attempt.max_violation_warnings, 1)
-    if attempt.warning_count >= warning_limit:
-        question_ids = [row['question_id'] for row in answers]
-        question_map = {
-            question.id: question
-            for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=attempt.company)
-        }
-        _finalize_attempt(
-            attempt,
-            question_map=question_map,
-            updated_answers=answers,
-            extra_update_fields=[
-                'tab_switch_count',
-                'warning_count',
+    if violation_type != 'right_click':
+        warning_limit = max(attempt.max_violation_warnings, 1)
+        if attempt.warning_count >= warning_limit:
+            question_ids = [row['question_id'] for row in answers]
+            question_map = {
+                question.id: question
+                for question in Quiz.objects.filter(id__in=question_ids, test_subject__company=attempt.company)
+            }
+            _finalize_attempt(
+                attempt,
+                question_map=question_map,
+                updated_answers=answers,
+                extra_update_fields=[
+                    'tab_switch_count',
+                    'warning_count',
+                    'last_violation_at',
+                    'violation_log_json',
+                ],
+            )
+            return JsonResponse(
+                {
+                    'ok': True,
+                    'auto_submitted': True,
+                    'warning_count': attempt.warning_count,
+                    'redirect_url': request.build_absolute_uri(
+                        redirect('quiz:result', attempt_slug=attempt.public_slug).url
+                    ),
+                }
+            )
+
+    attempt.answers_json = answers
+    if violation_type == 'right_click':
+        attempt.save(
+            update_fields=[
+                'answers_json',
                 'last_violation_at',
                 'violation_log_json',
-            ],
+            ]
         )
         return JsonResponse(
             {
                 'ok': True,
-                'auto_submitted': True,
+                'auto_submitted': False,
                 'warning_count': attempt.warning_count,
-                'redirect_url': request.build_absolute_uri(
-                    redirect('quiz:result', attempt_slug=attempt.public_slug).url
-                ),
+                'tab_switch_count': attempt.tab_switch_count,
             }
         )
-
-    attempt.answers_json = answers
-    attempt.save(
-        update_fields=[
-            'answers_json',
-            'tab_switch_count',
-            'warning_count',
-            'last_violation_at',
-            'violation_log_json',
-        ]
-    )
-    return JsonResponse(
-        {
-            'ok': True,
-            'auto_submitted': False,
-            'warning_count': attempt.warning_count,
-            'tab_switch_count': attempt.tab_switch_count,
-            'warning_limit': warning_limit,
-        }
-    )
+    else:
+        attempt.save(
+            update_fields=[
+                'answers_json',
+                'tab_switch_count',
+                'warning_count',
+                'last_violation_at',
+                'violation_log_json',
+            ]
+        )
+        warning_limit = max(attempt.max_violation_warnings, 1)
+        return JsonResponse(
+            {
+                'ok': True,
+                'auto_submitted': False,
+                'warning_count': attempt.warning_count,
+                'tab_switch_count': attempt.tab_switch_count,
+                'warning_limit': warning_limit,
+            }
+        )
 
 
 def test_result(request, attempt_slug):
