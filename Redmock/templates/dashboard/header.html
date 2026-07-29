@@ -501,7 +501,7 @@
         {% if request.session.company_id %}
             <ul class="dashboard-nav-list dashboard-secondary-nav">
                 <li class="dashboard-nav-item">
-                    <a href="/dashboard/logout/" class="dashboard-nav-link is-danger">
+                    <a href="/dashboard/logout/" class="dashboard-nav-link is-danger" hx-boost="false">
                         <span class="dashboard-nav-icon"><iconify-icon icon="mdi:logout"></iconify-icon></span>
                         <span class="dashboard-nav-label">Logout</span>
                     </a>
