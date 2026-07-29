@@ -738,6 +738,88 @@ def candidate_list(request):
 
 
 @company_login_required
+def candidate_pdf(request):
+    queryset = Candidate.objects.filter(attempts__company=request.company).distinct().order_by('-created_at')
+
+    # Filter by search query
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(
+                attempts__company=request.company,
+                attempts__test_category=test_category_filter,
+            ).distinct()
+
+    for candidate in queryset:
+        latest_attempt = candidate.attempts.filter(company=request.company).order_by('-created_at').first()
+        candidate.latest_test_category_display = (
+            latest_attempt.get_test_category_display() if latest_attempt else '-'
+        )
+
+    from django.http import HttpResponse
+    from django.utils import timezone
+    response = HttpResponse(content_type='application/pdf')
+    
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="candidates_report_{timestamp}.pdf"'
+    
+    from .candidate_export.pdf import generate_candidates_pdf
+    generate_candidates_pdf(queryset, request.company, response)
+    
+    return response
+
+
+@company_login_required
+def candidate_excel(request):
+    queryset = Candidate.objects.filter(attempts__company=request.company).distinct().order_by('-created_at')
+
+    # Filter by search query
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(
+                attempts__company=request.company,
+                attempts__test_category=test_category_filter,
+            ).distinct()
+
+    for candidate in queryset:
+        latest_attempt = candidate.attempts.filter(company=request.company).order_by('-created_at').first()
+        candidate.latest_test_category_display = (
+            latest_attempt.get_test_category_display() if latest_attempt else '-'
+        )
+
+    from django.http import HttpResponse
+    from django.utils import timezone
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="candidates_report_{timestamp}.xlsx"'
+    
+    from .candidate_export.excel import generate_candidates_excel
+    generate_candidates_excel(queryset, request.company, response)
+    
+    return response
+
+
+@company_login_required
 def candidate_detail(request, pk):
     candidate = get_object_or_404(Candidate, pk=pk)
 

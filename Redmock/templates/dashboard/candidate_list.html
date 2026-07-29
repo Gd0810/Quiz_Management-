@@ -73,6 +73,16 @@
                 <p class="quiz-subtitle">All registered candidates with name, email and date</p>
             </div>
         </div>
+        <div class="quiz-list-actions" style="display: flex; gap: 8px; align-items: center; padding-right: 0;">
+            <a href="{% url 'dashboard:candidate_pdf' %}?{{ page_query_prefix }}" class="attempt-btn secondary" style="min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <iconify-icon icon="mdi:file-pdf-box" style="font-size: 1.25rem; color: #be123c;"></iconify-icon>
+                Download PDF
+            </a>
+            <a href="{% url 'dashboard:candidate_excel' %}?{{ page_query_prefix }}" class="attempt-btn secondary" style="min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <iconify-icon icon="mdi:file-excel" style="font-size: 1.25rem; color: #15803d;"></iconify-icon>
+                Export Excel
+            </a>
+        </div>
     </div>
 
     <div class="quiz-list-panel">
