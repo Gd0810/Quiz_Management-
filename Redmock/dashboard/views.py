@@ -107,12 +107,28 @@ def dashboard_logout(request):
 @company_login_required
 def dashboard_home(request):
     company = request.company
+    pass_pct = float(company.pass_persantage)
+    
+    levels_data = []
+    for lvl in ['basic', 'intermediate', 'experienced']:
+        total_lvl = CandidateTestAttempt.objects.filter(company=company, level=lvl).count()
+        passed_lvl = CandidateTestAttempt.objects.filter(company=company, level=lvl, is_submitted=True, percentage__gte=pass_pct).count()
+        levels_data.append({
+            'level': lvl.capitalize(),
+            'total': total_lvl,
+            'passed': passed_lvl,
+        })
+        
+    category_count = CandidateTestAttempt.objects.filter(company=company).values('test_category').distinct().count()
+
     context = {
         'subject_count': TestSubject.objects.filter(company=company).count(),
         'subtitle_count': SubTitle.objects.filter(test_subject__company=company).count(),
         'quiz_count': Quiz.objects.filter(test_subject__company=company).count(),
         'candidate_count': Candidate.objects.filter(attempts__company=company).distinct().count(),
         'attempt_count': CandidateTestAttempt.objects.filter(company=company).count(),
+        'category_count': category_count,
+        'levels_data': levels_data,
         'subjects': TestSubject.objects.filter(company=company).select_related('company').annotate(
             quiz_total=Count('quizzes')
         )[:6],

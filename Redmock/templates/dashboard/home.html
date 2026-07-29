@@ -5,90 +5,635 @@
 {% block content %}
 {% include 'dashboard/header.html' %}
 <div id="dashboard-page-content">
-<section class="grid gap-4 md:grid-cols-5">
-    <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Subjects</p>
-        <p class="mt-2 text-3xl font-bold">{{ subject_count }}</p>
-    </div>
-    <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Sub Titles</p>
-        <p class="mt-2 text-3xl font-bold">{{ subtitle_count }}</p>
-    </div>
-    <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Quiz Questions</p>
-        <p class="mt-2 text-3xl font-bold">{{ quiz_count }}</p>
-    </div>
-    <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Candidates</p>
-        <p class="mt-2 text-3xl font-bold">{{ candidate_count }}</p>
-    </div>
-    <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">Attempts</p>
-        <p class="mt-2 text-3xl font-bold">{{ attempt_count }}</p>
-    </div>
-</section>
+<style>
+    /* ── Header styling ── */
+    .home-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 28px;
+        background: linear-gradient(135deg, #03045e, #0077b6);
+        border-radius: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(3,4,94,.12);
+        color: #fff;
+    }
+    .home-company-name {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+    .home-company-sub {
+        margin: 4px 0 0;
+        font-size: 0.86rem;
+        color: #90e0ef;
+    }
+    .home-company-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #fff;
+        border: 2px solid #90e0ef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .home-company-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        background: #0096c7;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 1.6rem;
+        font-weight: 900;
+        border: 2px solid #90e0ef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
 
-<section class="mt-8 grid gap-6 lg:grid-cols-2">
-    <div class="rounded-2xl bg-white p-6 shadow-sm">
-        <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Quick Actions</h2>
+    /* ── 5 K-Cards Grid ── */
+    .home-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .home-stat-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #fff;
+        border: 1px solid #7dddf0;
+        border-radius: 14px;
+        padding: 18px 16px;
+        box-shadow: 0 4px 12px rgba(2,62,138,.03);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .home-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(2,62,138,.07);
+    }
+    .home-stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        background: #c9f5fb;
+        color: #0096c7;
+        display: grid;
+        place-items: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .home-stat-info {
+        min-width: 0;
+    }
+    .home-stat-label {
+        display: block;
+        color: #008fd1;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+    .home-stat-value {
+        display: block;
+        color: #03045e;
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin-top: 2px;
+    }
+
+    /* ── Charts Grid ── */
+    .home-charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.3fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    .home-chart-card {
+        background: #fff;
+        border: 1px solid #7dddf0;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(2,62,138,.04);
+        display: flex;
+        flex-direction: column;
+    }
+    .home-chart-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #e0f2fe;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .home-chart-icon {
+        color: #0096c7;
+        font-size: 1.25rem;
+        display: grid;
+        place-items: center;
+    }
+    .home-chart-title {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        color: #03045e;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+    .home-chart-canvas-wrap {
+        position: relative;
+        height: 310px;
+        width: 100%;
+        margin: auto;
+    }
+
+    /* ── Bottom Section ── */
+    .home-bottom-grid {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    .home-panel {
+        background: #fff;
+        border: 1px solid #7dddf0;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(2,62,138,.04);
+    }
+    .home-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e0f2fe;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .home-panel-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .home-panel-icon {
+        color: #0096c7;
+        font-size: 1.25rem;
+        display: grid;
+        place-items: center;
+    }
+    .home-panel-title {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        color: #03045e;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    /* Table styling */
+    .home-table-wrap {
+        overflow-x: auto;
+    }
+    .home-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .home-table thead th {
+        background: linear-gradient(90deg, #0096c7, #0077b6);
+        color: #fff;
+        text-align: left;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        padding: 10px 12px;
+    }
+    .home-table thead th:first-child {
+        border-radius: 6px 0 0 6px;
+    }
+    .home-table thead th:last-child {
+        border-radius: 0 6px 6px 0;
+    }
+    .home-table tbody td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e0f2fe;
+        color: #03045e;
+        font-size: .86rem;
+    }
+    .home-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+    .home-table tbody tr:nth-child(even) {
+        background: #f4fdff;
+    }
+    .home-table tbody tr:hover {
+        background: #ebfbff;
+        cursor: pointer;
+    }
+
+    /* Subjects List */
+    .home-sub-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .home-sub-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: #f4fdff;
+        border: 1px solid #c9f5fb;
+        border-radius: 10px;
+        transition: background .15s;
+    }
+    .home-sub-item:hover {
+        background: #e6f9fd;
+    }
+    .home-sub-name {
+        font-weight: 700;
+        color: #03045e;
+        font-size: 0.88rem;
+    }
+    .home-sub-comp {
+        font-size: 0.76rem;
+        color: #008fd1;
+        margin-top: 1px;
+    }
+    .home-sub-badge {
+        background: #0096c7;
+        color: #fff;
+        padding: 4px 10px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        border-radius: 99px;
+    }
+
+    .home-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 99px;
+        padding: 4px 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+    }
+    .home-badge.pass { background: #d1fae5; color: #065f46; }
+    .home-badge.fail { background: #ffe4e6; color: #9f1239; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .home-charts-grid { grid-template-columns: 1fr; }
+        .home-bottom-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+        .home-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 580px) {
+        .home-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .home-header { flex-direction: column; text-align: center; gap: 14px; }
+    }
+</style>
+
+    <!-- ── Header ── -->
+    <div class="home-header">
+        <div class="home-header-left">
+            <h1 class="home-company-name">{{ company.name }}</h1>
+            <p class="home-company-sub">Redmock Test Administration Portal</p>
         </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-            <a href="{% url 'dashboard:subject_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-white">Create Subject</a>
-            <a href="{% url 'dashboard:quiz_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-white">Create Quiz</a>
-            <a href="{% url 'quiz:start' %}" class="rounded-xl bg-emerald-600 px-4 py-3 text-white">Open Test Form</a>
-            <a href="{% url 'dashboard:company_settings' %}" class="rounded-xl bg-indigo-600 px-4 py-3 text-white">Exam Security</a>
+        <div class="home-header-right">
+            {% if company.image %}
+                <img src="{{ company.image.url }}" alt="{{ company.name }}" class="home-company-logo">
+            {% else %}
+                <div class="home-company-avatar">{{ company.name|slice:":1"|upper }}</div>
+            {% endif %}
         </div>
     </div>
 
-    <div class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-semibold">Subject Overview</h2>
-        <div class="mt-4 space-y-3">
-            {% for subject in subjects %}
-                <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                    <div>
-                        <p class="font-medium">{{ subject.subject }}</p>
-                        <p class="text-sm text-slate-500">{{ subject.company.name }}</p>
-                    </div>
-                    <span class="rounded-full bg-slate-900 px-3 py-1 text-sm text-white">{{ subject.quiz_total }} questions</span>
+    <!-- ── 5 K-Cards ── -->
+    <div class="home-stats-grid">
+        <!-- Candidates -->
+        <div class="home-stat-card">
+            <span class="home-stat-icon"><iconify-icon icon="mdi:account-group-outline"></iconify-icon></span>
+            <div class="home-stat-info">
+                <span class="home-stat-label">Candidates</span>
+                <span class="home-stat-value">{{ candidate_count }}</span>
+            </div>
+        </div>
+        <!-- Subjects -->
+        <div class="home-stat-card">
+            <span class="home-stat-icon"><iconify-icon icon="mdi:book-open-variant"></iconify-icon></span>
+            <div class="home-stat-info">
+                <span class="home-stat-label">Subjects</span>
+                <span class="home-stat-value">{{ subject_count }}</span>
+            </div>
+        </div>
+        <!-- Quiz Questions -->
+        <div class="home-stat-card">
+            <span class="home-stat-icon"><iconify-icon icon="mdi:help-circle-outline"></iconify-icon></span>
+            <div class="home-stat-info">
+                <span class="home-stat-label">Questions</span>
+                <span class="home-stat-value">{{ quiz_count }}</span>
+            </div>
+        </div>
+        <!-- Attempts -->
+        <div class="home-stat-card">
+            <span class="home-stat-icon"><iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon></span>
+            <div class="home-stat-info">
+                <span class="home-stat-label">Attempts</span>
+                <span class="home-stat-value">{{ attempt_count }}</span>
+            </div>
+        </div>
+        <!-- Categories -->
+        <div class="home-stat-card">
+            <span class="home-stat-icon"><iconify-icon icon="mdi:shape-outline"></iconify-icon></span>
+            <div class="home-stat-info">
+                <span class="home-stat-label">Categories</span>
+                <span class="home-stat-value">{{ category_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Two Charts Grid ── -->
+    <div class="home-charts-grid">
+        <!-- radar chart -->
+        <div class="home-chart-card">
+            <div class="home-chart-head">
+                <span class="home-chart-icon"><iconify-icon icon="mdi:radar"></iconify-icon></span>
+                <h2 class="home-chart-title">Test Matrix</h2>
+            </div>
+            <div class="home-chart-canvas-wrap">
+                <canvas id="dashboardRadarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- bar chart -->
+        <div class="home-chart-card">
+            <div class="home-chart-head">
+                <span class="home-chart-icon"><iconify-icon icon="mdi:chart-bar"></iconify-icon></span>
+                <h2 class="home-chart-title">Difficulty Levels vs Pass Ratio</h2>
+            </div>
+            <div class="home-chart-canvas-wrap">
+                <canvas id="dashboardLevelsBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Bottom Grid ── -->
+    <div class="home-bottom-grid">
+        <!-- Recent Attempts -->
+        <div class="home-panel">
+            <div class="home-panel-head">
+                <div class="home-panel-title-wrap">
+                    <span class="home-panel-icon"><iconify-icon icon="mdi:history"></iconify-icon></span>
+                    <h2 class="home-panel-title">Recent Candidate Attempts</h2>
                 </div>
-            {% empty %}
-                <p class="text-slate-500">No subjects created yet.</p>
-            {% endfor %}
+            </div>
+            <div class="home-table-wrap">
+                <table class="home-table">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Level</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in recent_attempts %}
+                            <tr onclick="window.location='{% url 'dashboard:attempt_detail' attempt.pk %}'">
+                                <td>
+                                    <strong>{{ attempt.candidate.name }}</strong>
+                                    <div style="font-size:0.76rem;color:#008fd1;margin-top:2px;">{{ attempt.candidate.email }}</div>
+                                </td>
+                                <td><span style="font-weight:600;color:#0077b6;">{{ attempt.level|capfirst }}</span></td>
+                                <td><strong style="color:#03045e;">{{ attempt.percentage }}%</strong></td>
+                                <td>
+                                    {% if attempt.is_submitted %}
+                                        <span class="home-badge pass"><iconify-icon icon="mdi:check"></iconify-icon>Submitted</span>
+                                    {% else %}
+                                        <span class="home-badge fail"><iconify-icon icon="mdi:clock-outline"></iconify-icon>Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" style="text-align:center;padding:30px;color:#94a3b8;">No recent attempts found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Subject Overview -->
+        <div class="home-panel">
+            <div class="home-panel-head">
+                <div class="home-panel-title-wrap">
+                    <span class="home-panel-icon"><iconify-icon icon="mdi:view-list-outline"></iconify-icon></span>
+                    <h2 class="home-panel-title">Subject Overview</h2>
+                </div>
+            </div>
+            <div class="home-sub-list">
+                {% for subject in subjects %}
+                    <div class="home-sub-item">
+                        <div>
+                            <div class="home-sub-name">{{ subject.subject }}</div>
+                            <div class="home-sub-comp">{{ subject.company.name }}</div>
+                        </div>
+                        <span class="home-sub-badge">{{ subject.quiz_total }} Qs</span>
+                    </div>
+                {% empty %}
+                    <div style="text-align:center;padding:30px;color:#94a3b8;">No subjects created yet.</div>
+                {% endfor %}
+            </div>
         </div>
     </div>
-</section>
 
-<section class="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-    <h2 class="text-xl font-semibold">Recent Attempts</h2>
-    <div class="mt-4 overflow-x-auto">
-        <table class="min-w-full text-left text-sm">
-            <thead class="border-b border-slate-200 text-slate-500">
-                <tr>
-                    <th class="px-3 py-2">Candidate</th>
-                    <th class="px-3 py-2">Company</th>
-                    <th class="px-3 py-2">Level</th>
-                    <th class="px-3 py-2">Score</th>
-                    <th class="px-3 py-2">Submitted</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for attempt in recent_attempts %}
-                    <tr class="border-b border-slate-100">
-                        <td class="px-3 py-2">{{ attempt.candidate.name }}</td>
-                        <td class="px-3 py-2">{{ attempt.company.name }}</td>
-                        <td class="px-3 py-2">{{ attempt.level }}</td>
-                        <td class="px-3 py-2">{{ attempt.percentage }}%</td>
-                        <td class="px-3 py-2">{{ attempt.is_submitted|yesno:"Yes,No" }}</td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-3 py-6 text-center text-slate-500">No test attempts yet.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
 </div>
+
+<!-- Chart.js Loader and Initialization Scripts -->
+<script>
+(function () {
+    var chartJsUrl = 'https://cdn.jsdelivr.net/npm/chart.js';
+
+    function loadChartJs(callback) {
+        if (window.Chart) {
+            callback();
+            return;
+        }
+
+        var existingScript = document.getElementById('chartjs-loader');
+        if (existingScript) {
+            existingScript.addEventListener('load', callback, { once: true });
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.id = 'chartjs-loader';
+        script.src = chartJsUrl;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function initDashboardCharts() {
+        if (!window.Chart) return;
+
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#023e8a';
+
+        // ❶ Radar Chart (Test Stats)
+        var radarCanvas = document.getElementById('dashboardRadarChart');
+        if (radarCanvas) {
+            var candidateCount = {{ candidate_count }};
+            var subjectCount   = {{ subject_count }};
+            var quizCount      = {{ quiz_count }};
+            var attemptCount   = {{ attempt_count }};
+            var categoryCount  = {{ category_count }};
+
+            var radarChart = new Chart(radarCanvas, {
+                type: 'radar',
+                data: {
+                    labels: ['Candidates', 'Subjects', 'Questions', 'Attempts', 'Categories'],
+                    datasets: [{
+                        label: 'Total Metrics',
+                        data: [0, 0, 0, 0, 0], // animate from 0
+                        backgroundColor: 'rgba(72, 202, 228, 0.28)',
+                        borderColor: '#0096c7',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#03045e',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#03045e',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 950,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#03045e',
+                            titleColor: '#caf0f8',
+                            bodyColor: '#ffffff',
+                            borderColor: '#90e0ef',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        r: {
+                            grid: { color: 'rgba(2, 62, 138, 0.12)' },
+                            angleLines: { color: 'rgba(2, 62, 138, 0.15)' },
+                            ticks: { display: false },
+                            pointLabels: {
+                                color: '#03045e',
+                                font: { size: 10, weight: 700 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            window.setTimeout(function () {
+                radarChart.data.datasets[0].data = [candidateCount, subjectCount, quizCount, attemptCount, categoryCount];
+                radarChart.update();
+            }, 180);
+        }
+
+        // ❷ Bar Chart (Levels vs Pass Ratio)
+        var barCanvas = document.getElementById('dashboardLevelsBarChart');
+        if (barCanvas) {
+            var labels = [];
+            var totals = [];
+            var passeds = [];
+
+            {% for item in levels_data %}
+                labels.push('{{ item.level }}');
+                totals.push({{ item.total }});
+                passeds.push({{ item.passed }});
+            {% endfor %}
+
+            var zeroTotals = totals.map(function () { return 0; });
+            var zeroPasseds = passeds.map(function () { return 0; });
+
+            var barChart = new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Attempts',
+                            data: zeroTotals,
+                            backgroundColor: 'rgba(0, 119, 182, 0.65)',
+                            borderColor: '#0077b6',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Passed Attempts',
+                            data: zeroPasseds,
+                            backgroundColor: 'rgba(5, 150, 105, 0.72)',
+                            borderColor: '#059669',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 950,
+                        easing: 'easeOutQuart',
+                        delay: function (context) {
+                            return context.type === 'data' ? context.dataIndex * 110 : 0;
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#023e8a',
+                                font: { size: 11, weight: 700 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#03045e',
+                            titleColor: '#caf0f8',
+                            bodyColor: '#ffffff',
+                            borderColor: '#90e0ef',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#023e8a', font: { size: 11, weight: 700 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            precision: 0,
+                            grid: { color: 'rgba(2, 62, 138, .12)', borderDash: [3, 3] },
+                            ticks: { color: '#0077b6', font: { size: 11, weight: 600 } }
+                        }
+                    }
+                }
+            });
+
+            window.setTimeout(function () {
+                barChart.data.datasets[0].data = totals;
+                barChart.data.datasets[1].data = passeds;
+                barChart.update();
+            }, 180);
+        }
+    }
+
+    loadChartJs(initDashboardCharts);
+}());
+</script>
 {% endblock %}
