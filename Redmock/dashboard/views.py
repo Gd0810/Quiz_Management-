@@ -120,15 +120,24 @@ def dashboard_home(request):
         })
         
     category_count = CandidateTestAttempt.objects.filter(company=company).values('test_category').distinct().count()
+    home_chart_data = {
+        'candidateCount': Candidate.objects.filter(attempts__company=company).distinct().count(),
+        'subjectCount': TestSubject.objects.filter(company=company).count(),
+        'quizCount': Quiz.objects.filter(test_subject__company=company).count(),
+        'attemptCount': CandidateTestAttempt.objects.filter(company=company).count(),
+        'categoryCount': category_count,
+        'levels': levels_data,
+    }
 
     context = {
-        'subject_count': TestSubject.objects.filter(company=company).count(),
+        'subject_count': home_chart_data['subjectCount'],
         'subtitle_count': SubTitle.objects.filter(test_subject__company=company).count(),
-        'quiz_count': Quiz.objects.filter(test_subject__company=company).count(),
-        'candidate_count': Candidate.objects.filter(attempts__company=company).distinct().count(),
-        'attempt_count': CandidateTestAttempt.objects.filter(company=company).count(),
+        'quiz_count': home_chart_data['quizCount'],
+        'candidate_count': home_chart_data['candidateCount'],
+        'attempt_count': home_chart_data['attemptCount'],
         'category_count': category_count,
         'levels_data': levels_data,
+        'home_chart_data': home_chart_data,
         'subjects': TestSubject.objects.filter(company=company).select_related('company').annotate(
             quiz_total=Count('quizzes')
         )[:6],

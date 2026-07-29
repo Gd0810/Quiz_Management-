@@ -357,6 +357,7 @@
     </div>
 
     <!-- ── Two Charts Grid ── -->
+    {{ home_chart_data|json_script:"dashboard-home-chart-data" }}
     <div class="home-charts-grid">
         <!-- radar chart -->
         <div class="home-chart-card">
@@ -458,6 +459,24 @@
 <script>
 (function () {
     var chartJsUrl = 'https://cdn.jsdelivr.net/npm/chart.js';
+    var chartData = {
+        candidateCount: {{ candidate_count }},
+        subjectCount: {{ subject_count }},
+        quizCount: {{ quiz_count }},
+        attemptCount: {{ attempt_count }},
+        categoryCount: {{ category_count }},
+        levels: [
+            {% for item in levels_data %}
+                {
+                    label: '{{ item.level }}',
+                    total: {{ item.total }},
+                    passed: {{ item.passed }}
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+
+    window.dashboardHomeChartData = chartData;
 
     function loadChartJs(callback) {
         if (window.Chart) {
@@ -467,19 +486,27 @@
 
         var existingScript = document.getElementById('chartjs-loader');
         if (existingScript) {
-            existingScript.addEventListener('load', callback, { once: true });
+            if (existingScript.dataset.loaded === 'true') {
+                callback();
+            } else {
+                existingScript.addEventListener('load', callback, { once: true });
+            }
             return;
         }
 
         var script = document.createElement('script');
         script.id = 'chartjs-loader';
         script.src = chartJsUrl;
-        script.onload = callback;
+        script.onload = function () {
+            script.dataset.loaded = 'true';
+            callback();
+        };
         document.head.appendChild(script);
     }
 
     function initDashboardCharts() {
-        if (!window.Chart) return;
+        var activeData = window.dashboardHomeChartData || chartData;
+        if (!window.Chart || !document.getElementById('dashboardRadarChart')) return;
 
         Chart.defaults.font.family = "'Poppins', sans-serif";
         Chart.defaults.color = '#023e8a';
@@ -487,11 +514,14 @@
         // ❶ Radar Chart (Test Stats)
         var radarCanvas = document.getElementById('dashboardRadarChart');
         if (radarCanvas) {
-            var candidateCount = {{ candidate_count }};
-            var subjectCount   = {{ subject_count }};
-            var quizCount      = {{ quiz_count }};
-            var attemptCount   = {{ attempt_count }};
-            var categoryCount  = {{ category_count }};
+            var existingRadar = Chart.getChart ? Chart.getChart(radarCanvas) : null;
+            if (existingRadar) existingRadar.destroy();
+
+            var candidateCount = activeData.candidateCount;
+            var subjectCount   = activeData.subjectCount;
+            var quizCount      = activeData.quizCount;
+            var attemptCount   = activeData.attemptCount;
+            var categoryCount  = activeData.categoryCount;
 
             var radarChart = new Chart(radarCanvas, {
                 type: 'radar',
@@ -546,18 +576,15 @@
             }, 180);
         }
 
-        // ❷ Bar Chart (Levels vs Pass Ratio)
+        // ❷ Bar Chart (Difficulty Levels vs Pass Ratio)
         var barCanvas = document.getElementById('dashboardLevelsBarChart');
         if (barCanvas) {
-            var labels = [];
-            var totals = [];
-            var passeds = [];
+            var existingBar = Chart.getChart ? Chart.getChart(barCanvas) : null;
+            if (existingBar) existingBar.destroy();
 
-            {% for item in levels_data %}
-                labels.push('{{ item.level }}');
-                totals.push({{ item.total }});
-                passeds.push({{ item.passed }});
-            {% endfor %}
+            var labels = activeData.levels.map(function (item) { return item.label; });
+            var totals = activeData.levels.map(function (item) { return item.total; });
+            var passeds = activeData.levels.map(function (item) { return item.passed; });
 
             var zeroTotals = totals.map(function () { return 0; });
             var zeroPasseds = passeds.map(function () { return 0; });
@@ -635,7 +662,32 @@
         }
     }
 
-    loadChartJs(initDashboardCharts);
+    function scheduleDashboardCharts() {
+        window.clearTimeout(window.dashboardHomeChartTimer);
+        window.dashboardHomeChartTimer = window.setTimeout(function () {
+            loadChartJs(initDashboardCharts);
+        }, 40);
+    }
+
+    window.initDashboardHomeCharts = scheduleDashboardCharts;
+
+    if (!window.dashboardHomeChartEventsBound) {
+        window.dashboardHomeChartEventsBound = true;
+
+        document.addEventListener('DOMContentLoaded', scheduleDashboardCharts);
+        document.body.addEventListener('htmx:afterSettle', function (event) {
+            if (event.detail.target && event.detail.target.id === 'dashboard-page-content') {
+                scheduleDashboardCharts();
+            }
+        });
+        document.body.addEventListener('htmx:historyRestore', scheduleDashboardCharts);
+        window.addEventListener('pageshow', scheduleDashboardCharts);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) scheduleDashboardCharts();
+        });
+    }
+
+    scheduleDashboardCharts();
 }());
 </script>
 {% endblock %}
