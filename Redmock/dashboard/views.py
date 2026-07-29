@@ -1361,6 +1361,70 @@ def attempt_pdf(request):
 
 
 @company_login_required
+def attempt_excel(request):
+    queryset = (
+        CandidateTestAttempt.objects.filter(company=request.company)
+        .select_related('candidate', 'company')
+        .order_by('-created_at')
+    )
+
+    # Filter by candidate name or email
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(candidate__name__icontains=search_query) |
+            Q(candidate__email__icontains=search_query)
+        )
+
+    # Filter by level
+    level_filter = request.GET.get('level', '').strip()
+    if level_filter and level_filter != 'all':
+        if level_filter in ['experienced', 'experience']:
+            queryset = queryset.filter(level__in=['experienced', 'experience'])
+        else:
+            queryset = queryset.filter(level__iexact=level_filter)
+
+    test_category_filter = request.GET.get('test_category', 'all').strip()
+    valid_categories = {value for value, _label in CandidateTestAttempt.TEST_CATEGORY_CHOICES}
+    if test_category_filter != 'all':
+        if test_category_filter in valid_categories:
+            queryset = queryset.filter(test_category=test_category_filter)
+        else:
+            test_category_filter = 'all'
+
+    # Filter by minimum percentage
+    percentage_str = request.GET.get('percentage', '').strip()
+    if percentage_str:
+        try:
+            min_percentage = float(percentage_str)
+            queryset = queryset.filter(percentage__gte=min_percentage)
+        except ValueError:
+            pass
+
+    # Filter by date
+    date_str = request.GET.get('date', '').strip()
+    if date_str:
+        from django.utils.dateparse import parse_date
+        parsed_date = parse_date(date_str)
+        if parsed_date:
+            queryset = queryset.filter(created_at__date=parsed_date)
+
+    from django.http import HttpResponse
+    from django.utils import timezone
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="attempts_report_{timestamp}.xlsx"'
+    
+    from .allampt_exports.excel import generate_attempts_excel
+    generate_attempts_excel(queryset, request.company, response)
+    
+    return response
+
+
+@company_login_required
 def attempt_create(request):
     form = CandidateTestAttemptForm(request.POST or None, company=request.company)
     if request.method == 'POST' and form.is_valid():

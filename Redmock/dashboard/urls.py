@@ -32,6 +32,7 @@ urlpatterns = [
     path('candidates/<int:pk>/delete/', views.candidate_delete, name='candidate_delete'),
     path('attempts/', views.attempt_list, name='attempt_list'),
     path('attempts/pdf/', views.attempt_pdf, name='attempt_pdf'),
+    path('attempts/excel/', views.attempt_excel, name='attempt_excel'),
     path('attempts/create/', views.attempt_create, name='attempt_create'),
     path('attempts/<int:pk>/', views.attempt_detail, name='attempt_detail'),
     path('attempts/<int:pk>/pdf/', views.attempt_detail_pdf, name='attempt_detail_pdf'),
