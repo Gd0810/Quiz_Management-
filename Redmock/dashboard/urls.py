@@ -30,6 +30,7 @@ urlpatterns = [
     path('candidates/excel/', views.candidate_excel, name='candidate_excel'),
     path('candidates/create/', views.candidate_create, name='candidate_create'),
     path('candidates/<int:pk>/', views.candidate_detail, name='candidate_detail'),
+    path('candidates/<int:pk>/pdf/', views.candidate_detail_pdf, name='candidate_detail_pdf'),
     path('candidates/<int:pk>/edit/', views.candidate_update, name='candidate_update'),
     path('candidates/<int:pk>/delete/', views.candidate_delete, name='candidate_delete'),
     path('attempts/', views.attempt_list, name='attempt_list'),

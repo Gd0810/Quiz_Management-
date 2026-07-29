@@ -193,6 +193,9 @@
             <a href="{% url 'dashboard:candidate_list' %}" class="cdet-back-btn">
                 <iconify-icon icon="mdi:arrow-left"></iconify-icon> Back
             </a>
+            <a href="{% url 'dashboard:candidate_detail_pdf' candidate.pk %}" class="cdet-edit-btn" style="background: #be123c; box-shadow: 0 4px 14px rgba(190, 18, 60, .28);">
+                <iconify-icon icon="mdi:file-pdf-box" style="font-size: 1.15rem;"></iconify-icon> Download PDF
+            </a>
             <a href="{% url 'dashboard:candidate_update' candidate.pk %}" class="cdet-edit-btn">
                 <iconify-icon icon="mdi:pencil-outline"></iconify-icon> Edit
             </a>
