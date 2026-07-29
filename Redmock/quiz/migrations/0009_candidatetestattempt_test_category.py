@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
             name='test_category',
             field=models.CharField(
                 choices=[
-                    ('interview_qizze', 'Interview Qizze'),
+                    ('interview_quiz', 'Interview Quiz'),
                     ('academy_mock', 'Academy Mock'),
                     ('internship_mock', 'Internship Mock'),
                     ('general_mock', 'General Mock'),

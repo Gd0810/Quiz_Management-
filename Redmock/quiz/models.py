@@ -38,7 +38,7 @@ class Candidate(models.Model):
 class CandidateTestAttempt(models.Model):
     SESSION_SINGLE = 'single'
     SESSION_MULTI = 'multi'
-    TEST_CATEGORY_INTERVIEW = 'interview_qizze'
+    TEST_CATEGORY_INTERVIEW = 'interview_quiz'
     TEST_CATEGORY_ACADEMY = 'academy_mock'
     TEST_CATEGORY_INTERNSHIP = 'internship_mock'
     TEST_CATEGORY_GENERAL = 'general_mock'
@@ -47,7 +47,7 @@ class CandidateTestAttempt(models.Model):
         (SESSION_MULTI, 'Multi'),
     ]
     TEST_CATEGORY_CHOICES = [
-        (TEST_CATEGORY_INTERVIEW, 'Interview Qizze'),
+        (TEST_CATEGORY_INTERVIEW, 'Interview Quiz'),
         (TEST_CATEGORY_ACADEMY, 'Academy Mock'),
         (TEST_CATEGORY_INTERNSHIP, 'Internship Mock'),
         (TEST_CATEGORY_GENERAL, 'General Mock'),
