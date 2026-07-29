@@ -1886,6 +1886,7 @@ document.getElementById('btnSubmit').addEventListener('click', function () {
 window.closeModal    = function () { document.getElementById('submitModal').classList.remove('open'); };
 window.confirmSubmit = function () {
     if (!isInteractionLocked()) {
+        submittedByTimer = true;
         clearAttemptState();
         formEl.submit();
     }
