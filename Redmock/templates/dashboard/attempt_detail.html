@@ -546,67 +546,7 @@
 
     </div><!-- /chart-grid -->
 
-    {% if attempt.tab_switch_guard_enabled or attempt.right_click_disable_enabled %}
-    <!-- ── Security Breaches Section ── -->
-    <div class="adet-card" style="margin-top:20px;">
-        <div class="adet-card-head" style="background: linear-gradient(90deg, #fff1f2, #ffe4e6); border-bottom: 1px solid #fecdd3;">
-            <span class="adet-card-ico" style="background: #e11d48; color: #fff; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.25);"><iconify-icon icon="mdi:shield-alert-outline"></iconify-icon></span>
-            <div class="adet-card-lbl">
-                <span class="adet-card-name" style="color: #9f1239;">Security Breach Analysis</span>
-                <span class="adet-card-hint" style="color: #e11d48;">Real-time integrity monitor &amp; integrity logs</span>
-            </div>
-        </div>
-        <div class="adet-card-body" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-            
-            {% if attempt.tab_switch_guard_enabled %}
-            <!-- Tab Switch Guard Stats -->
-            <div class="sec-guard-card" style="border: 1px solid #fecdd3; border-radius: 12px; padding: 20px; background: #fff8f8; display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #9f1239; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
-                        <iconify-icon icon="mdi:tab" style="font-size: 1.2rem;"></iconify-icon> Tab Switch Guard
-                    </span>
-                    <span class="attempt-pill" style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.72rem; padding: 4px 8px; border-radius: 99px;">ENABLED</span>
-                </div>
-                <div style="border-top: 1px dashed #fecdd3; margin: 4px 0;"></div>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-size: 0.85rem; color: #881337; font-weight: 600;">Trying to security breach:</span>
-                    {% if attempt.tab_switch_count > 0 %}
-                        <span style="font-weight: 800; color: #e11d48; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 4px;">
-                            TRUE <span style="font-size: 0.78rem; font-weight: 600; color: #9f1239;">({{ attempt.tab_switch_count }} times)</span>
-                        </span>
-                    {% else %}
-                        <span style="font-weight: 800; color: #059669; font-size: 0.95rem;">FALSE (0)</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if attempt.right_click_disable_enabled %}
-            <!-- Right Click Disable Stats -->
-            <div class="sec-guard-card" style="border: 1px solid #fecdd3; border-radius: 12px; padding: 20px; background: #fff8f8; display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #9f1239; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
-                        <iconify-icon icon="mdi:mouse" style="font-size: 1.2rem;"></iconify-icon> Right Click Disable
-                    </span>
-                    <span class="attempt-pill" style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.72rem; padding: 4px 8px; border-radius: 99px;">ENABLED</span>
-                </div>
-                <div style="border-top: 1px dashed #fecdd3; margin: 4px 0;"></div>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-size: 0.85rem; color: #881337; font-weight: 600;">Trying to security breach:</span>
-                    {% if right_click_count > 0 %}
-                        <span style="font-weight: 800; color: #e11d48; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 4px;">
-                            TRUE <span style="font-size: 0.78rem; font-weight: 600; color: #9f1239;">({{ right_click_count }} times)</span>
-                        </span>
-                    {% else %}
-                        <span style="font-weight: 800; color: #059669; font-size: 0.95rem;">FALSE (0)</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-        </div>
-    </div>
-    {% endif %}
+    
 
 
     <!-- ── Bottom row: Session details (left) + Longest Question (right) ── -->
@@ -755,6 +695,68 @@
         </div>
 
     </div><!-- /bottom-grid -->
+
+    {% if attempt.tab_switch_guard_enabled or attempt.right_click_disable_enabled %}
+    <!-- ── Security Breaches Section ── -->
+    <div class="adet-card" style="margin-top:20px;">
+        <div class="adet-card-head" style="background: linear-gradient(90deg, #fff1f2, #ffe4e6); border-bottom: 1px solid #fecdd3;">
+            <span class="adet-card-ico" style="background: #e11d48; color: #fff; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.25);"><iconify-icon icon="mdi:shield-alert-outline"></iconify-icon></span>
+            <div class="adet-card-lbl">
+                <span class="adet-card-name" style="color: #9f1239;">Security Breach Analysis</span>
+                <span class="adet-card-hint" style="color: #e11d48;">Real-time integrity monitor &amp; integrity logs</span>
+            </div>
+        </div>
+        <div class="adet-card-body" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            
+            {% if attempt.tab_switch_guard_enabled %}
+            <!-- Tab Switch Guard Stats -->
+            <div class="sec-guard-card" style="border: 1px solid #fecdd3; border-radius: 12px; padding: 20px; background: #fff8f8; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-weight: 700; color: #9f1239; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <iconify-icon icon="mdi:tab" style="font-size: 1.2rem;"></iconify-icon> Tab Switch Guard
+                    </span>
+                    <span class="attempt-pill" style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.72rem; padding: 4px 8px; border-radius: 99px;">ENABLED</span>
+                </div>
+                <div style="border-top: 1px dashed #fecdd3; margin: 4px 0;"></div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.85rem; color: #881337; font-weight: 600;">Trying to security breach:</span>
+                    {% if attempt.tab_switch_count > 0 %}
+                        <span style="font-weight: 800; color: #e11d48; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 4px;">
+                            TRUE <span style="font-size: 0.78rem; font-weight: 600; color: #9f1239;">({{ attempt.tab_switch_count }} times)</span>
+                        </span>
+                    {% else %}
+                        <span style="font-weight: 800; color: #059669; font-size: 0.95rem;">FALSE (0)</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if attempt.right_click_disable_enabled %}
+            <!-- Right Click Disable Stats -->
+            <div class="sec-guard-card" style="border: 1px solid #fecdd3; border-radius: 12px; padding: 20px; background: #fff8f8; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-weight: 700; color: #9f1239; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <iconify-icon icon="mdi:mouse" style="font-size: 1.2rem;"></iconify-icon> Right Click Disable
+                    </span>
+                    <span class="attempt-pill" style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.72rem; padding: 4px 8px; border-radius: 99px;">ENABLED</span>
+                </div>
+                <div style="border-top: 1px dashed #fecdd3; margin: 4px 0;"></div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.85rem; color: #881337; font-weight: 600;">Trying to security breach:</span>
+                    {% if right_click_count > 0 %}
+                        <span style="font-weight: 800; color: #e11d48; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 4px;">
+                            TRUE <span style="font-size: 0.78rem; font-weight: 600; color: #9f1239;">({{ right_click_count }} times)</span>
+                        </span>
+                    {% else %}
+                        <span style="font-weight: 800; color: #059669; font-size: 0.95rem;">FALSE (0)</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
 
 </section>
 
