@@ -457,6 +457,30 @@ button { font-family: inherit; cursor: pointer; }
 }
 .info-list strong { display: block; font-size: 0.92rem; color: var(--ink-0); margin-bottom: 2px; }
 .info-list span { font-size: 0.9rem; color: var(--ink-2); }
+.info-list a, .info-link {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.info-list a::after, .info-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background: var(--c4);
+  transition: width 0.3s var(--ease-out);
+}
+.info-list a:hover, .info-link:hover {
+  color: var(--ink-0);
+}
+.info-list a:hover::after, .info-link:hover::after {
+  width: 100%;
+}
 
 .social-row { display: flex; gap: 12px; margin-bottom: 34px; }
 .social-row a {
