@@ -306,7 +306,7 @@
         {% endif %}
 
         <div class="security-grid">
-            {% if form.full_screen_lock %}
+            {% if form.fields.full_screen_lock.is_allowed %}
                 <label class="security-card" for="{{ form.full_screen_lock.id_for_label }}">
                     <span class="security-card-icon"><iconify-icon icon="mdi:fullscreen"></iconify-icon></span>
                     <span class="security-card-body">
@@ -321,7 +321,7 @@
                 </label>
             {% endif %}
 
-            {% if form.pause_lock %}
+            {% if form.fields.pause_lock.is_allowed %}
                 <label class="security-card" for="{{ form.pause_lock.id_for_label }}">
                     <span class="security-card-icon"><iconify-icon icon="mdi:pause-octagon-outline"></iconify-icon></span>
                     <span class="security-card-body">
@@ -336,7 +336,7 @@
                 </label>
             {% endif %}
 
-            {% if form.tab_switch_guard_enabled %}
+            {% if form.fields.tab_switch_guard_enabled.is_allowed %}
                 <label class="security-card" for="{{ form.tab_switch_guard_enabled.id_for_label }}">
                     <span class="security-card-icon"><iconify-icon icon="mdi:monitor-eye"></iconify-icon></span>
                     <span class="security-card-body">
@@ -351,7 +351,7 @@
                 </label>
             {% endif %}
 
-            {% if form.copy_paste_block_enabled %}
+            {% if form.fields.copy_paste_block_enabled.is_allowed %}
                 <label class="security-card" for="{{ form.copy_paste_block_enabled.id_for_label }}">
                     <span class="security-card-icon"><iconify-icon icon="mdi:content-copy"></iconify-icon></span>
                     <span class="security-card-body">
@@ -366,7 +366,7 @@
                 </label>
             {% endif %}
 
-            {% if form.right_click_disable_enabled %}
+            {% if form.fields.right_click_disable_enabled.is_allowed %}
                 <label class="security-card" for="{{ form.right_click_disable_enabled.id_for_label }}">
                     <span class="security-card-icon"><iconify-icon icon="mdi:mouse"></iconify-icon></span>
                     <span class="security-card-body">
@@ -382,11 +382,11 @@
             {% endif %}
         </div>
 
-        {% if not form.full_screen_lock and not form.pause_lock and not form.tab_switch_guard_enabled and not form.copy_paste_block_enabled and not form.right_click_disable_enabled %}
+        {% if not form.fields.full_screen_lock.is_allowed and not form.fields.pause_lock.is_allowed and not form.fields.tab_switch_guard_enabled.is_allowed and not form.fields.copy_paste_block_enabled.is_allowed and not form.fields.right_click_disable_enabled.is_allowed %}
             <div class="security-empty">No security features are available for this company yet.</div>
         {% endif %}
 
-        {% if form.max_violation_warnings %}
+        {% if form.fields.max_violation_warnings.is_allowed %}
             <div class="security-standalone-grid">
                 <div class="security-standalone-field">
                     <label for="{{ form.max_violation_warnings.id_for_label }}">{{ form.max_violation_warnings.label }}</label>
@@ -399,7 +399,7 @@
         {% endif %}
 
         <div class="security-password-grid">
-            {% if form.exam_control_password %}
+            {% if form.fields.exam_control_password %}
                 <div class="security-field">
                     <label for="{{ form.exam_control_password.id_for_label }}">{{ form.exam_control_password.label }}</label>
                     {{ form.exam_control_password }}
@@ -412,7 +412,7 @@
                 </div>
             {% endif %}
 
-            {% if form.exam_control_password_confirm %}
+            {% if form.fields.exam_control_password_confirm %}
                 <div class="security-field">
                     <label for="{{ form.exam_control_password_confirm.id_for_label }}">{{ form.exam_control_password_confirm.label }}</label>
                     {{ form.exam_control_password_confirm }}

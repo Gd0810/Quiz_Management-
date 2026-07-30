@@ -46,12 +46,17 @@ class CompanySecurityForm(forms.ModelForm):
             'right_click_disable_enabled': self.instance.allow_right_click_disable,
         }
         for field_name, is_allowed in gated_fields.items():
-            if is_allowed:
-                continue
-            self.fields.pop(field_name, None)
+            if field_name in self.fields:
+                self.fields[field_name].is_allowed = is_allowed
+                if not is_allowed:
+                    self.fields[field_name].disabled = True
+                    self.fields[field_name].required = False
 
-        if not self.instance.allow_tab_switch_guard:
-            self.fields.pop('max_violation_warnings', None)
+        if 'max_violation_warnings' in self.fields:
+            self.fields['max_violation_warnings'].is_allowed = self.instance.allow_tab_switch_guard
+            if not self.instance.allow_tab_switch_guard:
+                self.fields['max_violation_warnings'].disabled = True
+                self.fields['max_violation_warnings'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
