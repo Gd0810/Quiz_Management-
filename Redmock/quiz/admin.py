@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html_join
 
-from .models import Candidate, CandidateTestAttempt
+from .models import Candidate, CandidateTestAttempt, Contact
 
 
 @admin.register(Candidate)
@@ -63,3 +63,11 @@ class CandidateTestAttemptAdmin(admin.ModelAdmin):
         )
 
     candidate_details_preview.short_description = 'Candidate Details'
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('name', 'mail', 'phone_number', 'company', 'created_at')
+    search_fields = ('name', 'mail', 'phone_number', 'company', 'message')
+    list_filter = ('created_at',)
+    readonly_fields = ('created_at',)

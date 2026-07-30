@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from functools import wraps
 
-from quiz.models import Candidate, CandidateTestAttempt
+from quiz.models import Candidate, CandidateTestAttempt, Contact
 
 from .forms import (
     CandidateForm,
@@ -61,6 +61,26 @@ def _parse_positive_int(raw_value, default=0):
 
 
 def landing_page(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        mail = request.POST.get('email', '').strip() or request.POST.get('mail', '').strip()
+        phone_number = request.POST.get('phone', '').strip() or request.POST.get('phone_number', '').strip()
+        company = request.POST.get('company', '').strip() or request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
+
+        if name and mail and message:
+            Contact.objects.create(
+                name=name,
+                mail=mail,
+                phone_number=phone_number,
+                company=company,
+                message=message,
+            )
+            messages.success(request, 'Thank you! Your message has been sent successfully.')
+            return redirect('landing')
+        else:
+            messages.error(request, 'Please fill in all required fields.')
+
     return render(
         request,
         'landing.html',

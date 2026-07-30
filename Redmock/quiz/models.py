@@ -3,7 +3,6 @@ import secrets
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
-
 from dashboard.models import Company
 
 
@@ -126,3 +125,18 @@ class CandidateTestAttempt(models.Model):
             0,
         )
         return max((self.duration_minutes * 60) - consumed_seconds, 0)
+
+
+class Contact(models.Model):
+    name = models.CharField(max_length=150)
+    mail = models.EmailField(max_length=254)
+    phone_number = models.CharField(max_length=30, blank=True)
+    company = models.CharField(max_length=200, blank=True)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.company or self.mail}"

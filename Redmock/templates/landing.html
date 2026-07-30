@@ -1,6 +1,6 @@
 {% extends "landing_base.html" %}
 {% load static %}
-
+{% include "toaster.html" %}
 {% block title %}Redmock | Landing{% endblock %}
 
 {% block content %}
@@ -229,7 +229,8 @@
       </div>
     </div>
 
-    <form class="contact-form" id="contactForm" data-aos="fade-left">
+    <form class="contact-form" id="contactForm" method="post" action="{% url 'landing' %}" data-aos="fade-left">
+      {% csrf_token %}
       <div class="form-row">
         <div class="field">
           <label for="name">Name</label>
@@ -241,9 +242,15 @@
         </div>
       </div>
 
-      <div class="field">
-        <label for="subject">Company / Institution</label>
-        <input type="text" id="subject" name="subject" placeholder="Company / Institution" required>
+      <div class="form-row">
+        <div class="field">
+          <label for="company">Company / Institution</label>
+          <input type="text" id="company" name="company" placeholder="Company / Institution">
+        </div>
+        <div class="field">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="+91 9876543210">
+        </div>
       </div>
 
       <div class="field">

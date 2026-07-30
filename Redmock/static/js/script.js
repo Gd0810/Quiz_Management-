@@ -121,27 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ---------------- Contact form (front-end only demo) ---------------- */
-  const form = document.getElementById('contactForm');
-  const note = document.getElementById('formNote');
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const label = submitBtn.querySelector('.btn-label');
-    const originalLabel = label.textContent;
-
-    label.textContent = 'Sending...';
-    submitBtn.disabled = true;
-
-    setTimeout(() => {
-      label.textContent = originalLabel;
-      submitBtn.disabled = false;
-      note.textContent = "Thanks — we've received your message and will reply within one working day.";
-      form.reset();
-      setTimeout(() => { note.textContent = ''; }, 5000);
-    }, 900);
-  });
 
   /* ---------------- Ambient particle background (Canvas) ---------------- */
   const canvas = document.getElementById('bg-particles');
