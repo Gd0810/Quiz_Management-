@@ -484,7 +484,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .map-fake {
   position: relative;
-  height: 500px;
+  height: 550px;
   width: 100%;
   background:
     radial-gradient(circle at 30% 30%, rgba(72,202,228,0.35), transparent 55%),
