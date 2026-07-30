@@ -446,7 +446,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .contact-info .section-head { margin: 0 0 30px; text-align: left; max-width: none; padding: 0; }
 
-.info-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 30px; }
+.info-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 30px; margin-top: 20px; }
 .info-list li { display: flex; align-items: flex-start; gap: 14px; }
 .info-icon {
   width: 42px; height: 42px; flex-shrink: 0;
