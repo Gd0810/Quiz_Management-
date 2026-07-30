@@ -132,7 +132,7 @@ class Contact(models.Model):
     mail = models.EmailField(max_length=254)
     phone_number = models.CharField(max_length=30, blank=True)
     company = models.CharField(max_length=200, blank=True)
-    message = models.TextField()
+    message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

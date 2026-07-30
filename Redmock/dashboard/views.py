@@ -68,7 +68,7 @@ def landing_page(request):
         company = request.POST.get('company', '').strip() or request.POST.get('subject', '').strip()
         message = request.POST.get('message', '').strip()
 
-        if name and mail and message:
+        if name and mail:
             Contact.objects.create(
                 name=name,
                 mail=mail,
