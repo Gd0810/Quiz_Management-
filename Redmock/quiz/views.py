@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 import json
 import logging
+import threading
 
 from django.contrib import messages
 from django.core.mail import EmailMessage
@@ -654,6 +655,17 @@ def _send_attempt_link_email(request, attempt):
     return True
 
 
+def _send_attempt_link_email_async(request, attempt):
+    def send_task():
+        try:
+            _send_attempt_link_email(request, attempt)
+        except Exception as e:
+            print(f'[Redmock Mail Error] Async mail dispatch failed for attempt {attempt.public_slug}: {e}', flush=True)
+
+    thread = threading.Thread(target=send_task, daemon=True)
+    thread.start()
+
+
 def _answers_from_request(request, answer_rows):
     updated = []
     for idx, row in enumerate(answer_rows):
@@ -956,7 +968,7 @@ def begin_test(request):
         ) or 3,
         started_at=None,
     )
-    _send_attempt_link_email(request, attempt)
+    _send_attempt_link_email_async(request, attempt)
     request.session.pop(PENDING_TEST_SETUP_SESSION_KEY, None)
     request.session.pop(PENDING_SECURITY_SETUP_SESSION_KEY, None)
     return redirect('quiz:ready', attempt_slug=attempt.public_slug)
