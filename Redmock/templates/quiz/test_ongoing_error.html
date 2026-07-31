@@ -19,7 +19,7 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body { background: var(--c9); font-family: 'Poppins', sans-serif; min-height: 100vh; }
+    body { background: #f4fcff; font-family: 'Poppins', sans-serif; min-height: 100vh; }
 
     .to-container {
         min-height: 100vh;
@@ -28,65 +28,84 @@
         align-items: center;
         justify-content: center;
         padding: 2.5rem 1.5rem;
-        background: radial-gradient(circle at 50% 30%, rgba(239, 68, 68, 0.15), transparent 70%), var(--c9);
+        background:
+            radial-gradient(circle at 50% 20%, rgba(239, 68, 68, 0.08), transparent 60%),
+            radial-gradient(circle at 85% 90%, rgba(0, 180, 216, 0.12), transparent 55%),
+            linear-gradient(160deg, var(--c0) 0%, #f4fcff 45%, #ffffff 100%);
     }
 
     .to-card {
         width: 100%;
         max-width: 580px;
-        background: rgba(3, 4, 94, 0.85);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(239, 68, 68, 0.35);
-        border-radius: 24px;
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        border-radius: 26px;
         padding: 2.75rem 2.25rem;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+        box-shadow:
+            0 30px 60px -20px rgba(2, 62, 138, 0.16),
+            0 0 0 1px rgba(202, 240, 248, 0.5);
         text-align: center;
         position: relative;
         overflow: hidden;
     }
 
+    .to-card::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
     .to-badge {
-        width: 76px;
-        height: 76px;
+        position: relative;
+        width: 80px;
+        height: 80px;
         margin: 0 auto 1.5rem;
         border-radius: 50%;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.4));
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
         border: 1.5px solid #ef4444;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fca5a5;
+        color: #dc2626;
         font-size: 2.5rem;
-        box-shadow: 0 0 35px rgba(239, 68, 68, 0.35);
+        box-shadow: 0 12px 28px rgba(239, 68, 68, 0.22);
     }
 
     .to-title {
-        color: #ffffff;
-        font-size: 1.75rem;
+        position: relative;
+        color: var(--c9);
+        font-size: 1.8rem;
         font-weight: 800;
         letter-spacing: -0.02em;
         margin-bottom: 0.75rem;
     }
 
     .to-desc {
-        color: #fca5a5;
-        font-size: 1.05rem;
+        position: relative;
+        color: #b91c1c;
+        font-size: 1.02rem;
         font-weight: 600;
         margin-bottom: 1.75rem;
         line-height: 1.5;
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.25);
+        background: #fef2f2;
+        border: 1px solid #fecaca;
         border-radius: 12px;
         padding: 1rem 1.25rem;
     }
 
     .to-info-pill {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-around;
-        background: rgba(2, 3, 58, 0.7);
-        border: 1px solid rgba(72, 202, 228, 0.2);
+        background: #f6fbff;
+        border: 1px solid var(--c0);
         border-radius: 14px;
         padding: 1rem;
         margin-bottom: 2rem;
@@ -101,19 +120,20 @@
     .to-info-label {
         font-size: 0.7rem;
         text-transform: uppercase;
-        color: var(--c3);
+        color: var(--c6);
         letter-spacing: 0.05em;
     }
 
     .to-info-val {
         font-size: 0.98rem;
         font-weight: 700;
-        color: #ffffff;
+        color: var(--c9);
     }
 
     .to-sub-note {
+        position: relative;
         font-size: 0.85rem;
-        color: var(--c1);
+        color: #4d6a89;
         line-height: 1.45;
     }
 </style>
