@@ -117,7 +117,7 @@ class CandidateTestAttempt(models.Model):
 
     def remaining_seconds(self, now=None):
         if not self.started_at:
-            return 0
+            return self.duration_minutes * 60
         now = now or timezone.now()
         elapsed_seconds = int((now - self.started_at).total_seconds())
         consumed_seconds = max(

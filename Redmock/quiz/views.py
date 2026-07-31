@@ -620,7 +620,7 @@ def _send_attempt_link_email(request, attempt):
     if not company.mail_sender_ready or attempt.test_link_email_sent_at:
         return False
 
-    test_link = request.build_absolute_uri(reverse('quiz:take', args=[attempt.public_slug]))
+    test_link = request.build_absolute_uri(reverse('quiz:ready', args=[attempt.public_slug]))
     print(
         '[Redmock Mail] sending test link: '
         f'attempt={attempt.public_slug}, to={attempt.candidate.email}, '
@@ -936,17 +936,40 @@ def begin_test(request):
             security.get('max_violation_warnings', request.company.max_violation_warnings),
             request.company.max_violation_warnings or 3,
         ) or 3,
-        started_at=timezone.now(),
+        started_at=None,
     )
+    _send_attempt_link_email(request, attempt)
     request.session.pop(PENDING_TEST_SETUP_SESSION_KEY, None)
     request.session.pop(PENDING_SECURITY_SETUP_SESSION_KEY, None)
-    return redirect('quiz:take', attempt_slug=attempt.public_slug)
+    return redirect('quiz:ready', attempt_slug=attempt.public_slug)
+
+
+def test_ready_confirmation(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
+    if attempt.is_submitted:
+        return redirect('quiz:result', attempt_slug=attempt.public_slug)
+
+    test_link = request.build_absolute_uri(reverse('quiz:ready', args=[attempt.public_slug]))
+    return render(
+        request,
+        'quiz/ready_confirmation.html',
+        {
+            'attempt': attempt,
+            'test_link': test_link,
+            'candidate': attempt.candidate,
+            'company': attempt.company,
+        },
+    )
 
 
 def take_test(request, attempt_slug):
     attempt = _public_attempt_or_404(attempt_slug)
     if attempt.is_submitted:
         return redirect('quiz:result', attempt_slug=attempt.public_slug)
+
+    if not attempt.started_at:
+        attempt.started_at = timezone.now()
+        attempt.save(update_fields=['started_at'])
 
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
