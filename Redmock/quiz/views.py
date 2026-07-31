@@ -622,12 +622,11 @@ def _send_attempt_link_email(request, attempt):
         return False
 
     test_link = request.build_absolute_uri(reverse('quiz:ready', args=[attempt.public_slug]))
-    print(
+    logger.info(
         '[Redmock Mail] sending test link: '
         f'attempt={attempt.public_slug}, to={attempt.candidate.email}, '
         f'host={company.smtp_host}, port={company.smtp_port}, tls={company.smtp_use_tls}, '
-        f'from={company.effective_smtp_from_email}, link={test_link}',
-        flush=True,
+        f'from={company.effective_smtp_from_email}, link={test_link}'
     )
     subject = f'{company.name} test link'
     body = (
@@ -647,10 +646,9 @@ def _send_attempt_link_email(request, attempt):
     message.send(fail_silently=False)
     attempt.test_link_email_sent_at = timezone.now()
     attempt.save(update_fields=['test_link_email_sent_at'])
-    print(
+    logger.info(
         '[Redmock Mail] test link sent successfully: '
-        f'attempt={attempt.public_slug}, to={attempt.candidate.email}',
-        flush=True,
+        f'attempt={attempt.public_slug}, to={attempt.candidate.email}'
     )
     return True
 
@@ -660,7 +658,7 @@ def _send_attempt_link_email_async(request, attempt):
         try:
             _send_attempt_link_email(request, attempt)
         except Exception as e:
-            print(f'[Redmock Mail Error] Async mail dispatch failed for attempt {attempt.public_slug}: {e}', flush=True)
+            logger.error(f'[Redmock Mail Error] Async mail dispatch failed for attempt {attempt.public_slug}: {e}')
 
     thread = threading.Thread(target=send_task, daemon=True)
     thread.start()
@@ -1140,14 +1138,13 @@ def get_live_status(request, attempt_slug):
         'answers_json': attempt.answers_json or [],
         'multi_user_enabled': attempt.multi_user_enabled,
     })
-    print(
+    logger.info(
         '[Redmock Mail] take-test page loaded: '
         f'attempt={attempt.public_slug}, candidate_email={attempt.candidate.email}, '
         f'enabled={attempt.company.mail_sender_enabled}, '
         f'host_set={bool(attempt.company.smtp_host)}, port={attempt.company.smtp_port}, '
         f'username_set={bool(attempt.company.smtp_username)}, app_key_set={bool(attempt.company.smtp_app_key)}, '
-        f'ready={attempt.company.mail_sender_ready}, already_sent={bool(attempt.test_link_email_sent_at)}',
-        flush=True,
+        f'ready={attempt.company.mail_sender_ready}, already_sent={bool(attempt.test_link_email_sent_at)}'
     )
     return render(request, 'quiz/take_test.html', context)
 
@@ -1156,19 +1153,17 @@ def get_live_status(request, attempt_slug):
 def send_test_link_email(request, attempt_slug):
     attempt = _public_attempt_or_404(attempt_slug)
     if not attempt.company.mail_sender_ready:
-        print(
+        logger.info(
             '[Redmock Mail] skipped test link email: '
             f'attempt={attempt.public_slug}, enabled={attempt.company.mail_sender_enabled}, '
             f'host_set={bool(attempt.company.smtp_host)}, port={attempt.company.smtp_port}, '
-            f'username_set={bool(attempt.company.smtp_username)}, app_key_set={bool(attempt.company.smtp_app_key)}',
-            flush=True,
+            f'username_set={bool(attempt.company.smtp_username)}, app_key_set={bool(attempt.company.smtp_app_key)}'
         )
         return JsonResponse({'status': 'skipped'})
     if attempt.test_link_email_sent_at:
-        print(
+        logger.info(
             '[Redmock Mail] skipped test link email: '
-            f'attempt={attempt.public_slug}, reason=already_sent',
-            flush=True,
+            f'attempt={attempt.public_slug}, reason=already_sent'
         )
         return JsonResponse({'status': 'already_sent'})
 
@@ -1176,10 +1171,9 @@ def send_test_link_email(request, attempt_slug):
         sent = _send_attempt_link_email(request, attempt)
     except Exception as exc:
         logger.exception('Failed to send test link email for attempt %s', attempt.public_slug)
-        print(
+        logger.warning(
             '[Redmock Mail] failed to send test link email: '
-            f'attempt={attempt.public_slug}, error={exc}',
-            flush=True,
+            f'attempt={attempt.public_slug}, error={exc}'
         )
         return JsonResponse({'status': 'failed'}, status=202)
 

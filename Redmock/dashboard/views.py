@@ -1,6 +1,9 @@
 import json
+import logging
 from io import BytesIO
 from collections import Counter
+
+logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
@@ -222,13 +225,12 @@ def company_mail_settings(request):
     form = CompanyMailSettingsForm(request.POST or None, instance=request.company)
     if request.method == 'POST' and form.is_valid():
         company = form.save()
-        print(
+        logger.info(
             '[Redmock Mail] settings saved: '
             f'company={company.name!r}, enabled={company.mail_sender_enabled}, '
             f'host_set={bool(company.smtp_host)}, port={company.smtp_port}, '
             f'username_set={bool(company.smtp_username)}, app_key_set={bool(company.smtp_app_key)}, '
-            f'use_tls={company.smtp_use_tls}, ready={company.mail_sender_ready}',
-            flush=True,
+            f'use_tls={company.smtp_use_tls}, ready={company.mail_sender_ready}'
         )
         messages.success(request, 'Mail settings updated successfully.')
         return redirect('dashboard:company_mail_settings')
