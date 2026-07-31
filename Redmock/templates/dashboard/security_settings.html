@@ -380,9 +380,24 @@
                     <span class="security-switch" aria-hidden="true"></span>
                 </label>
             {% endif %}
+
+            {% if form.fields.multi_user_enabled.is_allowed %}
+                <label class="security-card" for="{{ form.multi_user_enabled.id_for_label }}">
+                    <span class="security-card-icon"><iconify-icon icon="mdi:account-group"></iconify-icon></span>
+                    <span class="security-card-body">
+                        <span class="security-card-title">Multi-User Access</span>
+                        <span class="security-card-text">Allow multiple browsers to open the same test link with shared timer &amp; live answer sync</span>
+                        {% if form.multi_user_enabled.errors %}
+                            <span class="security-error">{{ form.multi_user_enabled.errors|join:", " }}</span>
+                        {% endif %}
+                    </span>
+                    <input class="security-switch-input" type="checkbox" name="{{ form.multi_user_enabled.html_name }}" id="{{ form.multi_user_enabled.id_for_label }}" {% if form.multi_user_enabled.value %}checked{% endif %}>
+                    <span class="security-switch" aria-hidden="true"></span>
+                </label>
+            {% endif %}
         </div>
 
-        {% if not form.fields.full_screen_lock.is_allowed and not form.fields.pause_lock.is_allowed and not form.fields.tab_switch_guard_enabled.is_allowed and not form.fields.copy_paste_block_enabled.is_allowed and not form.fields.right_click_disable_enabled.is_allowed %}
+        {% if not form.fields.full_screen_lock.is_allowed and not form.fields.pause_lock.is_allowed and not form.fields.tab_switch_guard_enabled.is_allowed and not form.fields.copy_paste_block_enabled.is_allowed and not form.fields.right_click_disable_enabled.is_allowed and not form.fields.multi_user_enabled.is_allowed %}
             <div class="security-empty">No security features are available for this company yet.</div>
         {% endif %}
 

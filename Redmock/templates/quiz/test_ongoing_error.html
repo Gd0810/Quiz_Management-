@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Test Ongoing | Redmock{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --c0: #caf0f8;
+        --c1: #ade8f4;
+        --c2: #90e0ef;
+        --c3: #48cae4;
+        --c4: #00b4d8;
+        --c5: #0096c7;
+        --c6: #0077b6;
+        --c7: #023e8a;
+        --c8: #03045e;
+        --c9: #02033a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { background: var(--c9); font-family: 'Poppins', sans-serif; min-height: 100vh; }
+
+    .to-container {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.5rem;
+        background: radial-gradient(circle at 50% 30%, rgba(239, 68, 68, 0.15), transparent 70%), var(--c9);
+    }
+
+    .to-card {
+        width: 100%;
+        max-width: 580px;
+        background: rgba(3, 4, 94, 0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        border-radius: 24px;
+        padding: 2.75rem 2.25rem;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .to-badge {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.4));
+        border: 1.5px solid #ef4444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fca5a5;
+        font-size: 2.5rem;
+        box-shadow: 0 0 35px rgba(239, 68, 68, 0.35);
+    }
+
+    .to-title {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.75rem;
+    }
+
+    .to-desc {
+        color: #fca5a5;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 1.75rem;
+        line-height: 1.5;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+
+    .to-info-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        background: rgba(2, 3, 58, 0.7);
+        border: 1px solid rgba(72, 202, 228, 0.2);
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .to-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .to-info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--c3);
+        letter-spacing: 0.05em;
+    }
+
+    .to-info-val {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .to-sub-note {
+        font-size: 0.85rem;
+        color: var(--c1);
+        line-height: 1.45;
+    }
+</style>
+
+<div class="to-container">
+    <div class="to-card">
+        <div class="to-badge">
+            <iconify-icon icon="mdi:account-lock"></iconify-icon>
+        </div>
+
+        <h1 class="to-title">Test Already Ongoing</h1>
+
+        <div class="to-desc">
+            Test already started, it is ongoing. Please wait until the test completes.
+        </div>
+
+        <div class="to-info-pill">
+            <div class="to-info-item">
+                <span class="to-info-label">Candidate</span>
+                <span class="to-info-val">{{ candidate.name }}</span>
+            </div>
+            <div class="to-info-item">
+                <span class="to-info-label">Organization</span>
+                <span class="to-info-val">{{ company.name }}</span>
+            </div>
+        </div>
+
+        <p class="to-sub-note">
+            This test link is locked to an active browser session. If you need to re-open this test, please complete or submit the active session first.
+        </p>
+    </div>
+</div>
+{% endblock %}

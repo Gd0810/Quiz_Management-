@@ -1107,16 +1107,16 @@ body { font-family:'DM Sans',sans-serif; background:#eaf7fc; color:#1e293b; }
 
     <div class="tt-legend">
         <div class="tt-legend-item">
-            <div class="tt-legend-dot" style="background:var(--qs-answered)">1</div> Answered
+            <div class="tt-legend-dot" style="background:var(--qs-answered)" id="countAnswered">0</div> Answered
         </div>
         <div class="tt-legend-item">
-            <div class="tt-legend-dot" style="background:var(--qs-marked)">1</div> Marked
+            <div class="tt-legend-dot" style="background:var(--qs-marked)" id="countMarked">0</div> Marked
         </div>
         <div class="tt-legend-item">
-            <div class="tt-legend-dot" style="background:var(--qs-not-answered)">1</div> Not Answered
+            <div class="tt-legend-dot" style="background:var(--qs-not-answered)" id="countNotAnswered">0</div> Not Answered
         </div>
         <div class="tt-legend-item">
-            <div class="tt-legend-dot" style="background:#fff;border:1.5px solid #cbd5e1;color:#64748b">1</div> Not Visited
+            <div class="tt-legend-dot" style="background:#fff;border:1.5px solid #cbd5e1;color:#64748b" id="countNotVisited">0</div> Not Visited
         </div>
     </div>
 
@@ -1519,11 +1519,31 @@ function showQuestion(idx, dir) {
     syncSectionTabs();
     renderPalette();
     updateProgress();
+    syncStateWithServer();
 }
 
 window.goToQuestion = function (idx) {
     showQuestion(idx, idx > curIdx ? 1 : -1);
 };
+
+function updateLegendCounts() {
+    var ans = 0, mrk = 0, notAns = 0, notVis = 0;
+    for (var i = 0; i < TOTAL; i++) {
+        var s = states[i];
+        if (s === 'answered') ans++;
+        else if (s === 'marked') mrk++;
+        else if (s === 'not-answered') notAns++;
+        else notVis++;
+    }
+    var elAns = document.getElementById('countAnswered');
+    var elMrk = document.getElementById('countMarked');
+    var elNotAns = document.getElementById('countNotAnswered');
+    var elNotVis = document.getElementById('countNotVisited');
+    if (elAns) elAns.textContent = ans;
+    if (elMrk) elMrk.textContent = mrk;
+    if (elNotAns) elNotAns.textContent = notAns;
+    if (elNotVis) elNotVis.textContent = notVis;
+}
 
 /* ── palette render ── */
 function renderPalette() {
@@ -1531,6 +1551,7 @@ function renderPalette() {
         var el = document.getElementById('pnum-' + i);
         if (el) el.className = 'tt-pnum ' + states[i] + (i === curIdx ? ' current' : '');
     }
+    updateLegendCounts();
     saveAttemptState();
 }
 
@@ -1562,6 +1583,7 @@ window.onAnswer = function (idx) {
     if (states[idx] !== 'marked') states[idx] = 'answered';
     renderPalette();
     updateProgress();
+    syncStateWithServer();
 };
 
 /* also watch radio changes (handles pre-checked on load) */
@@ -1573,6 +1595,7 @@ document.getElementById('test-form').addEventListener('change', function (e) {
         if (!isNaN(i) && states[i] !== 'marked') states[i] = 'answered';
         renderPalette();
         updateProgress();
+        syncStateWithServer();
     }
 });
 
@@ -1840,6 +1863,7 @@ document.getElementById('btnSave').addEventListener('click', function () {
         states[curIdx] = hasSelectedAnswer(curIdx) ? 'answered' : 'not-answered';
     }
     renderPalette(); updateProgress();
+    syncStateWithServer();
     if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
 
@@ -1852,6 +1876,7 @@ document.getElementById('btnMark').addEventListener('click', function () {
     if (isInteractionLocked()) return;
     states[curIdx] = 'marked';
     renderPalette(); updateProgress();
+    syncStateWithServer();
     if (curIdx < TOTAL - 1) showQuestion(curIdx + 1, 1);
 });
 
@@ -1861,6 +1886,7 @@ document.getElementById('btnClear').addEventListener('click', function () {
     if (b) b.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
     states[curIdx] = 'not-answered';
     renderPalette(); updateProgress();
+    syncStateWithServer();
 });
 
 /* ── drawer: arrow tab push layout, open by default ── */
@@ -2052,6 +2078,106 @@ updateProgress();
 syncSectionTabs();
 updatePauseButton();
 refreshLockState();
+
+function getCsrfToken() {
+    var el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return el ? el.value : (typeof csrfToken !== 'undefined' ? csrfToken : '');
+}
+
+var multiUserEnabled = {{ multi_user_enabled|yesno:"true,false" }};
+var serverAnswersJson = {{ server_answers_json|safe }};
+
+function syncStateWithServer() {
+    if (!formEl) return;
+    var formData = new FormData(formEl);
+    states.forEach(function(st, idx) {
+        formData.append('status_idx_' + idx, st);
+    });
+    fetch("{% url 'quiz:save_state' attempt_slug=attempt.public_slug %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (!data) return;
+        if (data.is_submitted && data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+        }
+        if (typeof data.remaining_seconds === 'number') {
+            remainingSeconds = data.remaining_seconds;
+            updateCountdown();
+        }
+    })
+    .catch(function(err) {});
+}
+
+function restoreServerAnswersAndStates() {
+    if (!Array.isArray(serverAnswersJson)) return;
+    serverAnswersJson.forEach(function(row, idx) {
+        var selAns = row.selected_answer || '';
+        var status = row.status || (selAns ? 'answered' : '');
+        if (selAns) {
+            var block = document.getElementById('qblock-' + idx);
+            if (block) {
+                var radio = block.querySelector('input[type="radio"][value="' + selAns + '"]');
+                if (radio) radio.checked = true;
+            }
+        }
+        if (status && ['answered', 'marked', 'not-answered', 'not-visited'].indexOf(status) !== -1) {
+            states[idx] = status;
+        }
+    });
+    renderPalette();
+    updateProgress();
+}
+
+restoreServerAnswersAndStates();
+
+if (multiUserEnabled) {
+    setInterval(function() {
+        if (isPaused) return;
+        fetch("{% url 'quiz:live_status' attempt_slug=attempt.public_slug %}")
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (!data || !data.ok) return;
+            if (data.is_submitted) {
+                window.location.href = "{% url 'quiz:result' attempt_slug=attempt.public_slug %}";
+                return;
+            }
+            if (typeof data.remaining_seconds === 'number') {
+                remainingSeconds = data.remaining_seconds;
+                updateCountdown();
+            }
+            if (data.answers_json && Array.isArray(data.answers_json)) {
+                data.answers_json.forEach(function(row, idx) {
+                    var selAns = row.selected_answer || '';
+                    var status = row.status || (selAns ? 'answered' : 'not-visited');
+                    var block = document.getElementById('qblock-' + idx);
+                    if (block) {
+                        var radios = block.querySelectorAll('input[type="radio"]');
+                        radios.forEach(function(r) {
+                            if (r.value === selAns) {
+                                r.checked = true;
+                            } else if (!selAns) {
+                                r.checked = false;
+                            }
+                        });
+                    }
+                    if (status && ['answered', 'marked', 'not-answered', 'not-visited'].indexOf(status) !== -1) {
+                        states[idx] = status;
+                    }
+                });
+                renderPalette();
+                updateProgress();
+            }
+        })
+        .catch(function(err) {});
+    }, 3000);
+}
 
 if (fullscreenLockEnabled && !document.fullscreenElement) {
     setTimeout(function () {

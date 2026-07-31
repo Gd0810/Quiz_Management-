@@ -32,6 +32,7 @@ class CompanySecurityForm(forms.ModelForm):
             'tab_switch_guard_enabled',
             'copy_paste_block_enabled',
             'right_click_disable_enabled',
+            'multi_user_enabled',
             'max_violation_warnings',
             'exam_control_password',
         ]
@@ -44,6 +45,7 @@ class CompanySecurityForm(forms.ModelForm):
             'tab_switch_guard_enabled': self.instance.allow_tab_switch_guard,
             'copy_paste_block_enabled': self.instance.allow_copy_paste_block,
             'right_click_disable_enabled': self.instance.allow_right_click_disable,
+            'multi_user_enabled': self.instance.allow_multi_user,
         }
         for field_name, is_allowed in gated_fields.items():
             if field_name in self.fields:
@@ -81,6 +83,8 @@ class CompanySecurityForm(forms.ModelForm):
             cleaned_data['copy_paste_block_enabled'] = False
         if not self.instance.allow_right_click_disable:
             cleaned_data['right_click_disable_enabled'] = False
+        if not self.instance.allow_multi_user:
+            cleaned_data['multi_user_enabled'] = False
 
         if (cleaned_data.get('full_screen_lock') or cleaned_data.get('pause_lock')) and not cleaned_data.get('exam_control_password'):
             raise ValidationError('Set an exam control password before enabling fullscreen lock or pause lock.')
@@ -102,6 +106,8 @@ class CompanySecurityForm(forms.ModelForm):
             instance.copy_paste_block_enabled = False
         if not instance.allow_right_click_disable:
             instance.right_click_disable_enabled = False
+        if not instance.allow_multi_user:
+            instance.multi_user_enabled = False
         if commit:
             instance.save()
             self.save_m2m()

@@ -655,16 +655,31 @@ def _send_attempt_link_email(request, attempt):
 
 
 def _answers_from_request(request, answer_rows):
-    return [
-        {
-            'question_id': row['question_id'],
-            'selected_answer': request.POST.get(f"question_{row['question_id']}", ''),
-        }
-        for row in answer_rows
-    ]
+    updated = []
+    for idx, row in enumerate(answer_rows):
+        qid = row['question_id']
+        selected = request.POST.get(f'question_{qid}', '')
+        status = request.POST.get(f'status_{qid}', '') or request.POST.get(f'status_idx_{idx}', '')
+        if not status:
+            existing_status = row.get('status', '')
+            if selected:
+                status = 'answered'
+            elif existing_status:
+                status = existing_status
+            else:
+                status = 'not-visited'
+        updated.append({
+            'question_id': qid,
+            'selected_answer': selected,
+            'status': status,
+        })
+    return updated
 
 
 def _finalize_attempt(attempt, *, question_map, updated_answers, extra_update_fields=None):
+    if attempt.is_submitted:
+        return
+
     correct_count = 0
     for row in updated_answers:
         question = question_map.get(row['question_id'])
@@ -932,6 +947,9 @@ def begin_test(request):
         right_click_disable_enabled=_parse_bool(
             security.get('right_click_disable_enabled', request.company.right_click_disable_enabled)
         ) and request.company.allow_right_click_disable and request.company.right_click_disable_enabled,
+        multi_user_enabled=_parse_bool(
+            security.get('multi_user_enabled', request.company.multi_user_enabled)
+        ) and request.company.allow_multi_user and request.company.multi_user_enabled,
         max_violation_warnings=_parse_positive_int(
             security.get('max_violation_warnings', request.company.max_violation_warnings),
             request.company.max_violation_warnings or 3,
@@ -967,9 +985,45 @@ def take_test(request, attempt_slug):
     if attempt.is_submitted:
         return redirect('quiz:result', attempt_slug=attempt.public_slug)
 
+    if not request.session.session_key:
+        request.session.save()
+    session_key = request.session.session_key or ''
+
+    now = timezone.now()
+
+    if not attempt.multi_user_enabled:
+        is_session_active = (
+            attempt.started_at is not None
+            and attempt.active_session_key
+            and attempt.active_session_key != session_key
+            and attempt.remaining_seconds(now) > 0
+        )
+        if is_session_active:
+            return render(
+                request,
+                'quiz/test_ongoing_error.html',
+                {
+                    'attempt': attempt,
+                    'candidate': attempt.candidate,
+                    'company': attempt.company,
+                },
+                status=403,
+            )
+
+        if not attempt.active_session_key or attempt.active_session_key != session_key:
+            attempt.active_session_key = session_key
+
+    update_fields = []
     if not attempt.started_at:
-        attempt.started_at = timezone.now()
-        attempt.save(update_fields=['started_at'])
+        attempt.started_at = now
+        update_fields.append('started_at')
+
+    if attempt.active_session_key and 'active_session_key' not in update_fields:
+        update_fields.append('active_session_key')
+
+    attempt.last_active_at = now
+    update_fields.append('last_active_at')
+    attempt.save(update_fields=update_fields)
 
     answer_rows = attempt.answers_json or []
     question_ids = [row['question_id'] for row in answer_rows]
@@ -1021,12 +1075,14 @@ def take_test(request, attempt_slug):
         'questions': ordered_questions,
         'question_sections': question_sections,
         'initial_answers': initial_answers,
+        'server_answers_json': json.dumps(attempt.answers_json or []),
         'remaining_seconds': attempt.remaining_seconds(),
         'full_screen_lock_enabled': attempt.full_screen_lock_enabled,
         'pause_lock_enabled': attempt.pause_lock_enabled,
         'tab_switch_guard_enabled': attempt.tab_switch_guard_enabled,
         'copy_paste_block_enabled': attempt.copy_paste_block_enabled,
         'right_click_disable_enabled': attempt.right_click_disable_enabled,
+        'multi_user_enabled': attempt.multi_user_enabled,
         'max_violation_warnings': attempt.max_violation_warnings,
         'attempt_is_paused': attempt.is_paused,
         'current_pause_seconds': attempt.current_pause_seconds(),
@@ -1038,6 +1094,40 @@ def take_test(request, attempt_slug):
         if attempt.started_at
         else '',
     }
+    return render(request, 'quiz/take_test.html', context)
+
+
+def save_attempt_state(request, attempt_slug):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST method required'}, status=405)
+
+    attempt = _public_attempt_or_404(attempt_slug)
+    if attempt.is_submitted or attempt.is_paused:
+        return JsonResponse({'ok': False, 'is_submitted': attempt.is_submitted, 'is_paused': attempt.is_paused})
+
+    answers = _answers_from_request(request, attempt.answers_json or [])
+    attempt.answers_json = answers
+    attempt.last_active_at = timezone.now()
+    attempt.save(update_fields=['answers_json', 'last_active_at'])
+
+    return JsonResponse({
+        'ok': True,
+        'remaining_seconds': attempt.remaining_seconds(),
+        'answers_json': attempt.answers_json,
+    })
+
+
+def get_live_status(request, attempt_slug):
+    attempt = _public_attempt_or_404(attempt_slug)
+    return JsonResponse({
+        'ok': True,
+        'is_submitted': attempt.is_submitted,
+        'is_paused': attempt.is_paused,
+        'remaining_seconds': attempt.remaining_seconds(),
+        'warning_count': attempt.warning_count,
+        'answers_json': attempt.answers_json or [],
+        'multi_user_enabled': attempt.multi_user_enabled,
+    })
     print(
         '[Redmock Mail] take-test page loaded: '
         f'attempt={attempt.public_slug}, candidate_email={attempt.candidate.email}, '

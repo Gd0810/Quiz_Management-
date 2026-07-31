@@ -19,5 +19,7 @@ urlpatterns = [
     path('<slug:attempt_slug>/resume/', views.resume_attempt, name='resume'),
     path('<slug:attempt_slug>/unlock-fullscreen/', views.unlock_fullscreen, name='unlock_fullscreen'),
     path('<slug:attempt_slug>/record-violation/', views.record_violation, name='record_violation'),
+    path('<slug:attempt_slug>/save-state/', views.save_attempt_state, name='save_state'),
+    path('<slug:attempt_slug>/live-status/', views.get_live_status, name='live_status'),
     path('<slug:attempt_slug>/result/', views.test_result, name='result'),
 ]
